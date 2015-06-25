@@ -69,6 +69,13 @@
 
 
 !********************************************************************************
+    ! APS
+    ! Read in user-defined table if specified
+    IF (mix_rule == 'table') THEN
+       CALL Read_Nonbond_Table
+       RETURN
+    ENDIF
+
     ! Compute the number of different atom types
     CALL Compute_Atom_Types
 
@@ -83,6 +90,9 @@
     ALLOCATE(vdw_param3_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param4_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param5_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param6_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param7_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param8_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
 
     ! Allocate memory for total number bead types in each box
     ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
@@ -112,168 +122,166 @@
        DO jtype = 1, nbr_atomtypes
 
 
-	      IF (mix_rule /= 'custom') THEN
+        IF (mix_rule /= 'custom') THEN
 
-	          ! Flags that are tripped when a particular atomtype parameter set is located
-        	  iset = 0
-	          jset = 0
+            ! Flags that are tripped when a particular atomtype parameter set is located
+            iset = 0
+            jset = 0
 
-        	  DO is = 1, nspecies
+            DO is = 1, nspecies
 
-	             DO ia = 1, natoms(is)
+               DO ia = 1, natoms(is)
 
-        	        IF (iset == 0) THEN
-                	   ! Search for atomtype i because the parameters have not been found
+                  IF (iset == 0) THEN
+                     ! Search for atomtype i because the parameters have not been found
 
-	                   IF (nonbond_list(ia,is)%atom_type_number == itype) THEN
-        	              ! This type of atom has been found. Grab its vdw parameters
+                     IF (nonbond_list(ia,is)%atom_type_number == itype) THEN
+                        ! This type of atom has been found. Grab its vdw parameters
 
-                	      DO k=1, nbr_vdw_params(is)
+                        DO k=1, nbr_vdw_params(is)
 
-                        	 temp_param_i(k) = nonbond_list(ia,is)%vdw_param(k)
+                           temp_param_i(k) = nonbond_list(ia,is)%vdw_param(k)
                          
-	                      ENDDO
+                        ENDDO
 
-        	              ! This atomtype parameters are now determined. Trip flag
-                	      iset = 1
+                        ! This atomtype parameters are now determined. Trip flag
+                        iset = 1
                       
-	                      atom_type_list(itype) = nonbond_list(ia,is)%atom_name
-	
-        	           ENDIF
+                        atom_type_list(itype) = nonbond_list(ia,is)%atom_name
+  
+                     ENDIF
 
-                	ENDIF
+                  ENDIF
 
-	                IF(jset == 0) THEN
+                  IF(jset == 0) THEN
 
-        	        ! Now search for parameters of type j
+                  ! Now search for parameters of type j
 
-                	   IF (nonbond_list(ia,is)%atom_type_number == jtype) THEN
+                     IF (nonbond_list(ia,is)%atom_type_number == jtype) THEN
 
-	                      DO k=1, nbr_vdw_params(is)
+                        DO k=1, nbr_vdw_params(is)
                          
-        	                 temp_param_j(k) = nonbond_list(ia,is)%vdw_param(k)
+                           temp_param_j(k) = nonbond_list(ia,is)%vdw_param(k)
 
-                	      ENDDO
+                        ENDDO
                       
-	                      ! This atom type has been located
-        	              jset = 1
+                        ! This atom type has been located
+                        jset = 1
 
-                	      atom_type_list(jtype) = nonbond_list(ia,is)%atom_name
+                        atom_type_list(jtype) = nonbond_list(ia,is)%atom_name
 
-	                   ENDIF
+                     ENDIF
 
-        	        ENDIF
+                  ENDIF
 
-	             ENDDO
+               ENDDO
 
-        	  ENDDO
+            ENDDO
 
-	          ! atom types i and j have been found and vdw parameters loaded into temporary arrays.
-        	  ! Apply mixing rules and load vdw_table
-
-
-	          ! Adapt this to other potential types and mixing rules. Custom mixing rules can 
-        	  ! be created manually and then this routine should be bypassed.
+            ! atom types i and j have been found and vdw parameters loaded into temporary arrays.
+            ! Apply mixing rules and load vdw_table
 
 
-	          IF (int_vdw_style(1) == vdw_lj) THEN
-        	     ! There are two vdw parameters
+            ! Adapt this to other potential types and mixing rules. Custom mixing rules can 
+            ! be created manually and then this routine should be bypassed.
 
-	             ! Set LJ epsilon
-        	     IF ( (temp_param_i(1) <= tiny_number) .OR. (temp_param_j(1) <= tiny_number) ) THEN
-                	vdw_param1_table(itype,jtype) = 0.0_DP
-	             ! for parameters with zero, avoid overflow and set to zero
 
-        	     ELSE
+            IF (int_vdw_style(1) == vdw_lj) THEN
+               ! There are two vdw parameters
 
-                	! Use specified mixing rule
+               ! Set LJ epsilon
+               IF ( (temp_param_i(1) <= tiny_number) .OR. (temp_param_j(1) <= tiny_number) ) THEN
+                  vdw_param1_table(itype,jtype) = 0.0_DP
+               ! for parameters with zero, avoid overflow and set to zero
 
-	          ! LB mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = 1/2 (sigmai + sigmaj)
-        	        IF (mix_rule == 'LB') &
-                	     vdw_param1_table(itype,jtype) = dsqrt(temp_param_i(1)*temp_param_j(1))
+               ELSE
 
-	          ! geometric mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = (sigmai * sigmaj)^(1/2)
-        	        IF (mix_rule == 'geometric')  &
-                	     vdw_param1_table(itype,jtype) = dsqrt(temp_param_i(1)*temp_param_j(1))
+                  ! Use specified mixing rule
+
+            ! LB mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = 1/2 (sigmai + sigmaj)
+                  IF (mix_rule == 'LB') &
+                       vdw_param1_table(itype,jtype) = dsqrt(temp_param_i(1)*temp_param_j(1))
+
+            ! geometric mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = (sigmai * sigmaj)^(1/2)
+                  IF (mix_rule == 'geometric')  &
+                       vdw_param1_table(itype,jtype) = dsqrt(temp_param_i(1)*temp_param_j(1))
                 
-	             ENDIF
+               ENDIF
 
-        	     ! Set LJ sigma
-	             IF ( (temp_param_i(2) <= 1.0E-05) .OR. (temp_param_j(2) <= 1.0E-05) ) THEN
-        	        vdw_param2_table(itype,jtype) = 0.0_DP
+               ! Set LJ sigma
+               IF ( (temp_param_i(2) <= 1.0E-05) .OR. (temp_param_j(2) <= 1.0E-05) ) THEN
+                  vdw_param2_table(itype,jtype) = 0.0_DP
 
-	             ELSE
+               ELSE
 
-        	        IF (mix_rule == 'LB') &
-                	     vdw_param2_table(itype,jtype) = (temp_param_i(2) + temp_param_j(2)) * 0.5
-	                IF (mix_rule == 'geometric') &
-        	             vdw_param2_table(itype,jtype) = dsqrt(temp_param_i(2) * temp_param_j(2))
+                  IF (mix_rule == 'LB') &
+                       vdw_param2_table(itype,jtype) = (temp_param_i(2) + temp_param_j(2)) * 0.5
+                  IF (mix_rule == 'geometric') &
+                       vdw_param2_table(itype,jtype) = dsqrt(temp_param_i(2) * temp_param_j(2))
 
-	             ENDIF
+               ENDIF
 
-        	  ENDIF
+            ENDIF
              
-	         IF (int_vdw_style(1) == vdw_lj) THEN
-        	    ! Report parameters to logfile. Format is specific to vdw type. Add others here if 
-	            ! other than LJ potential is used.
+           IF (int_vdw_style(1) == vdw_lj) THEN
+              ! Report parameters to logfile. Format is specific to vdw type. Add others here if 
+              ! other than LJ potential is used.
 
-        	  WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
-	               atom_type_list(itype), atom_type_list(jtype), &
-        	       vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype)
+            WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
+                 atom_type_list(itype), atom_type_list(jtype), &
+                 vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype)
 
-	         ENDIF
+           ENDIF
 
 
-          ELSEIF (mix_rule == 'table') THEN 
-          ! user-defined table for cross-interactions
           ELSE !custom mixing rule if
-	
-  		REWIND(inputunit)
+  
+    	REWIND(inputunit)
 
-		ierr = 0
-	 	line_nbr = 0
+  	ierr = 0
+   	line_nbr = 0
 
-  		DO
-     			line_nbr = line_nbr + 1
+    	DO
+       		line_nbr = line_nbr + 1
 
-     			CALL Read_String(inputunit,line_string,ierr)
+       		CALL Read_String(inputunit,line_string,ierr)
 
 
-     			IF (ierr .NE. 0) THEN
-        			err_msg = ""
-        			err_msg(1) = "Error reading mixing rules1."
-        			CALL Clean_Abort(err_msg,'Get_Mixing_Rules')
-  			END IF
+       		IF (ierr .NE. 0) THEN
+          		err_msg = ""
+          		err_msg(1) = "Error reading mixing rules1."
+          		CALL Clean_Abort(err_msg,'Get_Mixing_Rules')
+    		END IF
 
-     			IF (line_string(1:13) == '# Mixing_Rule') THEN
-				READ(inputunit,*)
-				! Assign the first entry on the line to the mixing rule
-				DO is_1 = 1, nspecies
-					DO ia_1 = 1, natoms(is_1)
-						itype_custom = nonbond_list(ia_1,is_1)%atom_type_number
-						DO is_2 = 1, nspecies
-							DO ia_2 = 1, natoms(is_2)
-        							CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-								jtype_custom = nonbond_list(ia_2,is_2)%atom_type_number
-								!Convert epsilon to atomic units amu A^2/ps^2 
-								vdw_param1_table(itype_custom,jtype_custom) = kboltz * String_To_Double(line_array(3))
-								vdw_param2_table(itype_custom,jtype_custom) = String_To_Double(line_array(4))
-								!line_nbr = line_nbr + 1
-		  	  		                  	WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
-						                       atom_type_list(itype_custom), atom_type_list(jtype_custom), &
-						                       vdw_param1_table(itype_custom,jtype_custom), vdw_param2_table(itype_custom,jtype_custom)
+       		IF (line_string(1:13) == '# Mixing_Rule') THEN
+  			READ(inputunit,*)
+  			! Assign the first entry on the line to the mixing rule
+  			DO is_1 = 1, nspecies
+  				DO ia_1 = 1, natoms(is_1)
+  					itype_custom = nonbond_list(ia_1,is_1)%atom_type_number
+  					DO is_2 = 1, nspecies
+  						DO ia_2 = 1, natoms(is_2)
+          						CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+  							jtype_custom = nonbond_list(ia_2,is_2)%atom_type_number
+  							!Convert epsilon to atomic units amu A^2/ps^2 
+  							vdw_param1_table(itype_custom,jtype_custom) = kboltz * String_To_Double(line_array(3))
+  							vdw_param2_table(itype_custom,jtype_custom) = String_To_Double(line_array(4))
+  							!line_nbr = line_nbr + 1
+  	  	  		                  	WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
+  					                       atom_type_list(itype_custom), atom_type_list(jtype_custom), &
+  					                       vdw_param1_table(itype_custom,jtype_custom), vdw_param2_table(itype_custom,jtype_custom)
 
-							END DO
-						END DO
-					END DO
-				END DO
-				RETURN
-  	                END IF
-	       END DO
+  						END DO
+  					END DO
+  				END DO
+  			END DO
+  			RETURN
+                    END IF
+         END DO
            END IF
          ENDDO
     
-	 ENDDO
+   ENDDO
  
  WRITE(logunit,*)
  WRITE(logunit,*) '*** Completed construction of VDW interaction table ***'
@@ -282,8 +290,185 @@
 
 END SUBROUTINE Create_Nonbond_Table
 
+SUBROUTINE Read_Nonbond_Table
+!********************************************************************************
+    ! Written: Jun 25 2015
+    ! Author: A. Santos
+    
+    ! 
+    ! *** CALLED BY ***
+    ! Create_Nonbond_Table
+    !
+    ! Revision history:
+    !
+
+!********************************************************************************
+    USE Run_Variables
+    USE Type_Definitions
+    USE IO_Utilities
+    USE File_Names
+    
+    IMPLICIT NONE
+
+    INTEGER :: i, is, ia, itype, jtype, iset,jset,k, tot_natoms, iatom
+    REAL(DP), DIMENSION(max_nonbond_params) :: temp_param_i, temp_param_j
+
+    ! Steele potential
+
+    REAL(DP) :: sigma_ss, eps_ss, rho_s, delta_s, eps_sf
+    !custom mixing rules
+    INTEGER :: ierr,line_nbr,nbr_entries, is_1, is_2, ia_1, ia_2, itype_custom, jtype_custom, i_line, n_params, cur_line
+    CHARACTER(120) :: line_string, line_array(20)
+    CHARACTER(120) :: temp_name
+    INTEGER :: temp_type_list(30), temp_type
+
+    CHARACTER(120) :: pot_type
+  !********************************************************************************
+
+
+!********************************************************************************
+    ! Open mixfile and find the line where the data begins
+    OPEN(UNIT=mixfile_unit,FILE=mixfile_name,STATUS="OLD",IOSTAT=openstatus,ACTION="READ")
+    CALL Read_String(mixfile_unit,line_string,ierr)
+    IF (ierr .NE. 0) THEN
+        err_msg = ""
+        err_msg(1) = "Error reading mixinf rules."
+        CALL Clean_Abort(err_msg,'Get_Mixing_Rules')
+    END IF
+    i_line = 1
+    tot_natoms = SUM(natoms(:))
+    temp_type_list = -100
+    nbr_atomtypes = 0
+    DO 
+        IF (line_string(1:12) == '# Atom_Types') THEN
+            DO iatom = 1, tot_natoms
+                CALL Parse_String(mixfile_unit, i_line, 1, nbr_entries, line_array, ierr)
+                temp_name = line_array(1)
+                temp_type = String_To_Int( line_array(2) )
+                IF ( ALL(temp_type_list /= temp_type) ) THEN
+                    nbr_atomtypes = nbr_atomtypes + 1
+                    temp_type_list(nbr_atomtypes) = temp_type
+                END IF
+                !Check which speicies and atom corresponds to this name
+                DO is = 1, nspecies
+                    DO ia = 1, natoms(is)
+                        IF (temp_name == nonbond_list(ia,is)%atom_name) THEN
+                            nonbond_list(ia,is)%atom_type_number = temp_type
+                            
+                        ENDIF
+                    ENDDO
+                ENDDO
+            ENDDO
+            CALL Read_String(mixfile_unit,line_string,ierr)
+            EXIT
+        ENDIF
+        i_line = i_line + 1
+        CALL Read_String(mixfile_unit,line_string,ierr)
+    ENDDO
+
+    ! Create a character array containing the names of each unique atom type, with the index equal
+    ! to the atom type number
+
+    ! allocate arrays containing vdw parameters for all interaction pairs.
+    ALLOCATE(vdw_param1_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param2_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param3_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param4_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param5_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param6_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param7_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param8_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    vdw_param1_table = 0.0_DP
+    vdw_param2_table = 0.0_DP
+    vdw_param3_table = 0.0_DP
+    vdw_param4_table = 0.0_DP
+    vdw_param5_table = 0.0_DP
+    vdw_param6_table = 0.0_DP
+    vdw_param7_table = 0.0_DP
+    vdw_param8_table = 0.0_DP
+
+    ! Allocate memory for total number bead types in each box
+    ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
+    
+    IF (AllocateStatus .NE. 0) THEN
+       err_msg = ''
+       err_msg(1) = ' ERROR: Not enough memory for vdw interaction table '
+       CALL Clean_Abort(err_msg,'ceate_nonbond_table')
+    END IF
+
+    atom_type_list = ""
+
+    ! Now determine the set of vdw parameters for each type of interaction and load them into vdw_param_table
+    ! This is a brute force search - but it is fast.
+
+    WRITE(logunit,*) '*** Creating VDW interaction table ***'
+    WRITE(logunit,'(A,T25,A)') 'Mixing rule used is:', mix_rule
+    WRITE(logunit,*)
+
+    REWIND(inputunit)
+
+    DO 
+        IF (line_string(1:15) == '# Mixing_Values') THEN
+            EXIT
+        ENDIF
+
+        i_line = i_line + 1
+        CALL Read_String(mixfile_unit,line_string,ierr)
+    ENDDO
+    CALL Parse_String(mixfile_unit, i_line, 1, nbr_entries, line_array, ierr)
+    n_params = INT(nbr_atomtypes * (nbr_atomtypes + 1 ) / 2)
+
+    ! Read in from the table file
+    DO cur_line = i_line, n_params + i_line - 1
+        CALL Parse_String(mixfile_unit, cur_line, 2, nbr_entries, line_array, ierr)
+        itype = String_To_Int( line_array(1) )
+        jtype = String_To_Int( line_array(2) )
+
+        DO i = 3, SIZE(line_array)
+            pot_type = line_array(i)
+
+            IF (pot_type == 'LJ') THEN
+                vdw_param1_table(itype,jtype) = String_To_Double(line_array(i+1))
+                vdw_param2_table(itype,jtype) = String_To_Double(line_array(i+2))
+
+            ELSEIF (pot_type == 'WCA') THEN
+                vdw_param3_table(itype,jtype) = String_To_Double(line_array(i+1))
+                vdw_param4_table(itype,jtype) = String_To_Double(line_array(i+2))
+
+            ELSEIF (pot_type == 'HYDR') THEN
+                vdw_param5_table(itype,jtype)= String_To_Double(line_array(i+1))
+                vdw_param6_table(itype,jtype) = String_To_Double(line_array(i+2))
+                vdw_param7_table(itype,jtype) = String_To_Double(line_array(i+3))
+
+            ELSEIF (pot_type == 'CORR') THEN
+                vdw_param8_table(itype,jtype) = String_To_Double(line_array(i+1))
+
+            ENDIF
+
+        ENDDO
+    ENDDO
+
+    WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8'
+    DO itype = 1, nbr_atomtypes
+        DO jtype = itype, nbr_atomtypes
+            WRITE(logunit,'(2I3,8f11.4)') &
+                 itype, jtype, &
+                 vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype), &
+                 vdw_param3_table(itype,jtype), vdw_param4_table(itype,jtype), &
+                 vdw_param5_table(itype,jtype), vdw_param6_table(itype,jtype), &
+                 vdw_param7_table(itype,jtype), vdw_param8_table(itype,jtype)
+
+        ENDDO
+    ENDDO
+
+ WRITE(logunit,*)
+ WRITE(logunit,*) '*** Completed construction of VDW interaction table ***'
+ WRITE(logunit,*)    
+
+
+END SUBROUTINE Read_Nonbond_Table
 ! APS
-! Compute the number different atom types.
+! Compute the number of different atom types.
 ! Originally in Create_Nonbond_Table.  
 ! Moved for clarity and to use in Read_Nonbond_Table.
 SUBROUTINE Compute_Atom_Types
