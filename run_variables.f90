@@ -177,7 +177,9 @@ USE Type_Definitions
   ! full form is (qi*qj*e^2/(4*pi*epsilon0*rij)).  To simplify, the extra
   ! constant terms are subsumed into the single constant described above.
   ! The units of charge factor are:   amu A^3 / ps^2
-  REAL(DP) :: charge_factor = 138935.4558_DP
+  REAL(DP), PARAMETER :: charge_factor_vacuum = 138935.4558_DP
+  REAL(DP), DIMENSION(:), ALLOCATABLE :: charge_factor
+  REAL(DP), DIMENSION(:), ALLOCATABLE :: static_perm
 
   !Factor to convert atomic pressure (amu / (A ps^2) ) to bar
   REAL(DP), PARAMETER :: atomic_to_bar = 166.054_DP
