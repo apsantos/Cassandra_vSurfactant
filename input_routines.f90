@@ -749,6 +749,9 @@ SUBROUTINE Get_Mixing_Rules
            WRITE(logunit,'(A)') 'Geometric mixing rule specified'
         ELSEIF (mix_rule == 'custom') THEN
            WRITE(logunit,'(A)') 'Custom mixing rule specified'
+        ELSEIF (mix_rule == 'table') THEN
+           mixfile_name = line_array(2)
+           WRITE(logunit,'(2A)') 'Table of parameters specified in ', mixfile_name
         ELSE
            err_msg(1) = 'Mixing rule not supported'
            err_msg(2) = mix_rule
