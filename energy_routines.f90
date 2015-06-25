@@ -2321,7 +2321,7 @@ CONTAINS
     energy(this_box)%ewald_self = -energy(this_box)%ewald_self * charge_factor(this_box)
 
     ! Note that the ewald self constant computed here is slightly different than what is
-    ! computed in APSS. It has a negative sign and is already multiplied by a the charge_factor
+    ! computed in APSS. It has a negative sign and is already multiplied by a the charge_factor(this_box)
     ! for proper unit conversion
 
   END SUBROUTINE Compute_System_Ewald_Self_Energy
