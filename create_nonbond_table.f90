@@ -57,9 +57,7 @@
     
     IMPLICIT NONE
 
-    LOGICAL :: repeat_type
-    CHARACTER(6), DIMENSION(:), ALLOCATABLE :: temp_atomtypes ! same dimension as atom_name
-    INTEGER :: ii, is, ia, itype, jtype, iset,jset,k
+    INTEGER :: is, ia, itype, jtype, iset,jset,k
     REAL(DP), DIMENSION(max_nonbond_params) :: temp_param_i, temp_param_j
 
     ! Steele potential
@@ -71,92 +69,8 @@
 
 
 !********************************************************************************
-    ALLOCATE(temp_atomtypes(1000), Stat=AllocateStatus)
-    IF (AllocateStatus .NE. 0) THEN
-       err_msg = ''
-       err_msg(1) = ' ERROR: Not enough memory for temp_atomtypes '
-       CALL Clean_Abort(err_msg,'create_nonbond_table')
-    END IF
-
-    ! Initialize the number of atom types and the temp_atomtypes
-    nbr_atomtypes = 0
-    temp_atomtypes = ''
-
     ! Compute the number of different atom types
-    DO is = 1, nspecies
-       
-       DO ia = 1, natoms(is)
-          
-          repeat_type = .FALSE.
-
-          !----------------------------------------------------------------
-          ! Determine whether the atomtype has already been accounted for
-          !----------------------------------------------------------------
-          IF ((is .EQ. 1).AND.(ia .EQ. 1)) THEN
-             ! If this is the first atomtype obtained, store it in temp_atomtypes
-             nbr_atomtypes = nbr_atomtypes + 1
-             temp_atomtypes(nbr_atomtypes) = nonbond_list(ia,is)%atom_name
-
-             ! Store the unique number identifier
-             nonbond_list(ia,is)%atom_type_number = nbr_atomtypes
-            
-          ELSE
-             ! Loop over all current atomtypes to check if the atomtype has been accounted for
-             !   If so, turn the fatomtype flag to true
-             DO ii = 1, nbr_atomtypes
-                IF(nonbond_list(ia,is)%atom_name .EQ. temp_atomtypes(ii)) THEN
-
-                   ! This atom name is already present. Do not advance counter
-                   repeat_type = .TRUE.
-
-                   ! Store the unique number identifier
-                   nonbond_list(ia,is)%atom_type_number = ii
-
-                ENDIF
-             ENDDO
-
-             ! If the atomtype has not been accounted for, add it to the temp_atomtypes list
-             IF(.NOT.repeat_type) THEN
-                nbr_atomtypes = nbr_atomtypes + 1
-                temp_atomtypes(nbr_atomtypes) = nonbond_list(ia,is)%atom_name
-
-                ! Store the unique number identifier
-                nonbond_list(ia,is)%atom_type_number = nbr_atomtypes
-                
-             ENDIF
-
-          ENDIF
-
-       ENDDO
-
-    ENDDO
-
-    ! Write the number of different atom types to the screen and logfile
-    WRITE(logunit,'(A)') &
-         '  There are '//TRIM(Int_To_String(nbr_atomtypes))//' different atom types in the system '
-    DO ii = 1, nbr_atomtypes
-       WRITE(logunit,'(3x,I3,2x,A6)') ii, temp_atomtypes(ii)
-    ENDDO
-
-    WRITE(logunit,*)
-
-    DO is=1,nspecies
-       WRITE(logunit,*)
-       WRITE(logunit,'(A,T25,I3,3x,A)') 'species number and name:',is, molfile_name(is)
-       WRITE(logunit,*) 'Name      number'
-       WRITE(logunit,*) '------    ------'
-
-       DO ia = 1, natoms(is)
-          WRITE(logunit,'(A6,T10,I4)') nonbond_list(ia,is)%atom_name, &
-               nonbond_list(ia,is)%atom_type_number
-       ENDDO
-
-    ENDDO
-
-    WRITE(logunit,*)
-    WRITE(logunit,*)
-
-    IF (ALLOCATED(temp_atomtypes)) DEALLOCATE(temp_atomtypes)
+    CALL Compute_Atom_Types
 
     ! Create a character array containing the names of each unique atom type, with the index equal
     ! to the atom type number
@@ -198,7 +112,7 @@
        DO jtype = 1, nbr_atomtypes
 
 
-	  IF (mix_rule /= 'custom') THEN
+	      IF (mix_rule /= 'custom') THEN
 
 	          ! Flags that are tripped when a particular atomtype parameter set is located
         	  iset = 0
@@ -307,10 +221,12 @@
 	               atom_type_list(itype), atom_type_list(jtype), &
         	       vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype)
 
-	       ENDIF
+	         ENDIF
 
 
-            ELSE !custom mixing rule if
+          ELSEIF (mix_rule == 'table') THEN 
+          ! user-defined table for cross-interactions
+          ELSE !custom mixing rule if
 	
   		REWIND(inputunit)
 
@@ -365,3 +281,109 @@
 
 
 END SUBROUTINE Create_Nonbond_Table
+
+! APS
+! Compute the number different atom types.
+! Originally in Create_Nonbond_Table.  
+! Moved for clarity and to use in Read_Nonbond_Table.
+SUBROUTINE Compute_Atom_Types
+!********************************************************************************
+    USE Run_Variables
+    USE Type_Definitions
+    USE IO_Utilities
+    USE File_Names
+    
+    IMPLICIT NONE
+
+    LOGICAL :: repeat_type
+    CHARACTER(6), DIMENSION(:), ALLOCATABLE :: temp_atomtypes ! same dimension as atom_name
+    INTEGER :: ii, is, ia, k
+
+!********************************************************************************
+    ALLOCATE(temp_atomtypes(1000), Stat=AllocateStatus)
+    IF (AllocateStatus .NE. 0) THEN
+       err_msg = ''
+       err_msg(1) = ' ERROR: Not enough memory for temp_atomtypes '
+       CALL Clean_Abort(err_msg,'create_nonbond_table')
+    END IF
+
+    ! Initialize the number of atom types and the temp_atomtypes
+    nbr_atomtypes = 0
+    temp_atomtypes = ''
+
+    DO is = 1, nspecies
+       
+       DO ia = 1, natoms(is)
+          
+          repeat_type = .FALSE.
+
+          !----------------------------------------------------------------
+          ! Determine whether the atomtype has already been accounted for
+          !----------------------------------------------------------------
+          IF ((is .EQ. 1).AND.(ia .EQ. 1)) THEN
+             ! If this is the first atomtype obtained, store it in temp_atomtypes
+             nbr_atomtypes = nbr_atomtypes + 1
+             temp_atomtypes(nbr_atomtypes) = nonbond_list(ia,is)%atom_name
+
+             ! Store the unique number identifier
+             nonbond_list(ia,is)%atom_type_number = nbr_atomtypes
+            
+          ELSE
+             ! Loop over all current atomtypes to check if the atomtype has been accounted for
+             !   If so, turn the fatomtype flag to true
+             DO ii = 1, nbr_atomtypes
+                IF(nonbond_list(ia,is)%atom_name .EQ. temp_atomtypes(ii)) THEN
+
+                   ! This atom name is already present. Do not advance counter
+                   repeat_type = .TRUE.
+
+                   ! Store the unique number identifier
+                   nonbond_list(ia,is)%atom_type_number = ii
+
+                ENDIF
+             ENDDO
+
+             ! If the atomtype has not been accounted for, add it to the temp_atomtypes list
+             IF(.NOT.repeat_type) THEN
+                nbr_atomtypes = nbr_atomtypes + 1
+                temp_atomtypes(nbr_atomtypes) = nonbond_list(ia,is)%atom_name
+
+                ! Store the unique number identifier
+                nonbond_list(ia,is)%atom_type_number = nbr_atomtypes
+                
+             ENDIF
+
+          ENDIF
+
+       ENDDO
+
+    ENDDO
+
+    ! Write the number of different atom types to the screen and logfile
+    WRITE(logunit,'(A)') &
+         '  There are '//TRIM(Int_To_String(nbr_atomtypes))//' different atom types in the system '
+    DO ii = 1, nbr_atomtypes
+       WRITE(logunit,'(3x,I3,2x,A6)') ii, temp_atomtypes(ii)
+    ENDDO
+
+    WRITE(logunit,*)
+
+    DO is=1,nspecies
+       WRITE(logunit,*)
+       WRITE(logunit,'(A,T25,I3,3x,A)') 'species number and name:',is, molfile_name(is)
+       WRITE(logunit,*) 'Name      number'
+       WRITE(logunit,*) '------    ------'
+
+       DO ia = 1, natoms(is)
+          WRITE(logunit,'(A6,T10,I4)') nonbond_list(ia,is)%atom_name, &
+               nonbond_list(ia,is)%atom_type_number
+       ENDDO
+
+    ENDDO
+
+    WRITE(logunit,*)
+    WRITE(logunit,*)
+
+    IF (ALLOCATED(temp_atomtypes)) DEALLOCATE(temp_atomtypes)
+
+END SUBROUTINE Compute_Atom_Types
