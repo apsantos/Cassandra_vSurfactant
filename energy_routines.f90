@@ -1707,7 +1707,7 @@ CONTAINS
     REAL(DP) :: qi,qj,qsc,rijsq,rij,erf_val
     REAL(DP) :: Eij
 !FSL Local Coulomb Correction variables
-    REAL(DP) :: E_qqcor, Cqqcor, static_perm, Rqqcor, Sqqcor, ED, &
+    REAL(DP) :: E_qqcor, Cqqcor, Rqqcor, Sqqcor, ED, &
     ul, ll, tanhqqcor
     INTEGER :: itype, jtype
 
