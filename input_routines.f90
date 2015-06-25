@@ -696,6 +696,8 @@ SUBROUTINE Get_Pair_Style
 
   !Now determine the mixing rule to use
    CALL Get_Mixing_Rules
+  !Now get the implicit solvent information if there is any
+   CALL Get_Dielectric_Permitivity
 
   IF (.NOT. l_pair_nrg) THEN
      WRITE(logunit,*)
@@ -707,6 +709,77 @@ SUBROUTINE Get_Pair_Style
 END SUBROUTINE Get_Pair_Style
 
 
+
+!********************************************************************************
+SUBROUTINE Get_Dielectric_Permitivity
+!********************************************************************************
+! The routine searches for the keyword "# Dieletric_Permitivity" and 
+! then reads the necessary information underneath the key word. 
+! For Implicit solvent simulations.  
+! Fixed for userdefined, fit for built in experimental data.
+! Spaces, blank lines and ! characters are ignored. 
+! In the end only changes charge_factor
+!********************************************************************************
+  INTEGER :: ierr,line_nbr,nbr_entries
+  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(120) :: solvent, permitivity_method
+  DOUBLE PRECISION :: permitivity
+
+!********************************************************************************
+  REWIND(inputunit)
+
+  ierr = 0
+  line_nbr = 0
+
+  permitivity_method = ''
+  DO
+     line_nbr = line_nbr + 1
+
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF (ierr .NE. 0) THEN
+        err_msg = ""
+        err_msg(1) = "Error reading dielectric permitivity."
+        CALL Clean_Abort(err_msg,'Get_Dielectric_Permitivity')
+     END IF
+
+     IF (line_string(1:25) == '# Dielectric_Permitivity') THEN
+        line_nbr = line_nbr + 1
+        
+        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+
+! Assign the first entry on the line to the mixing rule
+        permitivity_method = line_array(1)
+        
+        IF (permitivity_method == 'fixed') THEN
+           WRITE(logunit,'(A)') 'User-defined dielectric permitivity used'
+           permitivity = String_To_Double(line_array(2))
+        ELSEIF (permitivity_method == 'fit') THEN
+           WRITE(logunit,'(A)') 'fit dielectric permitivity to exp. data'
+           solvent = line_array(2)
+           permitivity = 1.0
+           !CALL Calculate_Permitivity(box_t, solvent, permitivity)
+        ELSE
+           err_msg(1) = 'Dielectric Permitivity method not supported'
+           err_msg(2) = permitivity_method
+           err_msg(3) = 'Available options are'
+           err_msg(4) = 'fixed and fit'
+           CALL Clean_Abort(err_msg,'Get_Dielectric_Permitivity')
+        ENDIF
+
+        ! Update the charge factor
+        charge_factor = charge_factor / permitivity
+
+        EXIT
+
+     ELSEIF (line_string(1:3) == 'END' .or. line_nbr > 10000) THEN
+
+        EXIT
+
+     ENDIF
+
+  ENDDO
+END SUBROUTINE Get_Dielectric_Permitivity
 
 !********************************************************************************
 SUBROUTINE Get_Mixing_Rules
