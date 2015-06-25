@@ -1538,6 +1538,9 @@ SUBROUTINE Get_Atom_Info(is)
            nonbond_list(ia,is)%vdw_potential_type = line_array(6)
 	   
 
+           species_list(is)%total_charge = species_list(is)%total_charge + &
+                nonbond_list(ia,is)%charge
+
            species_list(is)%molecular_weight = species_list(is)%molecular_weight + &
                 nonbond_list(ia,is)%mass
 
