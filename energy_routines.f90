@@ -1143,7 +1143,7 @@ CONTAINS
                       
                       erf_val = 1.0_DP - erfc_val
                       
-                      Eij_qq = (qi*qj/rij)*(qsc - erf_val)*charge_factor
+                      Eij_qq = (qi*qj/rij)*(qsc - erf_val)*charge_factor(this_box)
                       
                       
                       IF (f_intra_nrg) THEN
@@ -1680,7 +1680,7 @@ CONTAINS
              IF ( is == js .AND. im == jm ) THEN
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
-             Eij_qq = qsc*charge_factor*(qi*qj)/SQRT(rijsq)
+             Eij_qq = qsc*charge_factor(this_box)*(qi*qj)/SQRT(rijsq)
           ELSEIF (int_charge_sum_style(ibox) == charge_ewald .AND. ( .NOT. igas_flag) ) THEN
              ! Real space Ewald part
              this_box = molecule_list(im,is)%which_box
@@ -1735,7 +1735,7 @@ CONTAINS
     rij = SQRT(rijsq)
     ! May need to protect against very small rijsq
     erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
-    Eij = (qi*qj/rij)*(qsc - erf_val)*charge_factor
+    Eij = (qi*qj/rij)*(qsc - erf_val)*charge_factor(ibox)
 !                   IF(en_flag) THEN
 !                      WRITE(60,"(4I4,2F8.5,F24.12)") ia, ja, jm, js, qi,qj, Eij
 !                   END IF
@@ -2064,7 +2064,7 @@ CONTAINS
     END DO
     
     energy(this_box)%ewald_reciprocal = energy(this_box)%ewald_reciprocal + energy_temp
-    energy(this_box)%ewald_reciprocal = energy(this_box)%ewald_reciprocal * charge_factor
+    energy(this_box)%ewald_reciprocal = energy(this_box)%ewald_reciprocal * charge_factor(this_box)
     
         
   END SUBROUTINE Compute_System_Ewald_Reciprocal_Energy
@@ -2182,7 +2182,7 @@ CONTAINS
        END DO
        !$OMP END PARALLEL DO
 
-       v_recip_difference = v_recip_difference * charge_factor - energy(this_box)%ewald_reciprocal
+       v_recip_difference = v_recip_difference * charge_factor(this_box) - energy(this_box)%ewald_reciprocal
 
        RETURN
 
@@ -2208,7 +2208,7 @@ CONTAINS
 
        END DO
        !$OMP END PARALLEL DO
-       v_recip_difference = v_recip_difference * charge_factor
+       v_recip_difference = v_recip_difference * charge_factor(this_box)
  
     ELSE IF ( move_flag == int_insertion ) THEN
 
@@ -2246,7 +2246,7 @@ CONTAINS
 
        !$OMP END PARALLEL DO
 
-       v_recip_difference = v_recip_difference * charge_factor
+       v_recip_difference = v_recip_difference * charge_factor(this_box)
 
     END IF
 
@@ -2296,10 +2296,10 @@ CONTAINS
     END DO
 
     energy(this_box)%ewald_self = energy(this_box)%ewald_self * alpha_ewald(this_box) / rootPI
-    energy(this_box)%ewald_self = - energy(this_box)%ewald_self * charge_factor
+    energy(this_box)%ewald_self = - energy(this_box)%ewald_self * charge_factor(this_box)
 
     ! Note that the ewald self constant computed here is slightly different than what is
-    ! computed in APSS. It has a negative sign and is already multiplied by a the charge_factor
+    ! computed in APSS. It has a negative sign and is already multiplied by a the charge_factor(this_box)
     ! for proper unit conversion
 
   END SUBROUTINE Compute_System_Ewald_Self_Energy
@@ -2340,7 +2340,7 @@ CONTAINS
           V_self_difference = V_self_difference + nonbond_list(ia,is)%charge * nonbond_list(ia,is)%charge
        END DO
 
-       V_self_difference = - charge_factor * V_self_difference * alpha_ewald(this_box)/rootPI
+       V_self_difference = - charge_factor(this_box) * V_self_difference * alpha_ewald(this_box)/rootPI
 
     ELSE IF ( move_flag == int_deletion ) THEN
 
@@ -2348,7 +2348,7 @@ CONTAINS
           V_self_difference = V_self_difference + nonbond_list(ia,is)%charge*nonbond_list(ia,is)%charge
        END DO
 
-       V_self_difference = charge_factor * V_self_difference * alpha_ewald(this_box)/rootPI
+       V_self_difference = charge_factor(this_box) * V_self_difference * alpha_ewald(this_box)/rootPI
 
     END IF
 
@@ -3095,7 +3095,7 @@ CONTAINS
        
     END IF
     
-    W_tensor_elec(:,:,this_box) = (W_tensor_charge(:,:,this_box) + W_tensor_recip(:,:,this_box))*charge_factor 
+    W_tensor_elec(:,:,this_box) = (W_tensor_charge(:,:,this_box) + W_tensor_recip(:,:,this_box))*charge_factor(this_box) 
     W_tensor_total(:,:,this_box) = W_tensor_vdw(:,:,this_box) + W_tensor_elec(:,:,this_box) 
     
   END SUBROUTINE Compute_Forces
@@ -3343,7 +3343,7 @@ CONTAINS
              IF ( is == js .AND. im == jm ) THEN
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
-             Wij_qq = qsc*charge_factor*(qi*qj)/SQRT(rijsq)
+             Wij_qq = qsc*charge_factor(this_box)*(qi*qj)/SQRT(rijsq)
           ELSEIF (int_charge_sum_style(ibox) == charge_ewald) THEN
              ! Real space Ewald part
              this_box = molecule_list(im,is)%which_box
@@ -4059,7 +4059,7 @@ CONTAINS
 
     !$OMP END PARALLEL DO
     
-    energy(this_box)%ewald_reciprocal = energy_temp * charge_factor
+    energy(this_box)%ewald_reciprocal = energy_temp * charge_factor(this_box)
 
   END SUBROUTINE Compute_System_Ewald_Reciprocal_Energy2
 
