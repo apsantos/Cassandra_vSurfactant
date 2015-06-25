@@ -124,9 +124,14 @@ USE Type_Definitions
  ! Mixing Rules variables :
   CHARACTER(40), DIMENSION(:,:), ALLOCATABLE :: vdw_interaction_table
   INTEGER, DIMENSION(:,:), ALLOCATABLE ::vdw_int_table
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param1_table
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param2_table, vdw_param3_table
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param4_table, vdw_param5_table
+  !LJ
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param1_table, vdw_param2_table
+  !WCA
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param3_table, vdw_param4_table
+  !HYDR
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param5_table, vdw_param6_table, vdw_param7_table
+  !QQ CORR
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param8_table
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alpha_ewald, h_ewald_cut
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alphal_ewald
   REAL(DP), DIMENSION(:), ALLOCATABLE :: ewald_p_sqrt, ewald_p
