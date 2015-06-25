@@ -156,7 +156,43 @@ MODULE Energy_Routines
   IMPLICIT NONE
 
 CONTAINS
-  
+  ! FSL + APS
+  ! Calculate the dielectric permitivity from experimental fits
+  ! Only does water now.
+  SUBROUTINE Calculate_Permitivity(box_int, solvent, eps)
+    INTEGER, INTENT(IN) :: box_int
+    CHARACTER(120), INTENT(IN) :: solvent
+    REAL(DP), INTENT(OUT) :: eps
+
+    IF (solvent == 'water') THEN
+       eps = water_permitivity( temperature(box_int) )
+
+    ELSE 
+       err_msg(1) = 'Dielectric Permitivity solvent not supported'
+       err_msg(2) = solvent
+       err_msg(3) = 'Available options are'
+       err_msg(4) = 'water'
+       CALL Clean_Abort(err_msg,'Calculate_Permitivity')
+
+    ENDIF
+
+  END SUBROUTINE Calculate_Permitivity
+
+  FUNCTION water_permitivity(temp_wp)
+    ! Function returns the water dielectric permitivity for water at given temperature
+
+    REAL(DP) :: water_permitivity
+
+    REAL(DP) :: temp_wp
+    REAL(DP) :: tempc
+    REAL(DP), PARAMETER :: T0 = 87.74000000_DP, T1 = -0.40008_DP
+    REAL(DP), PARAMETER :: T2 = 9.398000E-4_DP, T3 = -1.41000E-6_DP
+    REAL(DP), PARAMETER :: tempK = 273.15_DP
+
+    !-----------------------------
+    tempc = temp_wp - tempK
+    water_permitivity = T0 + T1*tempc + T2*tempc*tempc + T3*tempc*tempc*tempc
+  END FUNCTION water_permitivity
   !----------------------------------------------------------------------------------------------
 
   SUBROUTINE Compute_Bond_Energy(at1,at2,molecule,species,energy)

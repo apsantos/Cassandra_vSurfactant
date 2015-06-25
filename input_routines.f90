@@ -696,8 +696,6 @@ SUBROUTINE Get_Pair_Style
 
   !Now determine the mixing rule to use
    CALL Get_Mixing_Rules
-  !Now get the implicit solvent information if there is any
-   CALL Get_Dielectric_Permitivity
 
   IF (.NOT. l_pair_nrg) THEN
      WRITE(logunit,*)
@@ -719,7 +717,12 @@ SUBROUTINE Get_Dielectric_Permitivity
 ! Fixed for userdefined, fit for built in experimental data.
 ! Spaces, blank lines and ! characters are ignored. 
 ! In the end only changes charge_factor
+! Only a constant permitivity throughout boxes is functional
+! - Andrew Santos
 !********************************************************************************
+
+  USE Energy_Routines
+
   INTEGER :: ierr,line_nbr,nbr_entries
   CHARACTER(120) :: line_string, line_array(20)
   CHARACTER(120) :: solvent, permitivity_method
@@ -751,14 +754,13 @@ SUBROUTINE Get_Dielectric_Permitivity
 ! Assign the first entry on the line to the mixing rule
         permitivity_method = line_array(1)
         
-        IF (permitivity_method == 'fixed') THEN
+        IF (permitivity_method == 'fixed' .OR. permitivity_method == 'fix') THEN
            WRITE(logunit,'(A)') 'User-defined dielectric permitivity used'
            permitivity = String_To_Double(line_array(2))
         ELSEIF (permitivity_method == 'fit') THEN
            WRITE(logunit,'(A)') 'fit dielectric permitivity to exp. data'
            solvent = line_array(2)
-           permitivity = 1.0
-           !CALL Calculate_Permitivity(box_t, solvent, permitivity)
+           CALL Calculate_Permitivity(1, solvent, permitivity)
         ELSE
            err_msg(1) = 'Dielectric Permitivity method not supported'
            err_msg(2) = permitivity_method
@@ -822,6 +824,7 @@ SUBROUTINE Get_Mixing_Rules
            WRITE(logunit,'(A)') 'Geometric mixing rule specified'
         ELSEIF (mix_rule == 'custom') THEN
            WRITE(logunit,'(A)') 'Custom mixing rule specified'
+        ! APS
         ELSEIF (mix_rule == 'table') THEN
            mixfile_name = line_array(2)
            WRITE(logunit,'(2A)') 'Table of parameters specified in ', mixfile_name
@@ -3621,6 +3624,9 @@ SUBROUTINE Get_Temperature_Info
 
   write(logunit,*) '*** Finished loading information for temperature ****'
   write(logunit,*)
+
+  !Now get the implicit solvent information if there is any
+   CALL Get_Dielectric_Permitivity
   
 END SUBROUTINE Get_Temperature_Info
 !------------------------------------------------------------------------------------------------------
