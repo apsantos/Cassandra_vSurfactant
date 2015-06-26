@@ -415,7 +415,6 @@ SUBROUTINE Read_Nonbond_Table
         i_line = i_line + 1
         CALL Read_String(mixfile_unit,line_string,ierr)
     ENDDO
-    CALL Parse_String(mixfile_unit, i_line, 1, nbr_entries, line_array, ierr)
     n_params = INT(nbr_atomtypes * (nbr_atomtypes + 1 ) / 2)
 
     ! Read in from the table file
