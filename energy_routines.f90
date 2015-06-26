@@ -192,7 +192,7 @@ CONTAINS
     !-----------------------------
     tempc = temp_wp - tempK
     water_permitivity = T0 + T1*tempc + T2*tempc*tempc + T3*tempc*tempc*tempc
-  END FUNCTION water_permitivity
+  END FUNCTION water_permitivity  
   !----------------------------------------------------------------------------------------------
 
   SUBROUTINE Compute_Bond_Energy(at1,at2,molecule,species,energy)
@@ -1143,7 +1143,7 @@ CONTAINS
                       
                       erf_val = 1.0_DP - erfc_val
                       
-                      Eij_qq = (qi*qj/rij)*(qsc - erf_val)*charge_factor(this_box)
+                      Eij_qq = (qi*qj/rij)*(qsc-erf_val)*charge_factor(this_box)
                       
                       
                       IF (f_intra_nrg) THEN
@@ -1527,6 +1527,7 @@ CONTAINS
   SUBROUTINE Pair_Energy &
        (rxij,ryij,rzij,rijsq,is,im,ia,js,jm,ja,get_vdw,get_qq,Eij_vdw,Eij_qq)
 
+!FSL Added Hydration Energy here, which will be added to the Eij_vdw energy. Using interaction table.
     ! LJ potential: Eij = 4*epsilon(i,j) * [ (sigma(i,j)/rij)^12 - (sigma(i,j)/rij)^6 ]
 
     ! Computes the vdw and q-q pair energy between atoms ia and ja of molecules im and jm
@@ -1559,11 +1560,17 @@ CONTAINS
 
     LOGICAL :: fraction
 
+!FSL Local Hydration Parameters
+    REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh
+
   !------------------------------------------------------------------------------------------
     Eij_vdw = 0.0_DP
     Eij_qq = 0.0_DP
     fraction = .false.
     this_lambda = 1.0_DP
+    E_hyd = 0.0_DP
+    Preexph = 0.0_DP
+    Powerh = 0.0_DP
 
     ibox = molecule_list(im,is)%which_box
 
@@ -1667,7 +1674,25 @@ CONTAINS
           ENDIF LJ_12_6_calculation
           
        ENDIF VDW_calculation
-  
+
+!FSL Hydration Energy start
+       hydration_calculation: IF(vdw_param5_table(itype,jtype) /= 0) THEN
+          Hhyd = vdw_param5_table(itype,jtype)
+          Rhyd = vdw_param6_table(itype,jtype)
+          Shyd = vdw_param7_table(itype,jtype)
+          rij = SQRT(rijsq)
+
+          Preexph = Hhyd/(Shyd*(SQRT(twopi)))
+          Powerh = ((rij - Rhyd)**2)/(2.0_DP*(Shyd**2))
+          E_hyd = Preexph*EXP(-Powerh)
+
+       ELSE
+          E_hyd = 0.0_DP
+       ENDIF hydration_calculation
+
+       Eij_vdw = Eij_vdw + E_hyd
+!FSL Hydration Energy end
+
        qq_calculation: IF (get_qq) THEN
           
           qi = nonbond_list(ia,is)%charge
@@ -1680,7 +1705,7 @@ CONTAINS
              IF ( is == js .AND. im == jm ) THEN
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
-             Eij_qq = qsc*charge_factor(this_box)*(qi*qj)/SQRT(rijsq)
+             Eij_qq = qsc*charge_factor(ibox)*(qi*qj)/SQRT(rijsq)
           ELSEIF (int_charge_sum_style(ibox) == charge_ewald .AND. ( .NOT. igas_flag) ) THEN
              ! Real space Ewald part
              this_box = molecule_list(im,is)%which_box
@@ -1701,6 +1726,8 @@ CONTAINS
   !------------------------------------------------------------------------------------------
   SUBROUTINE Ewald_Real(ia,im,is,qi,ja,jm,js,qj,rijsq,Eij,ibox)
   !------------------------------------------------------------------------------------------
+!FSL Coulomb Correction Energy inserted here and will be added to the Coulomb Energy. Using
+!table of parameters for interactions
     ! Real space part of the Ewald sum between atoms 1a and jq with 
     ! charges qi and qj.
 
@@ -1715,9 +1742,24 @@ CONTAINS
     INTEGER :: ia,im,is,ja,jm,js,ibox
     REAL(DP) :: qi,qj,qsc,rijsq,rij,erf_val
     REAL(DP) :: Eij
+!FSL Local Coulomb Correction variables
+    REAL(DP) :: E_qqcor, Cqqcor, Rqqcor, Sqqcor, ED, &
+    ul, ll, tanhqqcor
+    INTEGER :: itype, jtype
 
     qsc = 1.0_DP
-    ibox = molecule_list(im,is)%which_box 
+    ibox = molecule_list(im,is)%which_box
+    E_qqcor = 0.0_DP
+    Cqqcor = 1.0_DP
+    tanhqqcor = 0.0_DP
+    Rqqcor = 1.0_DP
+    Sqqcor = 1.0_DP
+    ED = 0.0_DP
+    ul = 1.9_DP
+    ll = 0.1_DP
+
+    itype = nonbond_list(ia,is)%atom_type_number
+    jtype = nonbond_list(ja,js)%atom_type_number
 
     ! Apply intramolecular scaling if necessary
     IF (is == js .AND. im == jm) THEN
@@ -1740,6 +1782,21 @@ CONTAINS
 !                      WRITE(60,"(4I4,2F8.5,F24.12)") ia, ja, jm, js, qi,qj, Eij
 !                   END IF
 
+!FSL QQ Cor start
+    QQ_cor_calculation: IF(vdw_param8_table(itype,jtype) /= 0) THEN
+
+       Cqqcor = species_list(is)%total_charge*species_list(js)%total_charge
+       Rqqcor = vdw_param8_table(itype,jtype)
+       Sqqcor = vdw_param7_table(itype,jtype)
+
+       tanhqqcor = DTANH((rij - Rqqcor)/Sqqcor)
+       ED = (5.2_DP + static_perm(ibox))/2.0_DP + (static_perm(ibox) - 5.2_DP)/2.0_DP*tanhqqcor
+       E_qqcor = charge_factor(ibox)*(Cqqcor/rij)*((static_perm(ibox)/ED) - 1.0_DP)
+
+    END IF QQ_cor_calculation
+
+    Eij = Eij + E_qqcor
+!FSL QQ Cor end    
 !------------------------------------------------------------------------------
   CONTAINS
 
@@ -2064,7 +2121,7 @@ CONTAINS
     END DO
     
     energy(this_box)%ewald_reciprocal = energy(this_box)%ewald_reciprocal + energy_temp
-    energy(this_box)%ewald_reciprocal = energy(this_box)%ewald_reciprocal * charge_factor(this_box)
+    energy(this_box)%ewald_reciprocal = energy(this_box)%ewald_reciprocal*charge_factor(this_box)
     
         
   END SUBROUTINE Compute_System_Ewald_Reciprocal_Energy
@@ -2182,7 +2239,8 @@ CONTAINS
        END DO
        !$OMP END PARALLEL DO
 
-       v_recip_difference = v_recip_difference * charge_factor(this_box) - energy(this_box)%ewald_reciprocal
+       v_recip_difference = v_recip_difference*charge_factor(this_box) - &
+          energy(this_box)%ewald_reciprocal
 
        RETURN
 
@@ -2208,7 +2266,7 @@ CONTAINS
 
        END DO
        !$OMP END PARALLEL DO
-       v_recip_difference = v_recip_difference * charge_factor(this_box)
+       v_recip_difference = v_recip_difference*charge_factor(this_box)
  
     ELSE IF ( move_flag == int_insertion ) THEN
 
@@ -2246,7 +2304,7 @@ CONTAINS
 
        !$OMP END PARALLEL DO
 
-       v_recip_difference = v_recip_difference * charge_factor(this_box)
+       v_recip_difference = v_recip_difference*charge_factor(this_box)
 
     END IF
 
@@ -2296,7 +2354,7 @@ CONTAINS
     END DO
 
     energy(this_box)%ewald_self = energy(this_box)%ewald_self * alpha_ewald(this_box) / rootPI
-    energy(this_box)%ewald_self = - energy(this_box)%ewald_self * charge_factor(this_box)
+    energy(this_box)%ewald_self = -energy(this_box)%ewald_self * charge_factor(this_box)
 
     ! Note that the ewald self constant computed here is slightly different than what is
     ! computed in APSS. It has a negative sign and is already multiplied by a the charge_factor(this_box)
@@ -2340,7 +2398,7 @@ CONTAINS
           V_self_difference = V_self_difference + nonbond_list(ia,is)%charge * nonbond_list(ia,is)%charge
        END DO
 
-       V_self_difference = - charge_factor(this_box) * V_self_difference * alpha_ewald(this_box)/rootPI
+       V_self_difference = -charge_factor(this_box) * V_self_difference * alpha_ewald(this_box)/rootPI
 
     ELSE IF ( move_flag == int_deletion ) THEN
 
@@ -3095,7 +3153,7 @@ CONTAINS
        
     END IF
     
-    W_tensor_elec(:,:,this_box) = (W_tensor_charge(:,:,this_box) + W_tensor_recip(:,:,this_box))*charge_factor(this_box) 
+    W_tensor_elec(:,:,this_box) = (W_tensor_charge(:,:,this_box) + W_tensor_recip(:,:,this_box))*charge_factor(this_box)
     W_tensor_total(:,:,this_box) = W_tensor_vdw(:,:,this_box) + W_tensor_elec(:,:,this_box) 
     
   END SUBROUTINE Compute_Forces
@@ -3343,7 +3401,7 @@ CONTAINS
              IF ( is == js .AND. im == jm ) THEN
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
-             Wij_qq = qsc*charge_factor(this_box)*(qi*qj)/SQRT(rijsq)
+             Wij_qq = qsc*charge_factor(ibox)*(qi*qj)/SQRT(rijsq)
           ELSEIF (int_charge_sum_style(ibox) == charge_ewald) THEN
              ! Real space Ewald part
              this_box = molecule_list(im,is)%which_box
@@ -4059,7 +4117,7 @@ CONTAINS
 
     !$OMP END PARALLEL DO
     
-    energy(this_box)%ewald_reciprocal = energy_temp * charge_factor(this_box)
+    energy(this_box)%ewald_reciprocal = energy_temp *charge_factor(this_box)
 
   END SUBROUTINE Compute_System_Ewald_Reciprocal_Energy2
 
