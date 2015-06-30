@@ -429,24 +429,33 @@ SUBROUTINE Read_Nonbond_Table
             IF (pot_type == 'LJ') THEN
                 vdw_param1_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param2_table(itype,jtype) = String_To_Double(line_array(i+2))
+                vdw_param1_table(jtype,itype) = vdw_param1_table(itype,jtype)
+                vdw_param2_table(jtype,itype) = vdw_param2_table(itype,jtype)
 
             ELSEIF (pot_type == 'WCA') THEN
                 vdw_param3_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param4_table(itype,jtype) = String_To_Double(line_array(i+2))
+                vdw_param3_table(jtype,itype) = vdw_param3_table(itype,jtype)
+                vdw_param4_table(jtype,itype) = vdw_param4_table(itype,jtype)
 
             ELSEIF (pot_type == 'HYDR') THEN
-                vdw_param5_table(itype,jtype)= String_To_Double(line_array(i+1))
+                vdw_param5_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param6_table(itype,jtype) = String_To_Double(line_array(i+2))
                 vdw_param7_table(itype,jtype) = String_To_Double(line_array(i+3))
+                vdw_param5_table(jtype,itype) = vdw_param5_table(itype,jtype)
+                vdw_param6_table(jtype,itype) = vdw_param6_table(itype,jtype)
+                vdw_param7_table(jtype,itype) = vdw_param7_table(itype,jtype)
 
             ELSEIF (pot_type == 'CORR') THEN
                 vdw_param8_table(itype,jtype) = String_To_Double(line_array(i+1))
+                vdw_param8_table(jtype,itype) = vdw_param8_table(itype,jtype)
 
             ENDIF
 
         ENDDO
     ENDDO
 
+    ! Write output
     WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8'
     DO itype = 1, nbr_atomtypes
         DO jtype = itype, nbr_atomtypes
@@ -456,7 +465,6 @@ SUBROUTINE Read_Nonbond_Table
                  vdw_param3_table(itype,jtype), vdw_param4_table(itype,jtype), &
                  vdw_param5_table(itype,jtype), vdw_param6_table(itype,jtype), &
                  vdw_param7_table(itype,jtype), vdw_param8_table(itype,jtype)
-
         ENDDO
     ENDDO
 
