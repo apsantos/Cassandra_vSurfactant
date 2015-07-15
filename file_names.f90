@@ -78,6 +78,10 @@ CHARACTER(FILENAME_LEN) :: logfile
 INTEGER :: molfile_unit = 15
 CHARACTER(FILENAME_LEN), DIMENSION(:), ALLOCATABLE :: molfile_name
 
+! Name of the file that has the cross interaction terms for all atoms in all species.
+INTEGER :: mixfile_unit = 16
+CHARACTER(FILENAME_LEN) :: mixfile_name
+
 !Variables to hold unit number and filename for the crash file
 INTEGER :: crashunit = 30
 CHARACTER(FILENAME_LEN) :: crashfile

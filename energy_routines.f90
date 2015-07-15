@@ -1690,6 +1690,7 @@ CONTAINS
 
        Eij_vdw = Eij_vdw + E_wca
 !FSL WCA end
+
 !FSL Hydration Energy start
        hydration_calculation: IF(vdw_param5_table(itype,jtype) /= 0) THEN
           Hhyd = vdw_param5_table(itype,jtype)

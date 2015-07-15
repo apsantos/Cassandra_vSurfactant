@@ -1,0 +1,5 @@
+*.o
+*.mod
+dep*
+*.exe
+dep.mkbkp

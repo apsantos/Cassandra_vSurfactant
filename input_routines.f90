@@ -709,6 +709,93 @@ END SUBROUTINE Get_Pair_Style
 
 
 !********************************************************************************
+SUBROUTINE Get_Dielectric_Permitivity
+!********************************************************************************
+! The routine searches for the keyword "# Dieletric_Permitivity" and 
+! then reads the necessary information underneath the key word. 
+! For Implicit solvent simulations.  
+! Fixed for userdefined, fit for built in experimental data.
+! Spaces, blank lines and ! characters are ignored. 
+! In the end only changes charge_factor
+! Only a constant permitivity throughout boxes is functional
+! - Andrew Santos
+!********************************************************************************
+
+  USE Energy_Routines
+
+  INTEGER :: ierr, line_nbr, nbr_entries, ibox
+  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(120) :: solvent, permitivity_method
+
+!********************************************************************************
+  ! Check to make sure that we have read in number of boxes if not then abort
+
+  IF ( .NOT. ALLOCATED(box_list) ) THEN
+     err_msg = ""
+     err_msg(1) = 'Number of boxes has not been read yet'
+     CALL Clean_Abort(err_msg,'Get_Dielectric_Permitivity')
+  END IF
+
+  REWIND(inputunit)
+
+  ALLOCATE(charge_factor(nbr_boxes))
+  ALLOCATE(static_perm(nbr_boxes))
+
+  ierr = 0
+  line_nbr = 0
+
+  permitivity_method = ''
+  DO
+     line_nbr = line_nbr + 1
+
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF (ierr .NE. 0) THEN
+        err_msg = ""
+        err_msg(1) = "Error reading dielectric permitivity."
+        CALL Clean_Abort(err_msg,'Get_Dielectric_Permitivity')
+     END IF
+
+     IF (line_string(1:25) == '# Dielectric_Permitivity') THEN
+        DO ibox = 1, nbr_boxes
+           line_nbr = line_nbr + 1
+           
+           CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+   
+   ! Assign the first entry on the line to the mixing rule
+           permitivity_method = line_array(1)
+           
+           IF (permitivity_method == 'fixed' .OR. permitivity_method == 'fix') THEN
+              WRITE(logunit,'(A)') 'User-defined dielectric permitivity used'
+              static_perm(ibox) = String_To_Double(line_array(2))
+           ELSEIF (permitivity_method == 'fit') THEN
+              WRITE(logunit,'(A)') 'fit dielectric permitivity to exp. data'
+              solvent = line_array(2)
+              CALL Calculate_Permitivity(ibox, solvent, static_perm(ibox))
+           ELSE
+              err_msg(1) = 'Dielectric Permitivity method not supported'
+              err_msg(2) = permitivity_method
+              err_msg(3) = 'Available options are'
+              err_msg(4) = 'fixed and fit'
+              CALL Clean_Abort(err_msg,'Get_Dielectric_Permitivity')
+           ENDIF
+   
+           ! Update the charge factor
+           charge_factor(ibox) = charge_factor_vacuum / static_perm(ibox)
+        ENDDO
+
+        EXIT
+
+     ELSEIF (line_string(1:3) == 'END' .or. line_nbr > 10000) THEN
+
+        EXIT
+
+     ENDIF
+
+  ENDDO
+END SUBROUTINE Get_Dielectric_Permitivity
+
+!********************************************************************************
 SUBROUTINE Get_Mixing_Rules
 !********************************************************************************
 ! The routine searches for the keyword "# Mixing_Rules" and then reads the necessary 
@@ -749,6 +836,10 @@ SUBROUTINE Get_Mixing_Rules
            WRITE(logunit,'(A)') 'Geometric mixing rule specified'
         ELSEIF (mix_rule == 'custom') THEN
            WRITE(logunit,'(A)') 'Custom mixing rule specified'
+        ! APS
+        ELSEIF (mix_rule == 'table') THEN
+           mixfile_name = line_array(2)
+           WRITE(logunit,'(2A)') 'Table of parameters specified in ', mixfile_name
         ELSE
            err_msg(1) = 'Mixing rule not supported'
            err_msg(2) = mix_rule
@@ -1446,6 +1537,9 @@ SUBROUTINE Get_Atom_Info(is)
            IF(nonbond_list(ia,is)%charge .NE. 0.0_DP) has_charge(is) = .TRUE. 
            nonbond_list(ia,is)%vdw_potential_type = line_array(6)
 	   
+
+           species_list(is)%total_charge = species_list(is)%total_charge + &
+                nonbond_list(ia,is)%charge
 
            species_list(is)%molecular_weight = species_list(is)%molecular_weight + &
                 nonbond_list(ia,is)%mass
@@ -3545,6 +3639,9 @@ SUBROUTINE Get_Temperature_Info
 
   write(logunit,*) '*** Finished loading information for temperature ****'
   write(logunit,*)
+
+  !Now get the implicit solvent information if there is any
+   CALL Get_Dielectric_Permitivity
   
 END SUBROUTINE Get_Temperature_Info
 !------------------------------------------------------------------------------------------------------

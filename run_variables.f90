@@ -124,9 +124,14 @@ USE Type_Definitions
  ! Mixing Rules variables :
   CHARACTER(40), DIMENSION(:,:), ALLOCATABLE :: vdw_interaction_table
   INTEGER, DIMENSION(:,:), ALLOCATABLE ::vdw_int_table
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param1_table
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param2_table, vdw_param3_table
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param4_table, vdw_param5_table
+  !LJ
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param1_table, vdw_param2_table
+  !WCA
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param3_table, vdw_param4_table
+  !HYDR
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param5_table, vdw_param6_table, vdw_param7_table
+  !QQ CORR
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param8_table
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alpha_ewald, h_ewald_cut
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alphal_ewald
   REAL(DP), DIMENSION(:), ALLOCATABLE :: ewald_p_sqrt, ewald_p
@@ -177,7 +182,9 @@ USE Type_Definitions
   ! full form is (qi*qj*e^2/(4*pi*epsilon0*rij)).  To simplify, the extra
   ! constant terms are subsumed into the single constant described above.
   ! The units of charge factor are:   amu A^3 / ps^2
-  REAL(DP), PARAMETER :: charge_factor = 138935.4558_DP
+  REAL(DP), PARAMETER :: charge_factor_vacuum = 138935.4558_DP
+  REAL(DP), DIMENSION(:), ALLOCATABLE :: charge_factor
+  REAL(DP), DIMENSION(:), ALLOCATABLE :: static_perm
 
   !Factor to convert atomic pressure (amu / (A ps^2) ) to bar
   REAL(DP), PARAMETER :: atomic_to_bar = 166.054_DP
