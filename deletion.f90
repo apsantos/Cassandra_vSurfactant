@@ -276,6 +276,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   END IF
   f_inter_vdw = f_inter_vdw + E_inter_vdw
   f_inter_qq = f_inter_qq + E_inter_qq
+  IF (l_pair_nrg) DEALLOCATE(pair_vdw_temp,pair_qq_temp)
   enddo
 
   CALL Compute_Molecule_Pair_Interaction(alive(1),1,alive(2),2,this_box,pair_vdw,pair_qq,poverlap)
@@ -465,7 +466,6 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 !     CALL System_Energy_Check(1,mcstep,randno)
   ELSE
 
-     do is = 1, 2
      IF ( (int_charge_sum_style(this_box) == charge_ewald) .AND. &
            (has_charge(is)) ) THEN
         ! Restore cos_sum and sin_sum. Note that these were changed when
@@ -481,7 +481,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   END IF
 
-  IF (l_pair_nrg) DEALLOCATE(pair_vdw_temp,pair_qq_temp)
+!  IF (l_pair_nrg) DEALLOCATE(pair_vdw_temp,pair_qq_temp)
 
 END SUBROUTINE Deletion
 
