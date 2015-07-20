@@ -1529,6 +1529,7 @@ CONTAINS
 
 !FSL Added Hydration Energy here, which will be added to the Eij_vdw energy. Using interaction table.
     ! LJ potential: Eij = 4*epsilon(i,j) * [ (sigma(i,j)/rij)^12 - (sigma(i,j)/rij)^6 ]
+!FSL Added WCA potential here also    
 
     ! Computes the vdw and q-q pair energy between atoms ia and ja of molecules im and jm
     ! and species is and js, given their separation rijsq. I have passed each component of 
@@ -1560,8 +1561,8 @@ CONTAINS
 
     LOGICAL :: fraction
 
-!FSL Local Hydration Parameters
-    REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh
+!FSL Local Hydration and WCA Parameters
+    REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, E_wca, epswca, rwca
 
   !------------------------------------------------------------------------------------------
     Eij_vdw = 0.0_DP
@@ -1571,6 +1572,7 @@ CONTAINS
     E_hyd = 0.0_DP
     Preexph = 0.0_DP
     Powerh = 0.0_DP
+    E_wca = 0.0_DP
 
     ibox = molecule_list(im,is)%which_box
 
@@ -1674,7 +1676,20 @@ CONTAINS
           ENDIF LJ_12_6_calculation
           
        ENDIF VDW_calculation
+!FSL WCA start
+       WCA_calculation: IF(vdw_param3_table(itype,jtype) /= 0) THEN
 
+          epswca = vdw_param3_table(itype,jtype)
+          rwca = vdw_param4_table(itype,jtype)
+          rij = SQRT(rijsq)
+
+          IF(rij .LE. rwca) E_wca = epswca
+          IF(rij .GT. rwca) E_wca = -Eij_vdw
+
+       ENDIF WCA_calculation
+
+       Eij_vdw = Eij_vdw + E_wca
+!FSL WCA end
 !FSL Hydration Energy start
        hydration_calculation: IF(vdw_param5_table(itype,jtype) /= 0) THEN
           Hhyd = vdw_param5_table(itype,jtype)
@@ -2310,6 +2325,216 @@ CONTAINS
 
   END SUBROUTINE Compute_Ewald_Reciprocal_Energy_Difference
   !********************************************************************************************
+
+!FSL criada subrotina
+  SUBROUTINE Ins_Pairs_Ewald_Reciprocal_Energy_Difference(im,im_prev,is,this_box,move_flag,V_recip_difference)
+    !************************************************************************************************
+    ! The subroutine computes the difference in Ewald reciprocal space energy for a given move.
+    !
+    ! We will develop this routine for a number of moves.
+    !
+    ! Translation of COM
+    ! Rotation about COM
+    ! Angle Distortion
+    ! Rigid Dihedral rotation
+    ! Molecule insertion
+    ! Molecule Deletion
+    !***********************************************************************************************
+
+    USE Type_Definitions
+    USE Run_Variables
+    
+    IMPLICIT NONE
+
+!    !$ include 'omp_lib.h'
+
+    INTEGER, INTENT(IN) :: im, im_prev, is, this_box
+    INTEGER, INTENT(IN) :: move_flag
+    REAL(DP), INTENT(OUT) :: V_recip_difference
+
+    ! Note that im_prev is included here in the anticipation that the routine will be used
+    ! for CFC move. At present the input value of im_prev is immaterial.
+
+
+    ! Local variables
+    
+    REAL(DP) :: const_val, stp 
+    INTEGER :: i, ia
+
+    REAL(DP) :: hdotr_new
+
+    REAL(DP) :: cos_sum_im, cos_sum_im_o, sin_sum_im, sin_sum_im_o
+
+    ! storage stuff
+
+    INTEGER :: im_locate, im_prev_locate
+
+    ! get the location of im and im_prev
+
+    IF (is==1) THEN
+       im_locate = im
+       im_prev_locate = im_prev
+    ELSE
+       im_locate = SUM(nmolecules(1:is-1)) + im
+       im_prev_locate = SUM(nmolecules(1:is-1)) + im_prev
+    END IF
+
+    const_val = 1.0_DP/(2.0_DP * alpha_ewald(this_box) * alpha_ewald(this_box))
+
+    if (move_flag == int_insertion .OR. move_flag == int_deletion) then
+    if (is == 1) then
+       V_recip_difference = 0.0_DP
+    !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)
+    cos_sum_old(1:nvecs(this_box),this_box) = cos_sum(1:nvecs(this_box),this_box)
+    sin_sum_old(1:nvecs(this_box),this_box) = sin_sum(1:nvecs(this_box),this_box)
+    !$OMP END PARALLEL WORKSHARE
+    endif
+    endif
+
+    if (move_flag /= int_insertion .AND. move_flag /= int_deletion) then
+      V_recip_difference = 0.0_DP
+     !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)
+    cos_sum_old(1:nvecs(this_box),this_box) = cos_sum(1:nvecs(this_box),this_box)
+    sin_sum_old(1:nvecs(this_box),this_box) = sin_sum(1:nvecs(this_box),this_box)
+    !$OMP END PARALLEL WORKSHARE
+    endif
+
+    IF ( move_flag == int_translation .OR. move_flag == int_rotation .OR. move_flag == int_intra ) THEN
+    
+
+
+       ! only the particle coordinates change. Therefore, the contribution of cos(hdotr) and
+       ! sin(hdotr) of the old coordinates will be subtracted off for each of reciprocal vectors
+       ! and corresponding terms for the new coordinates are added.
+
+       ! Note that the flag INTRA will refer to any of the moves that correspond to the 
+       ! intramolecular DOF change.
+       
+           
+       !$OMP PARALLEL DO DEFAULT(SHARED) &
+       !$OMP PRIVATE(i,ia,cos_sum_im,sin_sum_im) &
+       !$OMP PRIVATE(cos_sum_im_o, sin_sum_im_o) &
+       !$OMP PRIVATE(hdotr_new) &
+       !$OMP SCHEDULE(STATIC) &
+       !$OMP REDUCTION(+:v_recip_difference)
+       DO i = 1, nvecs(this_box)
+
+          cos_sum_im = 0.0_DP
+          sin_sum_im = 0.0_DP
+
+          DO ia = 1,natoms(is)
+
+             ! let us compute the old and new hdotr
+
+             hdotr_new = hx(i,this_box) * atom_list(ia,im,is)%rxp + &
+                         hy(i,this_box) * atom_list(ia,im,is)%ryp + &
+                         hz(i,this_box) * atom_list(ia,im,is)%rzp
+             
+             cos_sum_im = cos_sum_im + nonbond_list(ia,is)%charge * DCOS(hdotr_new)
+             sin_sum_im = sin_sum_im + nonbond_list(ia,is)%charge * DSIN(hdotr_new)
+
+
+          END DO
+
+          cos_sum_im_o = cos_mol(i,im_locate)
+          sin_sum_im_o = sin_mol(i,im_locate)
+
+          cos_sum(i,this_box) = cos_sum(i,this_box) + cos_sum_im - cos_sum_im_o
+          sin_sum(i,this_box) = sin_sum(i,this_box) + sin_sum_im - sin_sum_im_o
+
+          v_recip_difference = v_recip_difference + cn(i,this_box) * (cos_sum(i,this_box) * &
+               cos_sum(i,this_box) + sin_sum(i,this_box) * sin_sum(i,this_box))
+
+          ! set the molecules cos and sin terms to the one calculated here
+          cos_mol(i,im_locate) = cos_sum_im
+          sin_mol(i,im_locate) = sin_sum_im
+
+       END DO
+       !$OMP END PARALLEL DO
+
+       v_recip_difference = v_recip_difference * charge_factor(this_box) - energy(this_box)%ewald_reciprocal
+
+       RETURN
+
+    ELSE IF ( move_flag == int_deletion) THEN
+
+       ! We need to subtract off the cos(hdotr) and sin(hdor) for each of the k vectors.
+
+       !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)
+       cos_sum(1:nvecs(this_box),this_box) = cos_sum(1:nvecs(this_box),this_box) - &
+            cos_mol(1:nvecs(this_box),im_locate)
+       sin_sum(1:nvecs(this_box),this_box) = sin_sum(1:nvecs(this_box),this_box) - &
+            sin_mol(1:nvecs(this_box),im_locate)
+       !$OMP END PARALLEL WORKSHARE
+
+       if (is == 2) then
+       !$OMP PARALLEL DO DEFAULT(SHARED) &
+       !$OMP PRIVATE(i) &
+       !$OMP SCHEDULE(STATIC) &
+       !$OMP REDUCTION(+:v_recip_difference)
+       DO i = 1, nvecs(this_box)
+             
+          v_recip_difference = v_recip_difference + cn(i,this_box) * ( cos_sum(i,this_box) * cos_sum(i,this_box) + &
+                                     sin_sum(i,this_box) * sin_sum(i,this_box) )
+
+       END DO
+       !$OMP END PARALLEL DO
+       v_recip_difference = v_recip_difference * charge_factor(this_box)
+       endif
+ 
+    ELSE IF ( move_flag == int_insertion ) THEN
+
+       !$OMP PARALLEL DO DEFAULT(SHARED) &
+       !$OMP PRIVATE(i, ia, hdotr_new) &
+       !$OMP SCHEDULE(STATIC) &
+       !$OMP REDUCTION(+:v_recip_difference) 
+
+       DO i = 1, nvecs(this_box)
+
+          cos_mol(i,im_locate) = 0.0_DP
+          sin_mol(i,im_locate) = 0.0_DP
+          
+          DO ia = 1, natoms(is)
+
+             ! Compute the new hdotr vector
+
+             hdotr_new = hx(i,this_box) * atom_list(ia,im,is)%rxp + &
+                         hy(i,this_box) * atom_list(ia,im,is)%ryp + &
+                         hz(i,this_box) * atom_list(ia,im,is)%rzp
+
+             cos_mol(i,im_locate) = cos_mol(i,im_locate) +  nonbond_list(ia,is)%charge * DCOS(hdotr_new)
+             sin_mol(i,im_locate) = sin_mol(i,im_locate) +  nonbond_list(ia,is)%charge * DSIN(hdotr_new)
+
+          END DO
+
+          cos_sum(i,this_box) = cos_sum(i,this_box) + cos_mol(i,im_locate)
+          sin_sum(i,this_box) = sin_sum(i,this_box) + sin_mol(i,im_locate)
+
+       END DO
+
+       !$OMP END PARALLEL DO
+
+       if(is == 2) then
+
+       !$OMP PARALLEL DO DEFAULT(SHARED) &
+       !$OMP PRIVATE(i) &
+       !$OMP SCHEDULE(STATIC) &
+       !$OMP REDUCTION(+:v_recip_difference)
+       DO i = 1, nvecs(this_box)
+
+          v_recip_difference = v_recip_difference + cn(i,this_box) * ( cos_sum(i,this_box) * cos_sum(i,this_box) + &
+                                     sin_sum(i,this_box) * sin_sum(i,this_box) )
+
+       END DO
+       !$OMP END PARALLEL DO
+
+       v_recip_difference = v_recip_difference * charge_factor(this_box)
+       endif
+
+    END IF
+
+  END SUBROUTINE Ins_Pairs_Ewald_Reciprocal_Energy_Difference
+!FSL termino da subrotina criada
 
   SUBROUTINE Compute_System_Ewald_Self_Energy(this_box)
     ! ******************************************************************************************
