@@ -546,7 +546,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
 
      IF ( int_charge_sum_style(this_box) == charge_ewald .AND. &
           has_charge(is)) THEN
-        energy(this_box)%ewald_reciprocal = f_reciprocal_move
+        energy(this_box)%ewald_reciprocal = f_reciprocal
         energy(this_box)%ewald_self = energy(this_box)%ewald_self + f_self_diff
      END IF
 

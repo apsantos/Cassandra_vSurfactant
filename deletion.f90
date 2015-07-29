@@ -77,6 +77,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   REAL(DP) :: delta_e, delta_e_pacc
   REAL(DP) :: E_bond, E_angle, E_dihedral, E_improper
+  REAL(DP) :: f_bond, f_angle, f_dihedral, f_improper
   REAL(DP) :: E_intra_vdw, E_intra_qq
   REAL(DP) :: E_inter_vdw, E_inter_qq
   REAL(DP) :: E_reciprocal_move, E_self_move, E_lrc
