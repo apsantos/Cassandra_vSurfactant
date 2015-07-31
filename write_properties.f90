@@ -289,6 +289,24 @@ CONTAINS
          END IF
          write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
 
+      ELSE IF (prop_written == 'Energy_Recip') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = (ac_energy(this_box)%intra)/REAL(nthermo_freq,DP)
+         ELSE
+            write_buff(ii+1) = energy(this_box)%ewald_reciprocal
+         END IF
+         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
+
+      ELSE IF (prop_written == 'Energy_Self') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = (ac_energy(this_box)%intra)/REAL(nthermo_freq,DP)
+         ELSE
+            write_buff(ii+1) = energy(this_box)%ewald_self
+         END IF
+         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
+
       ELSE IF (prop_written == 'Volume') THEN
          
          IF (block_average) THEN
