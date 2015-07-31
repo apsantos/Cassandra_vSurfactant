@@ -77,6 +77,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   REAL(DP) :: delta_e, delta_e_pacc
   REAL(DP) :: E_bond, E_angle, E_dihedral, E_improper
+  REAL(DP) :: f_bond, f_angle, f_dihedral, f_improper
   REAL(DP) :: E_intra_vdw, E_intra_qq
   REAL(DP) :: E_inter_vdw, E_inter_qq
   REAL(DP) :: E_reciprocal_move, E_self_move, E_lrc
@@ -120,7 +121,6 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   f_dihedral = 0.0_DP
   f_improper = 0.0_DP
 
-  
   !*****************************************************************************
   ! Step 1) Select a species with uniform probability
   !*****************************************************************************
@@ -331,8 +331,6 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
      f_reciprocal = f_reciprocal + E_reciprocal_move
      f_self_diff = f_self_diff + E_self_move
-
-!     print *, "del", is, f_reciprocal, E_reciprocal_move, f_self_diff, E_self_move     
 
   END IF
   enddo

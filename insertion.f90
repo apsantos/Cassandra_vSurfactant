@@ -181,7 +181,6 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   molecule_list(alive(is),is)%which_box = this_box
   molecule_list(alive(is),is)%cfc_lambda = this_lambda
   molecule_list(alive(is),is)%molecule_type = int_normal
-  print *, is, alive(is)
   enddo
 
   ! With the bookkeeping completed, we are ready to attempt the insertion
@@ -456,8 +455,6 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
 
      f_reciprocal = f_reciprocal + E_reciprocal_move
      f_self_diff = f_self_diff + E_self_move
-
-!     print *, "ins", is, f_reciprocal, E_reciprocal_move, f_self_diff, E_self_move
 
   END IF
   enddo
