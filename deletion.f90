@@ -84,7 +84,6 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   REAL(DP) :: nrg_ring_frag_tot
   REAL(DP) :: ln_pacc, P_seq, P_bias, this_lambda
   REAL(DP) :: E_intra_vdw_igas, E_intra_qq_igas
-  REAL(DP) :: f_bond, f_angle, f_dihedral, f_improper
   REAL(DP) :: fp_bias, fp_seq, f_ring, adden
   REAL(DP) :: f_inter_vdw, f_inter_qq, pair_vdw, pair_qq
   REAL(DP) :: f_intra_vdw, f_intra_qq, f_reciprocal, f_self_diff
