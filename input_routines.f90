@@ -3741,6 +3741,8 @@ SUBROUTINE Get_Fugacity_Info
 
  ! initialize fugacities
 
+
+  allocate(dbpair(nbr_boxes))
   species_list(:)%fugacity = 0.0_DP
   species_list(:)%chem_potential = 0.0_DP
   species_list(:)%activity = 0.0_DP
@@ -3821,6 +3823,12 @@ SUBROUTINE Get_Fugacity_Info
            END DO
    
         END DO
+
+        do j = 1, nbr_boxes
+
+              dbpair(j) = h_plank * &
+                 DSQRT(beta(1)/(twopi*(species_list(1)%molecular_weight+species_list(2)%molecular_weight)))
+        enddo
         
         EXIT
 

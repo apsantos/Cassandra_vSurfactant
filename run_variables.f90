@@ -553,6 +553,9 @@ USE Type_Definitions
 !!!! Zeolite variables
 REAL(DP), ALLOCATABLE, DIMENSION(:) :: x_lat, y_lat, z_lat
 INTEGER :: n_lat_atoms
+
+!!!!de Broglie of pair
+REAL(DP), ALLOCATABLE, DIMENSION(:) :: dbpair
   
 END MODULE Run_Variables
 

@@ -253,6 +253,42 @@ CONTAINS
 
          write_buff(ii+1) = P_ideal(this_box) + P_inst(this_box)
 
+      ELSE IF (prop_written == 'Energy_Intra_VDW') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = (ac_energy(this_box)%intra)/REAL(nthermo_freq,DP)
+         ELSE
+            write_buff(ii+1) = energy(this_box)%intra_vdw
+         END IF
+         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
+
+      ELSE IF (prop_written == 'Energy_Inter_VDW') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = (ac_energy(this_box)%intra)/REAL(nthermo_freq,DP)
+         ELSE
+            write_buff(ii+1) = energy(this_box)%inter_vdw
+         END IF
+         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
+
+      ELSE IF (prop_written == 'Energy_Intra_Q') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = (ac_energy(this_box)%intra)/REAL(nthermo_freq,DP)
+         ELSE
+            write_buff(ii+1) = energy(this_box)%intra_q
+         END IF
+         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
+
+      ELSE IF (prop_written == 'Energy_Inter_Q') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = (ac_energy(this_box)%intra)/REAL(nthermo_freq,DP)
+         ELSE
+            write_buff(ii+1) = energy(this_box)%inter_q
+         END IF
+         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
+
       ELSE IF (prop_written == 'Volume') THEN
          
          IF (block_average) THEN
