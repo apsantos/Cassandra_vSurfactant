@@ -320,7 +320,7 @@ SUBROUTINE Read_Nonbond_Table
     INTEGER :: ierr,line_nbr,nbr_entries, is_1, is_2, ia_1, ia_2, itype_custom, jtype_custom, i_line, n_params, cur_line
     CHARACTER(120) :: line_string, line_array(20)
     CHARACTER(120) :: temp_name
-    INTEGER :: temp_type_list(30), temp_type
+    INTEGER :: temp_type_list(30), temp_type, ncheck
 
     CHARACTER(120) :: pot_type
   !********************************************************************************
@@ -350,14 +350,20 @@ SUBROUTINE Read_Nonbond_Table
                     temp_type_list(nbr_atomtypes) = temp_type
                 END IF
                 !Check which speicies and atom corresponds to this name
+                ncheck = 0
                 DO is = 1, nspecies
                     DO ia = 1, natoms(is)
                         IF (temp_name == nonbond_list(ia,is)%atom_name) THEN
                             nonbond_list(ia,is)%atom_type_number = temp_type
                             
                         ENDIF
+                        ncheck = ncheck + 1
                     ENDDO
                 ENDDO
+                IF (ncheck == tot_natoms) THEN
+                    err_msg(1) = "Atom name in mixing table ("//TRIM(temp_name)//") does not match any name in MCF file."
+                    CALL Clean_Abort(err_msg,'Get_Mixing_Rules')
+                ENDIF
             ENDDO
             CALL Read_String(mixfile_unit,line_string,ierr)
             EXIT
