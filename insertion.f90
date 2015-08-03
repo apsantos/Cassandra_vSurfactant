@@ -87,7 +87,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   REAL(DP) :: fp_bias, fp_seq
 
   LOGICAL :: inter_overlap(2), cbmc_overlap(2), intra_overlap(2), poverlap
-  LOGICAL :: accept, accept_or_reject, isfrag, isgas
+  LOGICAL :: accept, accept_or_reject, isfrag, isgas, rej_pair
 
   ! Initialize variables
   ln_pacc = 0.0_DP
@@ -112,6 +112,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   igas_en = 0.0_DP
   isfrag = .FALSE.
   isgas = .FALSE.
+  rej_pair = .FALSE.
   suben = 0.0_DP
   f_ring = 0.0_DP
   fp_bias = 1.0_DP
@@ -385,14 +386,22 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
          f_intra_qq = f_intra_qq + E_intra_qq         
  
   END IF
+  enddo
 
   ! 3.3) Reject the move if there is any core overlap
+  do is = 1, 2
   IF (cbmc_overlap(is) .OR. inter_overlap(is) .OR. intra_overlap(is)) THEN
+        rej_pair = .TRUE.
+  ENDIF
+  enddo
+
+  if (rej_pair) then
+  do is = 1, 2
      molecule_list(alive(is),is)%live = .FALSE.
      atom_list(:,alive(is),is)%exist = .FALSE.
      if (is == 2) RETURN
-  END IF
   enddo
+  endif
 
   CALL Compute_Molecule_Pair_Interaction(alive(1),1,alive(2),2,this_box,pair_vdw,pair_qq,poverlap)
 
