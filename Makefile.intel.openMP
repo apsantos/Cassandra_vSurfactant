@@ -38,7 +38,7 @@
 ##  CASS_DIR	 CASSANDRA Distribution Directory
 ##  BIN_DIR      Hard Copies of CASSANDRA Executable goes here
 
-CASS_DIR =  /home/flima/bin/
+CASS_DIR =  .
 BIN_DIR = $(CASS_DIR)
 EXEC_NAME = pairid_cassandra.exe 
 
