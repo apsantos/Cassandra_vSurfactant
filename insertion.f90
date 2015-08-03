@@ -556,6 +556,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
      energy(this_box)%inter_vdw = energy(this_box)%inter_vdw + f_inter_vdw
      energy(this_box)%inter_q = energy(this_box)%inter_q + f_inter_qq
 
+     is = 1
      IF ( int_charge_sum_style(this_box) == charge_ewald .AND. &
           has_charge(is)) THEN
         energy(this_box)%ewald_reciprocal = f_reciprocal

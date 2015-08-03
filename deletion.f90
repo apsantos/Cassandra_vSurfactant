@@ -469,6 +469,8 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 !     CALL System_Energy_Check(1,mcstep,randno)
   ELSE
 
+     is = 1
+
      IF ( (int_charge_sum_style(this_box) == charge_ewald) .AND. &
            (has_charge(is)) ) THEN
         ! Restore cos_sum and sin_sum. Note that these were changed when
