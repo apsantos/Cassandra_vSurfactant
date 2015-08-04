@@ -355,12 +355,12 @@ SUBROUTINE Read_Nonbond_Table
                     DO ia = 1, natoms(is)
                         IF (temp_name == nonbond_list(ia,is)%atom_name) THEN
                             nonbond_list(ia,is)%atom_type_number = temp_type
+                            ncheck = 1
                             
                         ENDIF
-                        ncheck = ncheck + 1
                     ENDDO
                 ENDDO
-                IF (ncheck == tot_natoms) THEN
+                IF (ncheck == 0) THEN
                     err_msg(1) = "Atom name in mixing table ("//TRIM(temp_name)//") does not match any name in MCF file."
                     CALL Clean_Abort(err_msg,'Get_Mixing_Rules')
                 ENDIF
