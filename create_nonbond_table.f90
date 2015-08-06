@@ -93,6 +93,14 @@
     ALLOCATE(vdw_param6_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param7_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param8_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    vdw_param1_table = 0.0_DP
+    vdw_param2_table = 0.0_DP
+    vdw_param3_table = 0.0_DP
+    vdw_param4_table = 0.0_DP
+    vdw_param5_table = 0.0_DP
+    vdw_param6_table = 0.0_DP
+    vdw_param7_table = 0.0_DP
+    vdw_param8_table = 0.0_DP
 
     ! Allocate memory for total number bead types in each box
     ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
