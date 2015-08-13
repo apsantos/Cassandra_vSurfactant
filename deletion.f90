@@ -84,7 +84,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   REAL(DP) :: nrg_ring_frag_tot
   REAL(DP) :: ln_pacc, P_seq, P_bias, this_lambda
   REAL(DP) :: E_intra_vdw_igas, E_intra_qq_igas
-  REAL(DP) :: fp_bias, fp_seq, f_ring, adden
+  REAL(DP) :: fp_bias, fp_seq, f_ring, adden, f_vdw_igas, f_qq_igas
   REAL(DP) :: f_inter_vdw, f_inter_qq, pair_vdw, pair_qq
   REAL(DP) :: f_intra_vdw, f_intra_qq, f_reciprocal, f_self_diff
 
@@ -379,7 +379,11 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   ! where the primes (') indicate that additional intensive terms have been
   ! absorbed into the chemical potential and fugacity, respectively.
 
+  f_vdw_igas = 0.0_DP
+  f_qq_igas = 0.0_DP
   do is = 1, 2
+  E_intra_vdw_igas = 0.0_DP
+  E_intra_qq_igas = 0.0_DP
   IF(species_list(is)%int_insert == int_igas) THEN
      igas_flag = .TRUE.
      CALL Compute_Molecule_Nonbond_Intra_Energy(alive(is),is, &
@@ -393,9 +397,11 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
      isfrag = .TRUE.
         !ln_pacc = beta(this_box) * (delta_e + E_angle + nrg_ring_frag_tot)
   END IF
+  f_vdw_igas = f_vdw_igas + E_intra_vdw_igas
+  f_qq_igas = f_qq_igas + E_intra_qq_igas
   enddo
 
-  if(isgas) adden = adden + E_intra_vdw_igas + E_intra_qq_igas
+  if(isgas) adden = adden + f_vdw_igas + f_qq_igas
   if(isfrag) adden = adden + f_angle + f_ring
 
   ln_pacc = beta(this_box) * (delta_e + adden)
