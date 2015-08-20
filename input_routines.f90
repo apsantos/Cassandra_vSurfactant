@@ -832,7 +832,7 @@ SUBROUTINE Get_Mixing_Rules
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
 
 ! Assign the first entry on the line to the mixing rule
-        mix_rule= line_array(1)
+        mix_rule = line_array(1)
         
         IF (mix_rule == 'LB') THEN
            WRITE(logunit,'(A)') 'Lorentz-Berthelot mixing rule specified'
@@ -3216,7 +3216,7 @@ SUBROUTINE Get_Intra_Scaling
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries, iimprop, is
   CHARACTER(120) :: line_string, line_array(20)
-  LOGICAL :: intrascaling_set
+  LOGICAL :: intrascaling_set, intrascaling_read
 
 !********************************************************************************
   REWIND(inputunit)
@@ -3224,6 +3224,7 @@ SUBROUTINE Get_Intra_Scaling
   ierr = 0
   line_nbr = 0
   intrascaling_set = .false.
+  intrascaling_read = .false.
   ALLOCATE(scale_1_2_vdw(nspecies));ALLOCATE(scale_1_3_vdw(nspecies))
   ALLOCATE(scale_1_4_vdw(nspecies));ALLOCATE(scale_1_N_vdw(nspecies))
   ALLOCATE(scale_1_2_charge(nspecies));ALLOCATE(scale_1_3_charge(nspecies))
@@ -3242,41 +3243,50 @@ SUBROUTINE Get_Intra_Scaling
 
      IF (line_string(1:15) == '# Intra_Scaling') THEN
         line_nbr = line_nbr + 1
-        DO is = 1, nspecies
-           IF (int_vdw_style(1) /= vdw_none) THEN
-              ! Read vdw scaling which is listed first
-              line_array = ""
-              CALL Parse_String(inputunit,line_nbr,4,nbr_entries,line_array,ierr)
-           
-              ! Test for problems reading file
-              IF (ierr /= 0) THEN
-                 err_msg = ""
-                 err_msg(1) = "Error reading Intra_Scaling info."
-                 CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
-              END IF
+        line_array = ""
+        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+        IF (line_array(1) == 'table') THEN
+           intrafile_name = line_array(2)
+           intrascaling_read = .true.
+        ELSE
+           line_nbr = line_nbr + 1
+           DO is = 1, nspecies
+              IF (int_vdw_style(1) /= vdw_none) THEN
+                 ! Read vdw scaling which is listed first
+                 line_array = ""
               
-              ! Assign the vdw scaling
-              scale_1_2_vdw(is) = String_To_Double(line_array(1))
-              scale_1_3_vdw(is) = String_To_Double(line_array(2))
-              scale_1_4_vdw(is) = String_To_Double(line_array(3))
-              scale_1_N_vdw(is) = String_To_Double(line_array(4))
-           ENDIF
+                 ! Test for problems reading file
+                 IF (ierr /= 0) THEN
+                    err_msg = ""
+                    err_msg(1) = "Error reading Intra_Scaling info."
+                    CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
+                 END IF
+                 
+                 ! Assign the vdw scaling
+                 scale_1_2_vdw(is) = String_To_Double(line_array(1))
+                 scale_1_3_vdw(is) = String_To_Double(line_array(2))
+                 scale_1_4_vdw(is) = String_To_Double(line_array(3))
+                 scale_1_N_vdw(is) = String_To_Double(line_array(4))
+                 CALL Parse_String(inputunit,line_nbr,4,nbr_entries,line_array,ierr)
+              ENDIF
+   
+              IF (int_charge_style(1) /= charge_none) THEN
+                 ! Read coul scaling which is listed second
+                 line_array = ""
+                 CALL Parse_String(inputunit,line_nbr,4,nbr_entries,line_array,ierr)
+                 
+                 scale_1_2_charge(is) = String_To_Double(line_array(1))
+                 scale_1_3_charge(is) = String_To_Double(line_array(2))
+                 scale_1_4_charge(is) = String_To_Double(line_array(3))
+                 scale_1_N_charge(is) = String_To_Double(line_array(4))
+              ENDIF
+           END DO
+           intrascaling_set = .true.
+           ! exit the loop
+   
+           EXIT
 
-           IF (int_charge_style(1) /= charge_none) THEN
-              ! Read coul scaling which is listed second
-              line_array = ""
-              CALL Parse_String(inputunit,line_nbr,4,nbr_entries,line_array,ierr)
-              
-              scale_1_2_charge(is) = String_To_Double(line_array(1))
-              scale_1_3_charge(is) = String_To_Double(line_array(2))
-              scale_1_4_charge(is) = String_To_Double(line_array(3))
-              scale_1_N_charge(is) = String_To_Double(line_array(4))
-           ENDIF
-        END DO
-        intrascaling_set = .true.
-        ! exit the loop
-
-        EXIT
+        ENDIF
 
      ELSEIF (line_string(1:3) == 'END' .or. line_nbr > 10000) THEN
 
@@ -3298,30 +3308,34 @@ SUBROUTINE Get_Intra_Scaling
 
   ENDDO
   ! Report to logfile what scaling is used.
-  IF (intrascaling_set) THEN
-     WRITE(logunit,*) 'intramolecular scaling factors explicitly set'
+  IF (intrascaling_read) THEN
+     WRITE(logunit,*) 'intramolecular scaling factors explicitly set in', intrafile_name
   ELSE
-     WRITE(logunit,*) 'Using default intramolecular scaling factors, if required'
-  ENDIF
-
-  DO is = 1, nspecies
-     WRITE(logunit,'(A,T50,I7)') 'Intra molecule scaling factors for species', is 
-     WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-2 scaling factor', scale_1_2_vdw(is)
-     WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-3 scaling factor', scale_1_3_vdw(is)
-     WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-4 scaling factor', scale_1_4_vdw(is) 
-     WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-N scaling factor', scale_1_N_vdw(is) 
-
-     WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-2 scaling factor', scale_1_2_charge(is) 
-     WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-3 scaling factor', scale_1_3_charge(is) 
-     WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-4 scaling factor', scale_1_4_charge(is) 
-     WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-N scaling factor', scale_1_N_charge(is)
-     WRITE(logunit,*) 
-  END DO
+     IF (intrascaling_set) THEN
+        WRITE(logunit,*) 'intramolecular scaling factors explicitly set'
+     ELSE
+        WRITE(logunit,*) 'Using default intramolecular scaling factors, if required'
+     ENDIF
+   
+     DO is = 1, nspecies
+        WRITE(logunit,'(A,T50,I7)') 'Intra molecule scaling factors for species', is 
+        WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-2 scaling factor', scale_1_2_vdw(is)
+        WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-3 scaling factor', scale_1_3_vdw(is)
+        WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-4 scaling factor', scale_1_4_vdw(is) 
+        WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-N scaling factor', scale_1_N_vdw(is) 
+   
+        WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-2 scaling factor', scale_1_2_charge(is) 
+        WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-3 scaling factor', scale_1_3_charge(is) 
+        WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-4 scaling factor', scale_1_4_charge(is) 
+        WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-N scaling factor', scale_1_N_charge(is)
+        WRITE(logunit,*) 
+     END DO
 
   WRITE(logunit,*)
   WRITE(logunit,*) '*** Completed assigning intramolecular scaling factors ***'
   WRITE(logunit,*)
 
+  ENDIF
 
 END SUBROUTINE Get_Intra_Scaling
 !********************************************************************************
