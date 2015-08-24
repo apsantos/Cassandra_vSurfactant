@@ -481,7 +481,8 @@ USE Type_Definitions
   LOGICAL, DIMENSION(:), ALLOCATABLE :: has_charge
   LOGICAL :: get_fragorder, l_check
 
-  INTEGER :: imreplace, isreplace
+  INTEGER :: imreplace = 0
+  INTEGER :: isreplace = 0
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
