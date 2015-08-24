@@ -84,7 +84,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   REAL(DP) :: nrg_ring_frag_tot
   REAL(DP) :: ln_pacc, P_seq, P_bias, this_lambda
   REAL(DP) :: E_intra_vdw_igas, E_intra_qq_igas
-  REAL(DP) :: fp_bias, fp_seq, f_ring, adden
+  REAL(DP) :: fp_bias, fp_seq, f_ring, adden, f_vdw_igas, f_qq_igas
   REAL(DP) :: f_inter_vdw, f_inter_qq, pair_vdw, pair_qq
   REAL(DP) :: f_intra_vdw, f_intra_qq, f_reciprocal, f_self_diff
 
@@ -115,7 +115,11 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   isgas = .FALSE.
   isfrag = .FALSE.
   adden = 0.0_DP
-  
+  f_bond = 0.0_DP
+  f_angle = 0.0_DP
+  f_dihedral = 0.0_DP
+  f_improper = 0.0_DP
+
   !*****************************************************************************
   ! Step 1) Select a species with uniform probability
   !*****************************************************************************
@@ -277,7 +281,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   END IF
   f_inter_vdw = f_inter_vdw + E_inter_vdw
   f_inter_qq = f_inter_qq + E_inter_qq
-  IF (l_pair_nrg) DEALLOCATE(pair_vdw_temp,pair_qq_temp)
+  if(l_pair_nrg) DEALLOCATE(pair_vdw_temp,pair_qq_temp)
   enddo
 
   CALL Compute_Molecule_Pair_Interaction(alive(1),1,alive(2),2,this_box,pair_vdw,pair_qq,poverlap)
@@ -327,8 +331,6 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
      f_reciprocal = f_reciprocal + E_reciprocal_move
      f_self_diff = f_self_diff + E_self_move
 
-     print *, "del", is, f_reciprocal, E_reciprocal_move, f_self_diff, E_self_move     
-
   END IF
   enddo
 
@@ -377,7 +379,11 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   ! where the primes (') indicate that additional intensive terms have been
   ! absorbed into the chemical potential and fugacity, respectively.
 
+  f_vdw_igas = 0.0_DP
+  f_qq_igas = 0.0_DP
   do is = 1, 2
+  E_intra_vdw_igas = 0.0_DP
+  E_intra_qq_igas = 0.0_DP
   IF(species_list(is)%int_insert == int_igas) THEN
      igas_flag = .TRUE.
      CALL Compute_Molecule_Nonbond_Intra_Energy(alive(is),is, &
@@ -391,9 +397,11 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
      isfrag = .TRUE.
         !ln_pacc = beta(this_box) * (delta_e + E_angle + nrg_ring_frag_tot)
   END IF
+  f_vdw_igas = f_vdw_igas + E_intra_vdw_igas
+  f_qq_igas = f_qq_igas + E_intra_qq_igas
   enddo
 
-  if(isgas) adden = adden + E_intra_vdw_igas + E_intra_qq_igas
+  if(isgas) adden = adden + f_vdw_igas + f_qq_igas
   if(isfrag) adden = adden + f_angle + f_ring
 
   ln_pacc = beta(this_box) * (delta_e + adden)
@@ -466,6 +474,8 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
 !     CALL System_Energy_Check(1,mcstep,randno)
   ELSE
+
+     is = 1
 
      IF ( (int_charge_sum_style(this_box) == charge_ewald) .AND. &
            (has_charge(is)) ) THEN

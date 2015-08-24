@@ -87,7 +87,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   REAL(DP) :: fp_bias, fp_seq
 
   LOGICAL :: inter_overlap(2), cbmc_overlap(2), intra_overlap(2), poverlap
-  LOGICAL :: accept, accept_or_reject, isfrag, isgas
+  LOGICAL :: accept, accept_or_reject, isfrag, isgas, rej_pair
 
   ! Initialize variables
   ln_pacc = 0.0_DP
@@ -112,10 +112,12 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   igas_en = 0.0_DP
   isfrag = .FALSE.
   isgas = .FALSE.
+  rej_pair = .FALSE.
   suben = 0.0_DP
   f_ring = 0.0_DP
   fp_bias = 1.0_DP
   fp_seq = 1.0_DP
+  delta_e = 0.0_DP
 
   !*****************************************************************************
   ! Step 1) Randomly select a species
@@ -164,7 +166,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
 
   do is = 1, 2
   ntrials(is,this_box)%insertion = ntrials(is,this_box)%insertion + 1
-  tot_trials(this_box) = tot_trials(this_box) + 1
+  if(is == 1) tot_trials(this_box) = tot_trials(this_box) + 1
 
   !  * Assign a locate number for this molecule
 
@@ -209,6 +211,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
      get_fragorder = .TRUE.
      P_seq = 1.0_DP
      P_bias = 1.0_DP
+     nrg_ring_frag_tot = 0.0_DP
      ALLOCATE(frag_order(nfragments(is)))
      CALL Build_Molecule(alive(is),is,this_box,frag_order,this_lambda, &
              P_seq,P_bias,nrg_ring_frag_tot,cbmc_overlap(is))
@@ -352,6 +355,10 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! detect core overlaps.
 
   do is = 1, 2
+  E_inter_vdw = 0.0_DP
+  E_inter_qq = 0.0_DP
+  E_intra_vdw = 0.0_DP
+  E_intra_qq = 0.0_DP
   IF (.NOT. cbmc_overlap(is)) THEN
 
     ! Molecule COM may be outside the box boundary if grown via CBMC, so wrap
@@ -379,14 +386,22 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
          f_intra_qq = f_intra_qq + E_intra_qq         
  
   END IF
+  enddo
 
   ! 3.3) Reject the move if there is any core overlap
+  do is = 1, 2
   IF (cbmc_overlap(is) .OR. inter_overlap(is) .OR. intra_overlap(is)) THEN
+        rej_pair = .TRUE.
+  ENDIF
+  enddo
+
+  if (rej_pair) then
+  do is = 1, 2
      molecule_list(alive(is),is)%live = .FALSE.
      atom_list(:,alive(is),is)%exist = .FALSE.
      if (is == 2) RETURN
-  END IF
   enddo
+  endif
 
   CALL Compute_Molecule_Pair_Interaction(alive(1),1,alive(2),2,this_box,pair_vdw,pair_qq,poverlap)
 
@@ -397,14 +412,18 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   !
   ! Already have the change in nonbonded energies
 
-  delta_e = E_inter_vdw + E_inter_qq 
-  delta_e = delta_e + E_intra_vdw + E_intra_qq
+  delta_e = f_inter_vdw + f_inter_qq 
+  delta_e = delta_e + f_intra_vdw + f_intra_qq
 
   ! 3.4) Bonded intramolecular energies
   ! If the molecule was grown via CBMC, we already have the intramolecular 
   ! bond energies? Otherwise we need to compute them.
 
   do is = 1, 2
+  E_bond = 0.0_DP
+  E_angle = 0.0_DP
+  E_dihedral = 0.0_DP
+  E_improper = 0.0_DP
   IF(species_list(is)%int_insert == int_random) THEN
 
      CALL Compute_Molecule_Bond_Energy(alive(is),is,E_bond)
@@ -433,6 +452,8 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! 3.5) Ewald energies
 
   do is = 1, 2
+  E_reciprocal_move = 0.0_DP
+  E_self_move = 0.0_DP
   IF ( (int_charge_sum_style(this_box) == charge_ewald) .AND. &
        (has_charge(is)) ) THEN
  
@@ -443,8 +464,6 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
 
      f_reciprocal = f_reciprocal + E_reciprocal_move
      f_self_diff = f_self_diff + E_self_move
-
-     print *, "ins", is, f_reciprocal, E_reciprocal_move, f_self_diff, E_self_move
 
   END IF
   enddo
@@ -530,7 +549,9 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   
   IF (accept) THEN
      ! update the number of molecules
+     do is = 1, 2
      nmols(is,this_box) = nmols(is,this_box) + 1
+     enddo
      ! update the energies
      energy(this_box)%total = energy(this_box)%total + delta_e
      energy(this_box)%intra = energy(this_box)%intra + f_bond + f_angle &
@@ -544,6 +565,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
      energy(this_box)%inter_vdw = energy(this_box)%inter_vdw + f_inter_vdw
      energy(this_box)%inter_q = energy(this_box)%inter_q + f_inter_qq
 
+     is = 1
      IF ( int_charge_sum_style(this_box) == charge_ewald .AND. &
           has_charge(is)) THEN
         energy(this_box)%ewald_reciprocal = f_reciprocal

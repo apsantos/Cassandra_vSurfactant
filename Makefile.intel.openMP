@@ -40,7 +40,7 @@
 
 CASS_DIR =  .
 BIN_DIR = $(CASS_DIR)
-EXEC_NAME = cassandra_intel_openMP.exe 
+EXEC_NAME = pairid_cassandra.exe 
 
 ####################################################################
 ##  Known Machine Types
@@ -57,7 +57,7 @@ FC = ifort
 LIBS = 
 INCS = 
 #
-F90FLAGS = -c -O3 -openmp
+F90FLAGS = -c -O3 -openmp -traceback
 LINKFLAGS = -openmp
 
 

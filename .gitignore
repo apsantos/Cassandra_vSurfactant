@@ -3,3 +3,4 @@
 dep*
 *.exe
 dep.mkbkp
+Makefile*

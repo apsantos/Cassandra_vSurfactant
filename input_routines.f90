@@ -787,6 +787,10 @@ SUBROUTINE Get_Dielectric_Permitivity
         EXIT
 
      ELSEIF (line_string(1:3) == 'END' .or. line_nbr > 10000) THEN
+        DO ibox = 1, nbr_boxes
+           static_perm(ibox) = 1.0_DP
+           charge_factor(ibox) = charge_factor_vacuum
+        ENDDO
 
         EXIT
 
