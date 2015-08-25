@@ -53,12 +53,13 @@ SUBROUTINE Create_Intra_Exclusion_Table
 
   INTEGER :: is,ii,jj,kk
 !-----------------------------------------------------------------------------
+
   ALLOCATE(vdw_intra_scale(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
   ALLOCATE(charge_intra_scale(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
 
   IF (AllocateStatus .NE. 0) THEN
      err_msg = ''
-     err_msg(1) = ' ERROR: Not enough memory for scaling tabless '
+     err_msg(1) = ' ERROR: Not enough memory for scaling tables '
      CALL Clean_Abort(err_msg,'ceate_intra_exclusion_table')
   END IF
   
@@ -145,6 +146,11 @@ SUBROUTINE Create_Intra_Exclusion_Table
      
   ENDDO SpeciesLoop
 
+  ! Overwrite values if defined by the user
+  IF (intrafile_name .NE. "") THEN
+     CALL Read_Intra_Exclusion_Table
+  ENDIF
+
   ! report info to log
   WRITE(logunit,*)
   WRITE(logunit,*) '*** Creating exclusion table ***'
@@ -168,3 +174,121 @@ SUBROUTINE Create_Intra_Exclusion_Table
 
 
 END SUBROUTINE Create_Intra_Exclusion_Table
+
+SUBROUTINE Read_Intra_Exclusion_Table
+  !-----------------------------------------------------------------------------
+  ! Reads in a file that explicitly defines the intra scaling of user-defined
+  ! atoms.
+  ! If they are not defined by the user then, the default values are used.
+  ! Throws errors if the names in the file do not coincide with MCF files or if
+  ! the two atoms are not part of the same molecule.
+  !
+  ! Called by
+  !
+  !   Create_Intra_Exclusion_Table
+  !
+  ! Revision history
+  !
+  !   8/20/15 
+  !
+  !   - Andrew P. Santos
+  !-----------------------------------------------------------------------------  
+  USE Run_Variables
+  USE Type_Definitions
+  USE IO_Utilities
+  USE File_Names
+
+  IMPLICIT NONE
+
+  INTEGER :: is,ia,ii,jj,kk,js,ja
+  INTEGER :: ierr,line_nbr,nbr_entries, i_line
+  INTEGER :: t_atoms
+  INTEGER, ALLOCATABLE, DIMENSION(:,:) :: temp_type
+
+  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(6) :: temp_name
+!-----------------------------------------------------------------------------
+    ! Open intra scalingfile and find the line where the data begins
+    OPEN(UNIT=intrafile_unit,FILE=intrafile_name,STATUS="OLD",IOSTAT=openstatus,ACTION="READ")
+    CALL Read_String(intrafile_unit,line_string,ierr)
+    IF (ierr .NE. 0) THEN
+        err_msg = ""
+        err_msg(1) = "Error reading intra scaling values."
+        CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+    END IF
+    i_line = 1
+    ALLOCATE(temp_type( SUM(natoms(:)), nspecies ) )
+    DO 
+        IF (line_string(1:12) == '# Atom_Types') THEN
+            DO is = 1, nspecies
+               DO ia = 1, natoms(is)
+                  CALL Parse_String(intrafile_unit, i_line, 1, nbr_entries, line_array, ierr)
+                  temp_name = line_array(1)
+                  IF (ANY(temp_name == nonbond_list(:,is)%atom_name ) == .FALSE.) THEN
+                     err_msg(1) = "Atom name and type in Intra Scaling table (" &
+                                   //TRIM(temp_name)//") does not match the MCF file."
+                     err_msg(2) = "Make sure the atom list in the file starts with &
+                                   species 1 then 2 and so on."
+                     CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+                  ENDIF
+
+                  temp_type(ia, is) = String_To_Int(line_array(2)) 
+
+                  i_line = i_line + 1
+               ENDDO
+            ENDDO
+            DO is = 1, nspecies
+               DO js = is+1, nspecies
+                  IF (ANY(temp_type(:natoms(is),is) == temp_type(:natoms(js),js))) THEN
+                     err_msg(1) = "Atom types between among species"
+                     err_msg(2) = "must be unique in the intra scaling table."
+                     CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+                  ENDIF
+               ENDDO
+            ENDDO
+        ELSEIF (line_string(1:15) == '# Intra_Scaling') THEN
+           ! read in values
+           DO
+              CALL Parse_String(intrafile_unit, i_line, 2, nbr_entries, line_array, ierr)
+              IF (TRIM(line_array(2)) == 'Done_Intra_Scaling') THEN
+                EXIT
+              ENDIF
+   
+              ii = String_To_Double(line_array(1))
+              jj = String_To_Double(line_array(2))
+              t_atoms = 0
+              DO is = 1, nspecies
+                 t_atoms = t_atoms + temp_type(natoms(is),is)
+                 IF ( ii <= t_atoms ) THEN
+                    IF ( jj > t_atoms .OR. jj <= (t_atoms - natoms(is)) ) THEN
+                       err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule."
+                       CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+                    ENDIF
+                    EXIT
+                 ENDIF
+              ENDDO
+
+              DO ia = 1, natoms(is)
+                 IF ( ii == temp_type(ia,is)) THEN
+                    DO ja = 1, natoms(is)
+                       IF ( jj == temp_type(ja,is)) THEN
+                         vdw_intra_scale(ia,ja,is) = String_To_Double(line_array(3))
+                         vdw_intra_scale(ja,ia,is) = String_To_Double(line_array(3))
+                         charge_intra_scale(ia,ja,is) = String_To_Double(line_array(4))
+                         charge_intra_scale(ja,ia,is) = String_To_Double(line_array(4))
+                       ENDIF
+                    ENDDO
+                 ENDIF
+              ENDDO
+              i_line = i_line + 1
+           ENDDO
+
+           EXIT  
+        ENDIF
+
+        i_line = i_line + 1
+        CALL Read_String(intrafile_unit,line_string,ierr)
+    ENDDO
+    CLOSE(UNIT=intrafile_unit)
+
+END SUBROUTINE Read_Intra_Exclusion_Table

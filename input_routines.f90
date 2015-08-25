@@ -3225,6 +3225,7 @@ SUBROUTINE Get_Intra_Scaling
   line_nbr = 0
   intrascaling_set = .false.
   intrascaling_read = .false.
+  intrafile_name = ""
   ALLOCATE(scale_1_2_vdw(nspecies));ALLOCATE(scale_1_3_vdw(nspecies))
   ALLOCATE(scale_1_4_vdw(nspecies));ALLOCATE(scale_1_N_vdw(nspecies))
   ALLOCATE(scale_1_2_charge(nspecies));ALLOCATE(scale_1_3_charge(nspecies))
@@ -3248,10 +3249,11 @@ SUBROUTINE Get_Intra_Scaling
         IF (line_array(1) == 'table') THEN
            intrafile_name = line_array(2)
            intrascaling_read = .true.
+
         ELSE
-           line_nbr = line_nbr + 1
            DO is = 1, nspecies
               IF (int_vdw_style(1) /= vdw_none) THEN
+                 line_nbr = line_nbr + 1
                  ! Read vdw scaling which is listed first
                  line_array = ""
               
@@ -3271,6 +3273,7 @@ SUBROUTINE Get_Intra_Scaling
               ENDIF
    
               IF (int_charge_style(1) /= charge_none) THEN
+                 line_nbr = line_nbr + 1
                  ! Read coul scaling which is listed second
                  line_array = ""
                  CALL Parse_String(inputunit,line_nbr,4,nbr_entries,line_array,ierr)
@@ -3282,13 +3285,13 @@ SUBROUTINE Get_Intra_Scaling
               ENDIF
            END DO
            intrascaling_set = .true.
-           ! exit the loop
    
-           EXIT
 
         ENDIF
+        ! exit the loop
+        EXIT
 
-     ELSEIF (line_string(1:3) == 'END' .or. line_nbr > 10000) THEN
+     ELSEIF (line_string(1:3) == 'END' .or. line_nbr > 10000 .or. intrascaling_set) THEN
 
         ! No intrascaling set explicitly - use default.
         
