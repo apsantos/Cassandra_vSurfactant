@@ -3847,8 +3847,8 @@ SUBROUTINE Get_Fugacity_Info
 
         do j = 1, nbr_boxes
 
-              dbpair(j) = h_plank * &
-                 DSQRT(beta(1)/(twopi*(species_list(1)%molecular_weight+species_list(2)%molecular_weight)))
+              dbpair(j) = &
+              species_list(1)%de_broglie(j)*species_list(2)%de_broglie(j)
         enddo
         
         EXIT

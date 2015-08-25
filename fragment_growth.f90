@@ -1280,6 +1280,7 @@ SUBROUTINE Fragment_Order(this_frag,is,frag_total,frag_order,live,P_seq)
      !   Step 2) Select which fragment to add next
      !**************************************************************************
      ! Choose a random fragment
+     ! aps COULD BE an ERROR rranf sometimes outputs 1, then i_frag could be 3 if nconnect=2
      i_frag = INT( rranf() * n_connect ) + 1
      i_frag_id = hanging_connections(i_frag)
      P_seq = P_seq / n_connect ! fragment chosen with uniform probability
