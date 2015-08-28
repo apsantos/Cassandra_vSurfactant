@@ -3244,50 +3244,55 @@ SUBROUTINE Get_Intra_Scaling
 
      IF (line_string(1:15) == '# Intra_Scaling') THEN
         line_nbr = line_nbr + 1
-        line_array = ""
-        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
-        IF (line_array(1) == 'table') THEN
-           intrafile_name = line_array(2)
-           intrascaling_read = .true.
-
-        ELSE
-           DO is = 1, nspecies
-              IF (int_vdw_style(1) /= vdw_none) THEN
-                 line_nbr = line_nbr + 1
-                 ! Read vdw scaling which is listed first
-                 line_array = ""
+        DO is = 1, nspecies
+           IF (int_vdw_style(1) /= vdw_none) THEN
+              ! Read vdw scaling which is listed first
+              line_array=""
+              CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+           
+              ! Test for problems reading file
+              IF (ierr /= 0) THEN
+                 err_msg = ""
+                 err_msg(1) = "Error reading Intra_Scaling info."
+                 CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
+              ELSEIF (line_array(1) == 'table') THEN
+                 intrafile_name = line_array(2)
+                 intrascaling_read = .true.
+                 EXIT
+              END IF
               
-                 ! Test for problems reading file
-                 IF (ierr /= 0) THEN
-                    err_msg = ""
-                    err_msg(1) = "Error reading Intra_Scaling info."
-                    CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
-                 END IF
-                 
-                 ! Assign the vdw scaling
-                 scale_1_2_vdw(is) = String_To_Double(line_array(1))
-                 scale_1_3_vdw(is) = String_To_Double(line_array(2))
-                 scale_1_4_vdw(is) = String_To_Double(line_array(3))
-                 scale_1_N_vdw(is) = String_To_Double(line_array(4))
-                 CALL Parse_String(inputunit,line_nbr,4,nbr_entries,line_array,ierr)
-              ENDIF
-   
-              IF (int_charge_style(1) /= charge_none) THEN
-                 line_nbr = line_nbr + 1
-                 ! Read coul scaling which is listed second
-                 line_array = ""
-                 CALL Parse_String(inputunit,line_nbr,4,nbr_entries,line_array,ierr)
-                 
-                 scale_1_2_charge(is) = String_To_Double(line_array(1))
-                 scale_1_3_charge(is) = String_To_Double(line_array(2))
-                 scale_1_4_charge(is) = String_To_Double(line_array(3))
-                 scale_1_N_charge(is) = String_To_Double(line_array(4))
-              ENDIF
-           END DO
-           intrascaling_set = .true.
+              ! Assign the vdw scaling
+              scale_1_2_vdw(is) = String_To_Double(line_array(1))
+              scale_1_3_vdw(is) = String_To_Double(line_array(2))
+              scale_1_4_vdw(is) = String_To_Double(line_array(3))
+              scale_1_N_vdw(is) = String_To_Double(line_array(4))
+           ENDIF
+
+           IF (int_charge_style(1) /= charge_none) THEN
+              ! Read coul scaling which is listed second
+              CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+
+              ! Test for problems reading file
+              IF (ierr /= 0) THEN
+                 err_msg = ""
+                 err_msg(1) = "Error reading Intra_Scaling info."
+                 CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
+
+              ELSEIF (line_array(1) == 'table') THEN
+                 intrafile_name = line_array(2)
+                 intrascaling_read = .true.
+                 EXIT
+              END IF
+              
+              scale_1_2_charge(is) = String_To_Double(line_array(1))
+              scale_1_3_charge(is) = String_To_Double(line_array(2))
+              scale_1_4_charge(is) = String_To_Double(line_array(3))
+              scale_1_N_charge(is) = String_To_Double(line_array(4))
+           ENDIF
+        END DO
+        intrascaling_set = .true.
    
 
-        ENDIF
         ! exit the loop
         EXIT
 
