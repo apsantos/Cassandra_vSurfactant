@@ -192,6 +192,9 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   !
   ! These steps are implemented in the subroutine Build_Molecule
   do is = 1, 2
+  P_seq = 1.0_DP
+  P_bias = 1.0_DP
+  nrg_ring_frag_tot = 0.0_DP
   IF(species_list(is)%fragment .AND. &
      (species_list(is)%int_insert .NE. int_igas)) THEN
 
