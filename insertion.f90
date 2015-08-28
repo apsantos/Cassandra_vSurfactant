@@ -202,6 +202,9 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   !     is chosen at random. Position and orientation are random.
  
   do is = 1, 2 
+  P_seq = 1.0_DP
+  P_bias = 1.0_DP
+  nrg_ring_frag_tot = 0.0_DP
   IF (species_list(is)%fragment .AND. &
      (species_list(is)%int_insert .NE. int_igas) ) THEN
 
@@ -209,9 +212,6 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
      ! to place the additional fragments 
      del_flag = .FALSE.     ! Change the coordinates of 'alive(is)'
      get_fragorder = .TRUE.
-     P_seq = 1.0_DP
-     P_bias = 1.0_DP
-     nrg_ring_frag_tot = 0.0_DP
      ALLOCATE(frag_order(nfragments(is)))
      CALL Build_Molecule(alive(is),is,this_box,frag_order,this_lambda, &
              P_seq,P_bias,nrg_ring_frag_tot,cbmc_overlap(is))
