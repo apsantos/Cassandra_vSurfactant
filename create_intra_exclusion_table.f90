@@ -272,10 +272,19 @@ SUBROUTINE Read_Intra_Exclusion_Table
                  IF ( ii == temp_type(ia,is)) THEN
                     DO ja = 1, natoms(is)
                        IF ( jj == temp_type(ja,is)) THEN
-                         vdw_intra_scale(ia,ja,is) = String_To_Double(line_array(3))
-                         vdw_intra_scale(ja,ia,is) = String_To_Double(line_array(3))
-                         charge_intra_scale(ia,ja,is) = String_To_Double(line_array(4))
-                         charge_intra_scale(ja,ia,is) = String_To_Double(line_array(4))
+                          IF (int_vdw_style(1) /= vdw_none) THEN
+                             vdw_intra_scale(ia,ja,is) = String_To_Double(line_array(3))
+                             vdw_intra_scale(ja,ia,is) = String_To_Double(line_array(3))
+                          ENDIF
+                          IF (int_charge_style(1) /= charge_none) THEN
+                             IF (int_vdw_style(1) /= vdw_none) THEN
+                                charge_intra_scale(ia,ja,is) = String_To_Double(line_array(4))
+                                charge_intra_scale(ja,ia,is) = String_To_Double(line_array(4))
+                             ELSE
+                                charge_intra_scale(ia,ja,is) = String_To_Double(line_array(3))
+                                charge_intra_scale(ja,ia,is) = String_To_Double(line_array(3))
+                             ENDIF
+                          ENDIF
                        ENDIF
                     ENDDO
                  ENDIF
