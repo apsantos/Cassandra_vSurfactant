@@ -1121,7 +1121,7 @@ CONTAINS
                    sig = vdw_param2_table(itype,jtype)
                    qi = nonbond_list(ia,is)%charge
                    qj = nonbond_list(this_atom,this_species)%charge
-                   
+                        
                    this_lambda_lj = 1.0_DP
                    
                    IF(is == this_species .AND. im == this_molecule) THEN
@@ -1677,7 +1677,8 @@ CONTAINS
           
        ENDIF VDW_calculation
 !FSL WCA start
-       WCA_calculation: IF(vdw_param3_table(itype,jtype) /= 0) THEN
+       WCA_calculation: IF(vdw_param3_table(itype,jtype) /= 0 .AND. &
+        im /= jm) THEN
 
           epswca = vdw_param3_table(itype,jtype)
           rwca = vdw_param4_table(itype,jtype)
@@ -1686,9 +1687,9 @@ CONTAINS
           IF(rij .LE. rwca) E_wca = epswca
           IF(rij .GT. rwca) E_wca = -Eij_vdw
 
-       ENDIF WCA_calculation
+        Eij_vdw = Eij_vdw + E_wca
 
-       Eij_vdw = Eij_vdw + E_wca
+       ENDIF WCA_calculation
 !FSL WCA end
 !FSL Hydration Energy start
        hydration_calculation: IF(vdw_param5_table(itype,jtype) /= 0) THEN
@@ -1807,7 +1808,6 @@ CONTAINS
        tanhqqcor = DTANH((rij - Rqqcor)/Sqqcor)
        ED = (5.2_DP + static_perm(ibox))/2.0_DP + (static_perm(ibox) - 5.2_DP)/2.0_DP*tanhqqcor
        E_qqcor = charge_factor(ibox)*(Cqqcor/rij)*((static_perm(ibox)/ED) - 1.0_DP)
-
     END IF QQ_cor_calculation
 
     Eij = Eij + E_qqcor
@@ -3082,6 +3082,9 @@ CONTAINS
           
           epsij = vdw_param1_table(ia,ja)
           sigij = vdw_param2_table(ia,ja)
+
+
+          IF(vdw_param3_table(ia,ja) /= 0) CYCLE
           
           sigij2 = sigij*sigij
           
