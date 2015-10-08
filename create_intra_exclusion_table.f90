@@ -277,7 +277,7 @@ SUBROUTINE Read_Intra_Exclusion_Table
                              vdw_intra_scale(ja,ia,is) = String_To_Double(line_array(3))
                           ENDIF
                           IF (int_charge_style(1) /= charge_none) THEN
-                             IF (int_vdw_style(1) /= vdw_none) THEN
+                             IF (nbr_entries == 4) THEN
                                 charge_intra_scale(ia,ja,is) = String_To_Double(line_array(4))
                                 charge_intra_scale(ja,ia,is) = String_To_Double(line_array(4))
                              ELSE
