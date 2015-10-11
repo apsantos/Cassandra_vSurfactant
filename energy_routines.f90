@@ -1585,6 +1585,32 @@ CONTAINS
        
        VDW_calculation: IF (get_vdw) THEN
 
+!WCA calculation
+       IF(vdw_param3_table(itype,jtype) /= 0 .AND. is /= js & 
+        .OR. vdw_param3_table(itype,jtype) /= 0 .AND. is == js .AND. &
+        im /= jm) THEN
+
+          sig = vdw_param2_table(itype,jtype)
+
+          epswca = vdw_param3_table(itype,jtype)
+          rwca = vdw_param4_table(itype,jtype)
+          rij = SQRT(rijsq)
+
+          Eij_vdw = 0.0_DP
+
+          SigOverRsq = (sig**2) / rijsq
+          SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
+          SigOverR12 = SigOverR6 * SigOverR6
+
+          Eij_vdw = 4.0_DP * epswca * (SigOverR12 - SigOverR6)
+
+          IF(rij .LE. rwca) E_wca = epswca
+          IF(rij .GT. rwca) E_wca = -Eij_vdw
+
+        Eij_vdw = Eij_vdw + E_wca
+!End WCA calculation
+       ELSE
+
           LJ_12_6_calculation: IF (int_vdw_style(1) == vdw_lj) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
@@ -1674,23 +1700,9 @@ CONTAINS
              
              
           ENDIF LJ_12_6_calculation
-          
+!Closing loop for checking WCA
+       ENDIF 
        ENDIF VDW_calculation
-!FSL WCA start
-       WCA_calculation: IF(vdw_param3_table(itype,jtype) /= 0 .AND. &
-        im /= jm) THEN
-
-          epswca = vdw_param3_table(itype,jtype)
-          rwca = vdw_param4_table(itype,jtype)
-          rij = SQRT(rijsq)
-
-          IF(rij .LE. rwca) E_wca = epswca
-          IF(rij .GT. rwca) E_wca = -Eij_vdw
-
-        Eij_vdw = Eij_vdw + E_wca
-
-       ENDIF WCA_calculation
-!FSL WCA end
 !FSL Hydration Energy start
        hydration_calculation: IF(vdw_param5_table(itype,jtype) /= 0) THEN
           Hhyd = vdw_param5_table(itype,jtype)
