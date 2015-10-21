@@ -101,8 +101,12 @@ MODULE Type_Definitions
      INTEGER :: ndisp_atoms
      INTEGER :: nmoltotal
      INTEGER :: int_species_type, int_insert
+      
      INTEGER, DIMENSION(:), ALLOCATABLE :: disp_atom_id, disp_atom_ref
      LOGICAL :: f_atom_disp
+
+     ! for pair insertion of species
+     LOGICAL :: pair_insert
 
      LOGICAL :: fragment
      LOGICAL :: linear

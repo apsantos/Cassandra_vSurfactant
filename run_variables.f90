@@ -446,6 +446,7 @@ USE Type_Definitions
   REAL(DP) :: prob_deletion, prob_swap, prob_regrowth, prob_ring, prob_atom_displacement
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_rot_species
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_swap_species
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: prob_species_ins_pair ! APS
   REAL(DP), ALLOCATABLE :: prob_swap_boxes(:,:)
 
   LOGICAL :: l_mol_frac_swap

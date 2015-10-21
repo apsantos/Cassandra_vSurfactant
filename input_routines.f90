@@ -3881,11 +3881,12 @@ SUBROUTINE Get_Move_Probabilities
   IMPLICIT NONE
 
   INTEGER :: ierr, nbr_entries, line_nbr,i, j, ibox, is, vol_int
+  INTEGER :: js, n_pairs, pair_ins_species
   INTEGER ::  kbox, this_box
   CHARACTER(120) :: line_string, line_array(30), line_string2
   CHARACTER(4) :: Symbol
 
-  REAL(DP) :: total_mass, this_mass, prob_box_swap
+  REAL(DP) :: total_mass, this_mass, prob_box_swap, sum_prob_species_ins_pair
 
   LOGICAL :: l_prob_box_swap
 
@@ -3895,6 +3896,8 @@ SUBROUTINE Get_Move_Probabilities
 
   ALLOCATE(prob_species_trans(nspecies))
   ALLOCATE(prob_species_rotate(nspecies))
+  ALLOCATE(prob_species_ins_pair(nspecies, nspecies)) ! APS
+  species_list(:)%pair_insert = .FALSE.               ! APS
 
   ! set all the probabilities to zero initially and make sure that they add up to 1 at the end.
   prob_trans = 0.0_DP
@@ -3905,6 +3908,8 @@ SUBROUTINE Get_Move_Probabilities
   prob_volume = 0.0_DP
   prob_angle = 0.0_DP
   prob_insertion = 0.0_DP
+  prob_species_ins_pair = 0.0_DP
+  sum_prob_species_ins_pair = 0.0_DP
   prob_deletion = 0.0_DP
   prob_swap = 0.0_DP
   prob_regrowth = 0.0_DP
@@ -4281,6 +4286,67 @@ SUBROUTINE Get_Move_Probabilities
                     species_list(is)%species_type = 'SORBATE'
                     species_list(is)%int_species_type = int_sorbate
 
+                    ! APS
+                    IF(line_string2(11:14 ) == 'pair') THEN
+                       CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+
+                       write(*,*) nbr_entries, MOD(nbr_entries - 2, 2)
+                       IF (line_array(1) == 'insertion') THEN
+                          err_msg =''
+                          err_msg(1) = 'Must have a new line for species # and probability to use on a new line' 
+                          CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
+                       ELSE IF(MOD(nbr_entries - 2, 2) .NE. 0) THEN
+                          err_msg =''
+                          err_msg(1) = 'Must specify species # and probability to use on a new line' 
+                          err_msg(2) = 'the pair insertion method is used for a species'
+                          CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
+                       END IF
+
+
+                       n_pairs = INT(nbr_entries / 2.0)
+                       DO js = 1, n_pairs
+                          pair_ins_species = String_To_Int(line_array(js*2 - 1))
+                          species_list(is)%pair_insert = .TRUE.
+                          prob_species_ins_pair(is, pair_ins_species) = String_To_Double(line_array(js*2 ))
+
+                          IF (prob_species_ins_pair(pair_ins_species, is) == 0) THEN
+                             sum_prob_species_ins_pair = sum_prob_species_ins_pair + prob_species_ins_pair(is, pair_ins_species)
+                          END IF
+      
+                          IF (species_list(is)%total_charge .NE. - species_list(pair_ins_species)%total_charge) THEN
+                             WRITE(logunit,*) 
+                             WRITE(logunit,'(A,I4,A,I4,A)') 'CHECK Performing pair insertion of species ', is, ' and ', &
+                                                         pair_ins_species, ' that will lead to an non-neutral charged system'
+                             WRITE(logunit,*) 
+                          END IF
+      
+                          WRITE(logunit,'(A,I4,2X,A3,I4,2X,A2,2X,F10.6)') 'Pair insertion probability for species', &
+                                         is, 'and', pair_ins_species, 'is', prob_species_ins_pair(is, pair_ins_species)
+                       END DO
+      
+                       DO js = 1, is
+                          IF (species_list(is)%pair_insert .NE. species_list(js)%pair_insert) THEN
+                             err_msg =''
+                             err_msg(1) = 'Must specify pair insertion method for both species involved'
+                             CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
+                          ELSE IF (prob_species_ins_pair(is, js) /= prob_species_ins_pair(js, is)) THEN
+                             err_msg =''
+                             err_msg(1) = 'Pair insertion probabilities must agree for species '&
+                                          //TRIM(Int_To_String(is))//' and '//TRIM(Int_To_String(js))
+                             CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
+                          END IF
+                       END DO
+
+                       IF (is == nspecies) THEN
+                          IF (ABS(sum_prob_species_ins_pair - 1.0_DP) > 0.000001_DP) THEN
+                             err_msg =''
+                             err_msg(1) = 'Individual species pair insertion probabilties do not add up to 1'
+                             CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
+                          END IF
+                       END IF
+
+                    END IF
+
                  ELSE IF(line_string2(1:4) == 'none') THEN
                     ! it's a species that does not get exchanged with
                     ! reservoir in the case of a GCMC simulation or
@@ -4326,7 +4392,7 @@ SUBROUTINE Get_Move_Probabilities
                  IF (ABS(prob_swap_species(nspecies) -1.0_DP) > 0.000001_DP) THEN
                     err_msg =''
                     err_msg(1) = 'Individual species swap probabilties do not add up to 1'
-                    CALL Clean_Abort(err_msg,'Get_Move_Probabiltieis')
+                    CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
                  END IF
 
               ELSE
