@@ -3881,14 +3881,15 @@ SUBROUTINE Get_Move_Probabilities
   IMPLICIT NONE
 
   INTEGER :: ierr, nbr_entries, line_nbr,i, j, ibox, is, vol_int
-  INTEGER :: js, n_pairs, pair_ins_species
+  INTEGER :: ks, js, n_pairs, pair_ins_species
   INTEGER ::  kbox, this_box
   CHARACTER(120) :: line_string, line_array(30), line_string2
   CHARACTER(4) :: Symbol
 
   REAL(DP) :: total_mass, this_mass, prob_box_swap, sum_prob_species_ins_pair
 
-  LOGICAL :: l_prob_box_swap
+  LOGICAL :: l_prob_box_swap, l_all_pair
+  INTEGER, DIMENSION(:,:), ALLOCATABLE :: temp_ins_species_index
 
 
   ierr = 0
@@ -3898,6 +3899,10 @@ SUBROUTINE Get_Move_Probabilities
   ALLOCATE(prob_species_rotate(nspecies))
   ALLOCATE(prob_species_ins_pair(nspecies, nspecies)) ! APS
   species_list(:)%pair_insert = .FALSE.               ! APS
+  ALLOCATE(temp_ins_species_index(nspecies, 2))       ! APS
+  temp_ins_species_index = 0.0_DP                     ! APS
+  n_insertable = 0
+  l_all_pair = .TRUE.
 
   ! set all the probabilities to zero initially and make sure that they add up to 1 at the end.
   prob_trans = 0.0_DP
@@ -4290,7 +4295,6 @@ SUBROUTINE Get_Move_Probabilities
                     IF(line_string2(11:14 ) == 'pair') THEN
                        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
 
-                       write(*,*) nbr_entries, MOD(nbr_entries - 2, 2)
                        IF (line_array(1) == 'insertion') THEN
                           err_msg =''
                           err_msg(1) = 'Must have a new line for species # and probability to use on a new line' 
@@ -4309,43 +4313,62 @@ SUBROUTINE Get_Move_Probabilities
                           species_list(is)%pair_insert = .TRUE.
                           prob_species_ins_pair(is, pair_ins_species) = String_To_Double(line_array(js*2 ))
 
-                          IF (prob_species_ins_pair(pair_ins_species, is) == 0) THEN
+                          IF (pair_ins_species == is .OR. prob_species_ins_pair(pair_ins_species, is) == 0) THEN
+                             n_insertable = n_insertable + 1
+                             temp_ins_species_index(n_insertable, 1) = is
+                             temp_ins_species_index(n_insertable, 2) = pair_ins_species
                              sum_prob_species_ins_pair = sum_prob_species_ins_pair + prob_species_ins_pair(is, pair_ins_species)
-                          END IF
-      
-                          IF (species_list(is)%total_charge .NE. - species_list(pair_ins_species)%total_charge) THEN
-                             WRITE(logunit,*) 
-                             WRITE(logunit,'(A,I4,A,I4,A)') 'CHECK Performing pair insertion of species ', is, ' and ', &
-                                                         pair_ins_species, ' that will lead to an non-neutral charged system'
-                             WRITE(logunit,*) 
+
+                             IF (species_list(is)%total_charge .NE. - species_list(pair_ins_species)%total_charge .AND. &
+                                 prob_species_ins_pair(pair_ins_species, is) == 0) THEN
+                                WRITE(logunit,*) 
+                                WRITE(logunit,'(A,I4,A,I4,A)') 'CHECK Performing pair insertion of species ', is, ' and ', &
+                                                            pair_ins_species, ' that will lead to an non-neutral charged system'
+                                WRITE(logunit,*) 
+                             END IF
                           END IF
       
                           WRITE(logunit,'(A,I4,2X,A3,I4,2X,A2,2X,F10.6)') 'Pair insertion probability for species', &
                                          is, 'and', pair_ins_species, 'is', prob_species_ins_pair(is, pair_ins_species)
                        END DO
       
+                    ELSE
+                       ! Assume equal probability of inserting each species
+                       prob_species_ins_pair(is, is) = REAL(1.0 / nspecies)
+                       n_insertable = n_insertable + 1
+                       temp_ins_species_index(n_insertable, 1) = is
+                       temp_ins_species_index(n_insertable, 2) = is
+                       sum_prob_species_ins_pair = sum_prob_species_ins_pair + prob_species_ins_pair(is, is)
+                       l_all_pair = .FALSE.
+                    END IF
+
+                    IF (is == nspecies) THEN
+                       ALLOCATE(ins_species_index(n_insertable, 2))
+                       ins_species_index = temp_ins_species_index(1:n_insertable, :)
                        DO js = 1, is
-                          IF (species_list(is)%pair_insert .NE. species_list(js)%pair_insert) THEN
-                             err_msg =''
-                             err_msg(1) = 'Must specify pair insertion method for both species involved'
-                             CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
-                          ELSE IF (prob_species_ins_pair(is, js) /= prob_species_ins_pair(js, is)) THEN
-                             err_msg =''
-                             err_msg(1) = 'Pair insertion probabilities must agree for species '&
+                          IF (species_list(js)%pair_insert) THEN
+                             DO ks = 1, is
+                                IF (prob_species_ins_pair(ks, js) /= prob_species_ins_pair(js, ks)) THEN
+                                   err_msg =''
+                                   err_msg(1) = 'Pair insertion probabilities must agree for species '&
                                           //TRIM(Int_To_String(is))//' and '//TRIM(Int_To_String(js))
-                             CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
+                                   CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
+                                END IF
+                             END DO
                           END IF
                        END DO
 
-                       IF (is == nspecies) THEN
-                          IF (ABS(sum_prob_species_ins_pair - 1.0_DP) > 0.000001_DP) THEN
-                             err_msg =''
-                             err_msg(1) = 'Individual species pair insertion probabilties do not add up to 1'
-                             CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
+                       IF (ABS(sum_prob_species_ins_pair - 1.0_DP) > 0.000001_DP) THEN
+                          err_msg =''
+                          err_msg(1) = 'Individual species pair insertion probabilties do not add up to 1'
+                          IF (l_all_pair == .FALSE.) THEN
+                             err_msg(2) = 'Single insertion species probability is assumed to be 1/'&
+                                         //TRIM( Int_To_String(nspecies) )
                           END IF
+                          CALL Clean_Abort(err_msg,'Get_Move_Probabilties')
                        END IF
-
                     END IF
+
 
                  ELSE IF(line_string2(1:4) == 'none') THEN
                     ! it's a species that does not get exchanged with

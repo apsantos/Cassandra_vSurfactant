@@ -444,10 +444,13 @@ USE Type_Definitions
   ! individual move probability
   REAL(DP) :: prob_trans, prob_rot, prob_torsion, prob_volume, prob_angle, prob_insertion
   REAL(DP) :: prob_deletion, prob_swap, prob_regrowth, prob_ring, prob_atom_displacement
+  REAL(DP), ALLOCATABLE :: prob_swap_boxes(:,:)
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_rot_species
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_swap_species
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: prob_species_ins_pair ! APS
-  REAL(DP), ALLOCATABLE :: prob_swap_boxes(:,:)
+  ! pair information
+  INTEGER, DIMENSION(:,:), ALLOCATABLE :: ins_species_index ! APS
+  INTEGER :: n_insertable ! APS
 
   LOGICAL :: l_mol_frac_swap
 
