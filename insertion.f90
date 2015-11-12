@@ -72,7 +72,9 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   INTEGER :: kappa_tot, which_anchor
   INTEGER, ALLOCATABLE :: frag_order(:)
   INTEGER :: rand_igas, tot_mols
+  INTEGER :: tn1, tn2, n1, n2, nplocal
 
+  REAL(DP) :: ppt, pp(n_insertable), randnpair
   REAL(DP) :: dx, dy, dz, delta_e
   REAL(DP) :: E_bond, E_angle, E_dihedral, E_improper
   REAL(DP) :: f_bond, f_angle, f_dihedral, f_improper
@@ -82,12 +84,12 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   REAL(DP) :: pair_vdw, pair_qq, igas_en
   REAL(DP) :: E_reciprocal_move, E_self_move, E_lrc
   REAL(DP) :: f_reciprocal, f_self_diff, suben
-  REAL(DP) :: nrg_ring_frag_tot, f_ring
+  REAL(DP) :: nrg_ring_frag_tot, f_ring, dblocal
   REAL(DP) :: ln_pacc, P_seq, P_bias, this_lambda
   REAL(DP) :: fp_bias, fp_seq
 
   LOGICAL :: inter_overlap(2), cbmc_overlap(2), intra_overlap(2), poverlap
-  LOGICAL :: accept, accept_or_reject, isfrag, isgas, rej_pair
+  LOGICAL :: accept, accept_or_reject, isfrag, isgas, rej_pair, cbmc_rej_pair
 
   ! Initialize variables
   ln_pacc = 0.0_DP
@@ -99,6 +101,12 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   cbmc_overlap(:) = .FALSE.
   intra_overlap(:) = .FALSE.
   poverlap = .FALSE.
+  ppt = 0.0_DP
+  pp(:) = 0.0_DP
+  tn1 = 1
+  n1 = 1
+  tn2 = 2
+  n2 = 2
   f_bond = 0.0_DP
   f_angle = 0.0_DP
   f_dihedral = 0.0_DP
@@ -110,14 +118,18 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   f_reciprocal = 0.0_DP
   f_self_diff = 0.0_DP
   igas_en = 0.0_DP
+  pair_qq = 0.0_DP
+  pair_vdw = 0.0_DP
   isfrag = .FALSE.
   isgas = .FALSE.
   rej_pair = .FALSE.
+  cbmc_rej_pair = .FALSE.
   suben = 0.0_DP
   f_ring = 0.0_DP
   fp_bias = 1.0_DP
   fp_seq = 1.0_DP
   delta_e = 0.0_DP
+  dblocal = 0.0_DP
 
   !*****************************************************************************
   ! Step 1) Randomly select a species
@@ -129,24 +141,27 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! water and CO2 allowed to fluctuate. First, choose a random integer between 1
   ! and the number of insertable species, nspec_insert:
 
-!  is_rand = INT(rranf() * nspec_insert) + 1
+  do i = 1, n_insertable
+  tn1 = ins_species_index(i,1)
+  tn2 = ins_species_index(i,2)
+  ppt = prob_species_ins_pair(tn1,tn2)
+  if (i == 1) then
+     pp(i) = ppt
+  else
+     pp(i) = ppt + pp(i-1)
+  endif
+  enddo
 
-  ! Now find the index 'is' that corresponds to is_rand. In the example, if
-  ! is_rand == 2 a CO2 molecule will be inserted. CO2 corresponds to 'is' == 4.
+  randnpair = rranf()
+  do i = n_insertable, 1, -1
+  if(randnpair .LE. pp(i)) then
+     n1 = ins_species_index(i,1)
+     n2 = ins_species_index(i,2)
+  endif
+  enddo
 
-!  is_counter = 0
-!  DO is = 1, nspecies
-!     IF(species_list(is)%int_species_type == int_sorbate) THEN 
-!        is_counter = is_counter + 1
-!     END IF
-!     IF(is_counter == is_rand) EXIT ! exit the loop when 'is' has been found
-!  END DO
 
-  ! In the given example, now 'is' would equal 4.
-
-  ! Each species has a maximum allowable number of molecules specified in the 
-  ! input file. The number of molecules currently in the system is
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   tot_mols = SUM(nmols(is,:)) ! summed over the number of boxes?
 
   ! Check that tot_mols is less than the maximum allowable, nmolecules(is)
@@ -164,9 +179,8 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! Now that an insertion will be attempted, we need to do some bookkeeping:
   !  * Increment the counters to compute success ratios
 
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   ntrials(is,this_box)%insertion = ntrials(is,this_box)%insertion + 1
-  if(is == 1) tot_trials(this_box) = tot_trials(this_box) + 1
 
   !  * Assign a locate number for this molecule
 
@@ -183,6 +197,8 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   molecule_list(alive(is),is)%cfc_lambda = this_lambda
   molecule_list(alive(is),is)%molecule_type = int_normal
   enddo
+
+  tot_trials(this_box) = tot_trials(this_box) + 1
 
   ! With the bookkeeping completed, we are ready to attempt the insertion
   
@@ -201,7 +217,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   !     conformations?) were sampled according to their Boltzmann weight. One 
   !     is chosen at random. Position and orientation are random.
  
-  do is = 1, 2 
+  do is = n1, n2, n2-n1 
   P_seq = 1.0_DP
   P_bias = 1.0_DP
   nrg_ring_frag_tot = 0.0_DP
@@ -354,12 +370,18 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! flag equals .TRUE. If the molecule was inserted randomly, we still need to 
   ! detect core overlaps.
 
-  do is = 1, 2
+!FSL to speed up the calculation, we're skipping the next loop if there's any overlap
+  do is = n1, n2, n2-n1
+       if (cbmc_overlap(is)) cbmc_rej_pair = .TRUE.
+  enddo
+
+
+  if (.NOT. cbmc_rej_pair) then
+  do is = n1, n2, n2-n1
   E_inter_vdw = 0.0_DP
   E_inter_qq = 0.0_DP
   E_intra_vdw = 0.0_DP
   E_intra_qq = 0.0_DP
-  IF (.NOT. cbmc_overlap(is)) THEN
 
     ! Molecule COM may be outside the box boundary if grown via CBMC, so wrap
     ! the molecule coordinates back in the box (if needed)
@@ -384,26 +406,29 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
          f_inter_qq = f_inter_qq + E_inter_qq
          f_intra_vdw = f_intra_vdw + E_intra_vdw
          f_intra_qq = f_intra_qq + E_intra_qq         
- 
-  END IF
-  enddo
+
+  enddo 
+  endif
 
   ! 3.3) Reject the move if there is any core overlap
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   IF (cbmc_overlap(is) .OR. inter_overlap(is) .OR. intra_overlap(is)) THEN
         rej_pair = .TRUE.
   ENDIF
   enddo
 
   if (rej_pair) then
-  do is = 1, 2
+  do is = n1, n2, n2-n1
      molecule_list(alive(is),is)%live = .FALSE.
      atom_list(:,alive(is),is)%exist = .FALSE.
-     if (is == 2) RETURN
+     if (is == n2) RETURN
   enddo
   endif
 
-  CALL Compute_Molecule_Pair_Interaction(alive(1),1,alive(2),2,this_box,pair_vdw,pair_qq,poverlap)
+!FSL this calculation should only be executed if n1 /= n2, updating "is" values
+  if (n1 /= n2) then
+     CALL Compute_Molecule_Pair_Interaction(alive(n1),n1,alive(n2),n2,this_box,pair_vdw,pair_qq,poverlap)
+  endif
 
   f_inter_vdw = f_inter_vdw - pair_vdw
   f_inter_qq = f_inter_qq - pair_qq
@@ -419,7 +444,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! If the molecule was grown via CBMC, we already have the intramolecular 
   ! bond energies? Otherwise we need to compute them.
 
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   E_bond = 0.0_DP
   E_angle = 0.0_DP
   E_dihedral = 0.0_DP
@@ -451,14 +476,21 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
 
   ! 3.5) Ewald energies
 
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   E_reciprocal_move = 0.0_DP
   E_self_move = 0.0_DP
   IF ( (int_charge_sum_style(this_box) == charge_ewald) .AND. &
        (has_charge(is)) ) THEN
- 
+    if (n1 /= n2) then
+     if (is == n1) store_sum = .TRUE.
+     if (is == n2) store_sum = .FALSE.
      CALL Ins_Pairs_Ewald_Reciprocal_Energy_Difference(alive(is),alive(is),is,this_box, &
              int_insertion,E_reciprocal_move)
+    else
+     CALL Compute_Ewald_Reciprocal_Energy_Difference(alive(is),alive(is),is,this_box, &
+             int_insertion,E_reciprocal_move)
+    endif
+
      CALL Compute_Ewald_Self_Energy_Difference(alive(is),is,this_box, &
              int_insertion,E_self_move)
 
@@ -477,7 +509,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
      ! increase number of integer beads
      nbeads_in = nint_beads(:,this_box)
 
-     do is = 1, 2
+     do is = n1, n2, n2-n1
      DO i = 1, natoms(is)
         i_type = nonbond_list(i,is)%atom_type_number
         nint_beads(i_type,this_box) = nint_beads(i_type,this_box) + 1
@@ -514,8 +546,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! absorbed into the chemical potential and fugacity, respectively.
 
   ! Compute the acceptance criterion
-
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   IF(species_list(is)%int_insert == int_igas) THEN 
      isgas = .TRUE.
      igas_en = igas_en + energy_igas(rand_igas,is)%total
@@ -529,16 +560,22 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
 
   ln_pacc = beta(this_box) * (delta_e - suben)
 
-  is = 1
+  is = n1
   ! P_seq and P_bias equal 1.0 unless changed by Build_Molecule.
+  nplocal = MIN(nmols(n1,this_box), nmols(n2,this_box))
   ln_pacc = ln_pacc + DLOG(fp_seq * fp_bias) &
-                    + 2.0_DP*DLOG(REAL(nmols(is,this_box)+1,DP)) &
+                    + 2.0_DP*DLOG(REAL(nplocal+1,DP)) &
                     - 2.0_DP*DLOG(box_list(this_box)%volume) 
-
   IF(lchempot) THEN
+    if (n1 /= n2) then
+        dblocal = species_list(n1)%de_broglie(this_box)*& 
+          species_list(n2)%de_broglie(this_box)
+    else
+       dblocal = species_list(n1)%de_broglie(this_box)
+    endif
      ! chemical potential is input
      ln_pacc = ln_pacc - species_list(is)%chem_potential * beta(this_box) &
-                       + 3.0_DP*DLOG(dbpair(this_box))
+                       + 3.0_DP*DLOG(dblocal)
   ELSE
      ! fugacity is input
      ln_pacc = ln_pacc - DLOG(species_list(is)%fugacity) &
@@ -549,7 +586,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   
   IF (accept) THEN
      ! update the number of molecules
-     do is = 1, 2
+     do is = n1, n2, n2-n1
      nmols(is,this_box) = nmols(is,this_box) + 1
      enddo
      ! update the energies
@@ -565,7 +602,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
      energy(this_box)%inter_vdw = energy(this_box)%inter_vdw + f_inter_vdw
      energy(this_box)%inter_q = energy(this_box)%inter_q + f_inter_qq
 
-     is = 1
+     is = n1
      IF ( int_charge_sum_style(this_box) == charge_ewald .AND. &
           has_charge(is)) THEN
         energy(this_box)%ewald_reciprocal = f_reciprocal
@@ -577,19 +614,19 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
      END IF
 
      ! Increment counter
-     do is = 1, 2
+     do is = n1, n2, n2-n1
      nsuccess(is,this_box)%insertion = nsuccess(is,this_box)%insertion + 1
      enddo
 
   ELSE
   
-     do is = 1, 2
+     do is = n1, n2, n2-n1
      molecule_list(alive(is),is)%live = .FALSE.
      atom_list(:,alive(is),is)%exist = .FALSE.
      molecule_list(alive(is),is)%molecule_type = int_none
      enddo
      
-     is = 1
+     is = n1
      IF ( int_charge_sum_style(this_box) == charge_ewald .AND. &
           has_charge(is) ) THEN
         ! Restore cos_sum and sin_sum. Note that these were changed when the

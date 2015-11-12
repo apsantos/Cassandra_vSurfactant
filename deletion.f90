@@ -74,8 +74,10 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   INTEGER :: kappa_tot, which_anchor
   INTEGER, ALLOCATABLE :: frag_order(:)
   INTEGER :: k, position
+  INTEGER :: tn1, tn2, n1, n2, nplocal
 
-  REAL(DP) :: delta_e, delta_e_pacc
+  REAL(DP) :: ppt, pp(n_insertable), randnpair
+  REAL(DP) :: delta_e, delta_e_pacc, dblocal
   REAL(DP) :: E_bond, E_angle, E_dihedral, E_improper
   REAL(DP) :: f_bond, f_angle, f_dihedral, f_improper
   REAL(DP) :: E_intra_vdw, E_intra_qq
@@ -130,39 +132,44 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   ! water and CO2 allowed to fluctuate. First, choose a random integer between 1
   ! and the number of insertable species, nspec_insert:
 
-!  is_rand = INT(rranf() * nspec_insert) + 1
+  do i = 1, n_insertable
+  tn1 = ins_species_index(i,1)
+  tn2 = ins_species_index(i,2)
+  ppt = prob_species_ins_pair(tn1,tn2)
+  if (i == 1) then
+     pp(i) = ppt
+  else
+     pp(i) = ppt + pp(i-1)
+  endif
+  enddo
 
-  ! Now find the index 'is' that corresponds to is_rand. In the example, if
-  ! is_rand == 2 a CO2 molecule will be deleted. CO2 corresponds to 'is' == 4.
-
-!  is_counter = 0
-!  DO is = 1, nspecies
-!     IF(species_list(is)%int_species_type == int_sorbate) THEN
-!        is_counter = is_counter + 1
-!     END IF
-!     IF(is_counter == is_rand) EXIT ! exit the loop when 'is' has been found
-!  END DO
-
-  ! In the given example, now 'is' would equal 4.
+  randnpair = rranf()
+  do i = n_insertable, 1, -1
+  if(randnpair .LE. pp(i)) then
+     n1 = ins_species_index(i,1)
+     n2 = ins_species_index(i,2)
+  endif
+  enddo
 
   ! Cannot delete a molecule if there aren't any in the box
-  is = 1
-  IF (nmols(is,this_box) == 0) RETURN
+  is = n1
+  IF (nmols(n1,this_box) == 0 .OR. nmols(n2,this_box) == 0) RETURN
 
   ! Now that a deletion will be attempted, we need to do some bookkeeping:
   !  * Increment the counters to compute success ratios
 
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   ntrials(is,this_box)%deletion = ntrials(is,this_box)%deletion + 1  
-  tot_trials(this_box) = tot_trials(this_box) + 1
   enddo
+
+  tot_trials(this_box) = tot_trials(this_box) + 1
 
   !*****************************************************************************
   ! Step 2) Select a molecule with uniform probability
   !*****************************************************************************
   !
 
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   im(is) = INT(rranf() * nmols(is,this_box)) + 1
   CALL Get_Index_Molecule(this_box,is,im(is),alive(is)) ! sets the value of 'alive(is)'
 
@@ -191,7 +198,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   !          b) Calculate the probability of the fragment's current dihedral
   !
   ! These steps are implemented in the subroutine Build_Molecule
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   P_seq = 1.0_DP
   P_bias = 1.0_DP
   nrg_ring_frag_tot = 0.0_DP
@@ -266,7 +273,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   !   4.5) Long-range energy correction
   ! 
 
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   ! Recompute the COM
   CALL Get_COM(alive(is),is)
 
@@ -287,7 +294,9 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   if(l_pair_nrg) DEALLOCATE(pair_vdw_temp,pair_qq_temp)
   enddo
 
-  CALL Compute_Molecule_Pair_Interaction(alive(1),1,alive(2),2,this_box,pair_vdw,pair_qq,poverlap)
+  if (n1 /= n2) then
+     CALL Compute_Molecule_Pair_Interaction(alive(n1),n1,alive(n2),n2,this_box,pair_vdw,pair_qq,poverlap)
+  endif
 
   f_inter_vdw = f_inter_vdw - pair_vdw
   f_inter_qq = f_inter_qq - pair_qq
@@ -296,7 +305,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   ! 4.2) Bonded intramolecular energies
 
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   CALL Compute_Molecule_Bond_Energy(alive(is),is,E_bond)
   CALL Compute_Molecule_Angle_Energy(alive(is),is,E_angle)
   CALL Compute_Molecule_Dihedral_Energy(alive(is),is,E_dihedral)
@@ -311,7 +320,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   
   ! 4.3) Nonbonded intramolecular energies
 
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   CALL Compute_Molecule_Nonbond_Intra_Energy(alive(is),is, &
           E_intra_vdw,E_intra_qq,intra_overlap(is))
   f_intra_vdw = f_intra_vdw + E_intra_vdw
@@ -322,12 +331,18 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   ! 4.4) Ewald energies
 
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   IF ( (int_charge_sum_style(this_box) == charge_ewald) .AND. &
        (has_charge(is)) ) THEN
-
+    if (n1 /= n2) then
+       if (is == n1) store_sum = .TRUE.
+       if (is == n2) store_sum = .FALSE.
      CALL Ins_Pairs_Ewald_Reciprocal_Energy_Difference(alive(is),alive(is),is,this_box, &
              int_deletion,E_reciprocal_move)
+    else
+     CALL Compute_Ewald_Reciprocal_Energy_Difference(alive(is),alive(is),is,this_box, &
+        int_insertion,E_reciprocal_move)
+    endif
      CALL Compute_Ewald_Self_Energy_Difference(alive(is),is,this_box, &
              int_deletion,E_self_move)
 
@@ -346,7 +361,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
      ! subtract off beads for this species
      nbeads_out(:) = nint_beads(:,this_box)
 
-     do is = 1, 2
+     do is = n1, n2, n2-n1
      DO i = 1, natoms(is)
         i_type = nonbond_list(i,is)%atom_type_number
         nint_beads(i_type,this_box) = nint_beads(i_type,this_box) - 1
@@ -384,7 +399,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   f_vdw_igas = 0.0_DP
   f_qq_igas = 0.0_DP
-  do is = 1, 2
+  do is = n1, n2, n2-n1
   E_intra_vdw_igas = 0.0_DP
   E_intra_qq_igas = 0.0_DP
   IF(species_list(is)%int_insert == int_igas) THEN
@@ -409,16 +424,23 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   ln_pacc = beta(this_box) * (delta_e + adden)
 
-  is = 1
+  is = n1
   ! P_seq and P_bias equal 1.0 unless changed by Build_Molecule
+  nplocal = MIN(nmols(n1,this_box), nmols(n2,this_box))
   ln_pacc = ln_pacc - DLOG(fp_seq * fp_bias) &
-                    - 2.0_DP*DLOG(REAL(nmols(is,this_box),DP)) &
+                    - 2.0_DP*DLOG(REAL(nplocal,DP)) &
                     + 2.0_DP*DLOG(box_list(this_box)%volume)
  
   IF(lchempot) THEN
      ! chemical potential is input
+     if (n1 /= n2) then
+        dblocal = species_list(n1)%de_broglie(this_box)*&
+           species_list(n2)%de_broglie(this_box)
+     else
+        dblocal = species_list(n1)%de_broglie(this_box)
+     endif
      ln_pacc = ln_pacc + beta(this_box) * species_list(is)%chem_potential &
-                       - 3.0_DP*DLOG(dbpair(this_box)) 
+                       - 3.0_DP*DLOG(dblocal)
   ELSE
      ! fugacity is input
      ln_pacc = ln_pacc + DLOG(species_list(is)%fugacity) &
@@ -454,7 +476,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
      ! obtain the original position of the deleted molecule so that the
      ! linked list can be updated
 
-     do is = 1, 2
+     do is = n1, n2, n2-n1
      CALL Get_Position_Molecule(this_box,is,im(is),position)
 
      IF (position < SUM(nmols(is,:))) THEN
@@ -478,7 +500,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 !     CALL System_Energy_Check(1,mcstep,randno)
   ELSE
 
-     is = 1
+     is = n1
 
      IF ( (int_charge_sum_style(this_box) == charge_ewald) .AND. &
            (has_charge(is)) ) THEN
@@ -498,6 +520,3 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 !  IF (l_pair_nrg) DEALLOCATE(pair_vdw_temp,pair_qq_temp)
 
 END SUBROUTINE Deletion
-
-     
-

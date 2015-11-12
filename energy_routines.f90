@@ -2394,7 +2394,7 @@ CONTAINS
     const_val = 1.0_DP/(2.0_DP * alpha_ewald(this_box) * alpha_ewald(this_box))
 
     if (move_flag == int_insertion .OR. move_flag == int_deletion) then
-    if (is == 1) then
+    if (store_sum) then
        V_recip_difference = 0.0_DP
     !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)
     cos_sum_old(1:nvecs(this_box),this_box) = cos_sum(1:nvecs(this_box),this_box)
@@ -2479,7 +2479,7 @@ CONTAINS
             sin_mol(1:nvecs(this_box),im_locate)
        !$OMP END PARALLEL WORKSHARE
 
-       if (is == 2) then
+       if (.NOT. store_sum) then
        !$OMP PARALLEL DO DEFAULT(SHARED) &
        !$OMP PRIVATE(i) &
        !$OMP SCHEDULE(STATIC) &
@@ -2526,7 +2526,7 @@ CONTAINS
 
        !$OMP END PARALLEL DO
 
-       if(is == 2) then
+       if(.NOT. store_sum) then
 
        !$OMP PARALLEL DO DEFAULT(SHARED) &
        !$OMP PRIVATE(i) &
