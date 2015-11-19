@@ -448,6 +448,7 @@ USE Type_Definitions
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_rot_species
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_swap_species
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: prob_species_ins_pair ! APS
+  REAL(DP), DIMENSION(:), ALLOCATABLE :: pair_chem_potential     ! APS
   ! pair information
   INTEGER, DIMENSION(:,:), ALLOCATABLE :: ins_species_index ! APS
   INTEGER :: n_insertable ! APS
@@ -561,6 +562,7 @@ INTEGER :: n_lat_atoms
 
 !!!!de Broglie of pair
 REAL(DP), ALLOCATABLE, DIMENSION(:) :: dbpair
+LOGICAL :: store_sum
   
 END MODULE Run_Variables
 

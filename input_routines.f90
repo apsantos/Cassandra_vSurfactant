@@ -3756,7 +3756,7 @@ SUBROUTINE Get_Fugacity_Info
 
   IMPLICIT NONE
 
-  INTEGER :: line_nbr, nbr_entries, ierr, i, spec_counter, j
+  INTEGER :: line_nbr, nbr_entries, ierr, i, spec_counter, j, is, js, i_ins
   CHARACTER(120) :: line_string, line_array(20)
 
   REWIND(inputunit)
@@ -3849,6 +3849,57 @@ SUBROUTINE Get_Fugacity_Info
            END DO
    
         END DO
+        !APS
+        ! IF the species is inserted as a pair, set the corresponding chemical potential
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        IF (ANY(species_list(:)%pair_insert) == .TRUE.) THEN
+           IF (line_array(1) /= 'pair') THEN
+              err_msg = ""
+              err_msg(1) = 'You must define the pair chemical potentials'
+              CALL Clean_Abort(err_msg,'Get_Fugacity')
+           END IF
+
+           ALLOCATE(pair_chem_potential(n_insertable)) 
+           pair_chem_potential = 0.0_DP
+
+           DO i = 1, n_insertable
+              IF (ins_species_index(i,1) == ins_species_index(i,2)) THEN
+                 pair_chem_potential(i) = species_list(ins_species_index(i,1))%chem_potential
+                 CYCLE
+              END IF
+
+              CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+              IF (nbr_entries /= 3) THEN
+                 err_msg = ""
+                 err_msg(1) = 'You must define the pair chemical potenitials as:'
+                 err_msg(2) = '<species_i> <species_j> <pair_chemical_potential_ij>'
+                 CALL Clean_Abort(err_msg,'Get_Fugacity')
+              END IF
+               
+              is = String_To_Int(line_array(1))
+              js = String_To_Int(line_array(2))
+              IF (is == js) CYCLE
+
+              DO i_ins = 1, n_insertable
+                 IF ( (ins_species_index(i_ins, 1) == is) .AND. (ins_species_index(i_ins, 2) == js) .OR. &
+                      (ins_species_index(i_ins, 2) == is) .AND. (ins_species_index(i_ins, 1) == js) ) THEN
+                    EXIT
+                 END IF
+              END DO
+              pair_chem_potential(i_ins) = String_To_Double(line_array(3)) / atomic_to_kJmol
+
+              WRITE(logunit,*)
+              WRITE(logunit,'(A,I3,A,I3,A,E16.9,A)') 'Pair Chemical Potential of ', is, &
+                ' and ', js, ' is ', pair_chem_potential(i_ins), ' in atomic units'
+
+              
+           END DO
+
+        ELSE IF (line_array(0) == 'pair') THEN
+           WRITE(logunit,'(A,A)') 'You have not defined the insertion probabilities,', &
+                                'chemical potential information is not being used'
+        END IF
+
 
         do j = 1, nbr_boxes
 
