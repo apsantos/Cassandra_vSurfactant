@@ -3852,7 +3852,7 @@ SUBROUTINE Get_Fugacity_Info
         !APS
         ! IF the species is inserted as a pair, set the corresponding chemical potential
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-        IF (ANY(species_list(:)%pair_insert) == .TRUE.) THEN
+        IF (ANY(species_list(:)%pair_insert) .eqv. .TRUE.) THEN
            IF (line_array(1) /= 'pair') THEN
               err_msg = ""
               err_msg(1) = 'You must define the pair chemical potentials'
@@ -4412,7 +4412,7 @@ SUBROUTINE Get_Move_Probabilities
                        IF (ABS(sum_prob_species_ins_pair - 1.0_DP) > 0.000001_DP) THEN
                           err_msg =''
                           err_msg(1) = 'Individual species pair insertion probabilties do not add up to 1'
-                          IF (l_all_pair == .FALSE.) THEN
+                          IF (l_all_pair .eqv. .FALSE.) THEN
                              err_msg(2) = 'Single insertion species probability is assumed to be 1/'&
                                          //TRIM( Int_To_String(nspecies) )
                           END IF

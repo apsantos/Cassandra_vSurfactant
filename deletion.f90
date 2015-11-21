@@ -74,9 +74,9 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   INTEGER :: kappa_tot, which_anchor
   INTEGER, ALLOCATABLE :: frag_order(:)
   INTEGER :: k, position
-  INTEGER :: tn1, tn2, n1, n2, nplocal
+  INTEGER :: tn1, tn2, n1, n2, nplocal, npair
 
-  REAL(DP) :: ppt, pp(n_insertable), randnpair
+  REAL(DP) :: ppt, pp(n_insertable), randnpair, loc_chem_pot
   REAL(DP) :: delta_e, delta_e_pacc, dblocal
   REAL(DP) :: E_bond, E_angle, E_dihedral, E_improper
   REAL(DP) :: f_bond, f_angle, f_dihedral, f_improper
@@ -132,6 +132,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   ! water and CO2 allowed to fluctuate. First, choose a random integer between 1
   ! and the number of insertable species, nspec_insert:
 
+  if(any(species_list(:)%pair_insert) .eqv. .TRUE.) then
   do i = 1, n_insertable
   tn1 = ins_species_index(i,1)
   tn2 = ins_species_index(i,2)
@@ -148,11 +149,24 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   if(randnpair .LE. pp(i)) then
      n1 = ins_species_index(i,1)
      n2 = ins_species_index(i,2)
+     npair = i
   endif
   enddo
+  else
+  is_rand = INT(rranf() * nspec_insert) + 1
+
+  is_counter = 0
+  DO is = 1, nspecies
+     IF(species_list(is)%int_species_type == int_sorbate) THEN
+        is_counter = is_counter + 1
+     END IF
+     IF(is_counter == is_rand) EXIT ! exit the loop when 'is' has been found
+  END DO
+  n1 = is
+  n2 = is
+  endif
 
   ! Cannot delete a molecule if there aren't any in the box
-  is = n1
   IF (nmols(n1,this_box) == 0 .OR. nmols(n2,this_box) == 0) RETURN
 
   ! Now that a deletion will be attempted, we need to do some bookkeeping:
@@ -436,10 +450,12 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
      if (n1 /= n2) then
         dblocal = species_list(n1)%de_broglie(this_box)*&
            species_list(n2)%de_broglie(this_box)
+        loc_chem_pot = pair_chem_potential(npair)
      else
         dblocal = species_list(n1)%de_broglie(this_box)
+        loc_chem_pot = species_list(n1)%chem_potential
      endif
-     ln_pacc = ln_pacc + beta(this_box) * species_list(is)%chem_potential &
+     ln_pacc = ln_pacc + beta(this_box) * loc_chem_pot &
                        - 3.0_DP*DLOG(dblocal)
   ELSE
      ! fugacity is input

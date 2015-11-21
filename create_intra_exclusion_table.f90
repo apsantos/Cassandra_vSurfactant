@@ -224,7 +224,7 @@ SUBROUTINE Read_Intra_Exclusion_Table
                DO ia = 1, natoms(is)
                   CALL Parse_String(intrafile_unit, i_line, 1, nbr_entries, line_array, ierr)
                   temp_name = line_array(1)
-                  IF (ANY(temp_name == nonbond_list(:,is)%atom_name ) == .FALSE.) THEN
+                  IF (ANY(temp_name == nonbond_list(:,is)%atom_name ) .eqv. .FALSE.) THEN
                      err_msg(1) = "Atom name and type in Intra Scaling table (" &
                                    //TRIM(temp_name)//") does not match the MCF file."
                      err_msg(2) = "Make sure the atom list in the file starts with &
