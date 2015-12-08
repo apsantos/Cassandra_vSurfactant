@@ -166,20 +166,20 @@ SUBROUTINE Get_Nspecies
 
   ALLOCATE( molfile_name(nspecies),Stat = AllocateStatus )
   IF (AllocateStatus /= 0 ) THEN
-     write(*,*)'memory could no tbe allocated for molfile_name array'
+     write(*,*)'memory could not be allocated for molfile_name array'
      write(*,*)'stopping'
      STOP
   END IF
   ALLOCATE( nmolecules(nspecies), natoms(nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0 ) THEN
-     write(*,*)'memory could no tbe allocated for nmolecules or natoms array'
+     write(*,*)'memory could not be allocated for nmolecules or natoms array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE (nring_atoms(nspecies), nexo_atoms(nspecies), Stat = AllocateStatus)
   IF (AllocateStatus /= 0 ) THEN
-     write(*,*)'memory could no tbe allocated for nmolecules or natoms array'
+     write(*,*)'memory could not be allocated for nmolecules or natoms array'
      write(*,*)'stopping'
      STOP
   END IF
@@ -187,21 +187,21 @@ SUBROUTINE Get_Nspecies
 
   ALLOCATE( nbonds(nspecies), nangles(nspecies),Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for nbonds or nangles array'
+     write(*,*)'memory could not be allocated for nbonds or nangles array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE( ndihedrals(nspecies), nimpropers(nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for ndihedrals or nimpropers array'
+     write(*,*)'memory could not be allocated for ndihedrals or nimpropers array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE(nbr_bond_params(nspecies),Stat = AllocateStatus)
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for nbr_bond_params array'
+     write(*,*)'memory could not be allocated for nbr_bond_params array'
      write(*,*)'stopping'
      STOP
   END IF
@@ -209,28 +209,28 @@ SUBROUTINE Get_Nspecies
   ALLOCATE(nbr_angle_params(nspecies),Stat = AllocateStatus)
 
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for molfile_name array'
+     write(*,*)'memory could not be allocated for molfile_name array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE(nbr_dihedral_params(nspecies),Stat = AllocateStatus)
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for nbr_dihedral_params array'
+     write(*,*)'memory could not be allocated for nbr_dihedral_params array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE(nbr_improper_params(nspecies),Stat = AllocateStatus)
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for nbr_improper_params array'
+     write(*,*)'memory could not be allocated for nbr_improper_params array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE(nbr_vdw_params(nspecies),Stat = AllocateStatus)
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for nbr_vdw_params array'
+     write(*,*)'memory could not be allocated for nbr_vdw_params array'
      write(*,*)'stopping'
      STOP
   END IF
@@ -1061,70 +1061,70 @@ SUBROUTINE Get_Molecule_Info
 
   ALLOCATE( atom_list(MAXVAL(natoms), MAXVAL(nmolecules), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for atom_list array'
+     write(*,*)'memory could not be allocated for atom_list array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE( nonbond_list(MAXVAL(natoms), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for nonbond_list array'
+     write(*,*)'memory could not be allocated for nonbond_list array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE( ring_atom_ids(MAXVAL(natoms), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for ring_atom_ids array'
+     write(*,*)'memory could not be allocated for ring_atom_ids array'
      write(*,*)'stopping'
      STOP
   END IF
   
   ALLOCATE( exo_atom_ids(MAXVAL(natoms), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for exo_atom_ids array'
+     write(*,*)'memory could not be allocated for exo_atom_ids array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE( bond_list(MAXVAL(nbonds), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for bond_list array'
+     write(*,*)'memory could not be allocated for bond_list array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE( angle_list(MAXVAL(nangles), nspecies),Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for angle_list array'
+     write(*,*)'memory could not be allocated for angle_list array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE( dihedral_list(MAXVAL(ndihedrals), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for dihedral_list array'
+     write(*,*)'memory could not be allocated for dihedral_list array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE( improper_list(MAXVAL(nimpropers), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for improper_list array'
+     write(*,*)'memory could not be allocated for improper_list array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE( molecule_list(MAXVAL(nmolecules), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for molecule_list array'
+     write(*,*)'memory could not be allocated for molecule_list array'
      write(*,*)'stopping'
      STOP
   END IF
 
   ALLOCATE( locate(MAXVAL(nmolecules),nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for locate array'
+     write(*,*)'memory could not be allocated for locate array'
      write(*,*)'stopping'
      STOP
   END IF
@@ -1147,7 +1147,7 @@ SUBROUTINE Get_Molecule_Info
 
   ALLOCATE( species_list(nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for species_list array'
+     write(*,*)'memory could not be allocated for species_list array'
      write(*,*)'stopping'
      STOP
   END IF
@@ -1156,7 +1156,7 @@ SUBROUTINE Get_Molecule_Info
 
   ALLOCATE( internal_coord_list(max_index, MAXVAL(nmolecules), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could no tbe allocated for internal_coord_list array'
+     write(*,*)'memory could not be allocated for internal_coord_list array'
      write(*,*)'stopping'
      STOP
   END IF
@@ -1164,7 +1164,7 @@ SUBROUTINE Get_Molecule_Info
   ALLOCATE(internal_coord_list_old(max_index), Stat = AllocateStatus)
   IF (AllocateStatus /= 0) THEN
      err_msg = ''
-     err_msg(1) = 'memory could no tbe allocated for internal_coord_list_old array'
+     err_msg(1) = 'memory could not be allocated for internal_coord_list_old array'
      CALL Clean_Abort(err_msg,'Get_Molecule_Info')
   END IF 
  
@@ -1732,6 +1732,19 @@ SUBROUTINE Get_Bond_Info(is)
 
               ! Set number of bond parameters
               nbr_bond_params = 1
+
+           ELSEIF (bond_list(ib,is)%bond_potential_type == 'harmonic') THEN
+              bond_list(ib,is)%int_bond_type = int_harmonic
+              WRITE(logunit,'(A,I6,1x,I6, A, I4)') & 
+                   'Harmonic Bond between atoms: ',bond_list(ib,is)%atom1, bond_list(ib,is)%atom2, &
+                   ' in species', is
+              bond_list(ib,is)%bond_param(1) = String_To_Double(line_array(5))
+              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond length, in A:',bond_list(ib,is)%bond_param(1)
+              bond_list(ib,is)%bond_param(2) = String_To_Double(line_array(6))
+              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond constant, in K/rad^2:',bond_list(ib,is)%bond_param(2)
+
+              ! Set number of bond parameters
+              nbr_bond_params = 2
 
            ELSE
               err_msg = ""
@@ -3400,14 +3413,14 @@ SUBROUTINE Get_Box_Info
         ! Allocate arrays associated with the box variables
         ALLOCATE(box_list(nbr_boxes), STAT=AllocateStatus)
         IF (AllocateStatus /= 0) THEN
-           write(*,*)'memory could no tbe allocated for box_list array'
+           write(*,*)'memory could not be allocated for box_list array'
            write(*,*)'stopping'
            STOP
         END IF
 
         ALLOCATE(l_cubic(nbr_boxes), STAT=AllocateStatus)
         IF (AllocateStatus /= 0) THEN
-           write(*,*)'memory could no tbe allocated for l_cubic array'
+           write(*,*)'memory could not be allocated for l_cubic array'
            write(*,*)'stopping'
            STOP
         END IF
@@ -3768,7 +3781,6 @@ SUBROUTINE Get_Fugacity_Info
  ! initialize fugacities
 
 
-  allocate(dbpair(nbr_boxes))
   species_list(:)%fugacity = 0.0_DP
   species_list(:)%chem_potential = 0.0_DP
   species_list(:)%activity = 0.0_DP
@@ -3892,7 +3904,6 @@ SUBROUTINE Get_Fugacity_Info
               WRITE(logunit,'(A,I3,A,I3,A,E16.9,A)') 'Pair Chemical Potential of ', is, &
                 ' and ', js, ' is ', pair_chem_potential(i_ins), ' in atomic units'
 
-              
            END DO
 
         ELSE IF (line_array(0) == 'pair') THEN
@@ -3900,13 +3911,6 @@ SUBROUTINE Get_Fugacity_Info
                                 'chemical potential information is not being used'
         END IF
 
-
-        do j = 1, nbr_boxes
-
-              dbpair(j) = &
-              species_list(1)%de_broglie(j)*species_list(2)%de_broglie(j)
-        enddo
-        
         EXIT
 
      ELSE IF (line_string(1:3) == 'END' .OR. line_nbr > 10000 ) THEN
@@ -4482,21 +4486,21 @@ SUBROUTINE Get_Move_Probabilities
 
                     ALLOCATE( molecule_list_igas(MAXVAL(nmolecules), nspecies), Stat = AllocateStatus )
                     IF (AllocateStatus /= 0) THEN
-                       write(*,*)'memory could no tbe allocated for molecule_list_igas array'
+                       write(*,*)'memory could not be allocated for molecule_list_igas array'
                        write(*,*)'stopping'
                        STOP
                     END IF
 
                     ALLOCATE( atom_list_igas(MAXVAL(natoms), MAXVAL(nmolecules), nspecies), Stat = AllocateStatus )
                     IF (AllocateStatus /= 0) THEN
-                       write(*,*)'memory could no tbe allocated for atom_list_igas array'
+                       write(*,*)'memory could not be allocated for atom_list_igas array'
                        write(*,*)'stopping'
                        STOP
                     END IF
 
                     ALLOCATE( energy_igas(MAXVAL(nmolecules), nspecies), Stat = AllocateStatus )
                     IF (AllocateStatus /= 0) THEN
-                       write(*,*)'memory could no tbe allocated for energy_igas array'
+                       write(*,*)'memory could not be allocated for energy_igas array'
                        write(*,*)'stopping'
                        STOP
                     END IF
@@ -4892,7 +4896,7 @@ SUBROUTINE Get_Start_Type
               start_type = 'make_config'
               ALLOCATE(nmol_actual(nspecies,nbr_boxes),Stat = AllocateStatus)
               IF (AllocateStatus /= 0 ) THEN
-                 write(*,*)'memory could no tbe allocated for nmol_actual array'
+                 write(*,*)'memory could not be allocated for nmol_actual array'
                  write(*,*)'stopping'
                  STOP
               END IF
@@ -5022,7 +5026,6 @@ SUBROUTINE Get_Start_Type
               ! Make sure that the characters of the string are alphanumeric with
               ! a possibility of a . (dot). or _ (dash). The first character must be an alphabet
               CALL Check_String(line_array(1),ierr)
-              write(*,*) line_array(1)
               IF (ierr /= 0 ) THEN
                  err_msg = ""
                  err_msg(1) = 'An error in the input line ' // TRIM(Int_to_String(line_nbr)) &
