@@ -561,7 +561,6 @@ REAL(DP), ALLOCATABLE, DIMENSION(:) :: x_lat, y_lat, z_lat
 INTEGER :: n_lat_atoms
 
 !!!!de Broglie of pair
-REAL(DP), ALLOCATABLE, DIMENSION(:) :: dbpair
 LOGICAL :: store_sum
   
 END MODULE Run_Variables
