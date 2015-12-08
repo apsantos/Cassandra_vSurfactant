@@ -72,7 +72,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   INTEGER :: kappa_tot, which_anchor
   INTEGER, ALLOCATABLE :: frag_order(:)
   INTEGER :: rand_igas, tot_mols
-  INTEGER :: tn1, tn2, n1, n2, nplocal, npair
+  INTEGER :: tn1, tn2, n1, n2, nplocal, npair, dn
 
   REAL(DP) :: ppt, pp(n_insertable), randnpair, loc_chem_pot
   REAL(DP) :: dx, dy, dz, delta_e
@@ -107,6 +107,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   n1 = 1
   tn2 = 2
   n2 = 2
+  dn = 1
   f_bond = 0.0_DP
   f_angle = 0.0_DP
   f_dihedral = 0.0_DP
@@ -176,8 +177,10 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   n2 = is
   endif
 
+  dn = n2 - n1
+  if (dn .EQ. 0) dn = 1
 
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   tot_mols = SUM(nmols(is,:)) ! summed over the number of boxes?
 
   ! Check that tot_mols is less than the maximum allowable, nmolecules(is)
@@ -195,7 +198,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! Now that an insertion will be attempted, we need to do some bookkeeping:
   !  * Increment the counters to compute success ratios
 
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   ntrials(is,this_box)%insertion = ntrials(is,this_box)%insertion + 1
 
   !  * Assign a locate number for this molecule
@@ -233,7 +236,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   !     conformations?) were sampled according to their Boltzmann weight. One 
   !     is chosen at random. Position and orientation are random.
  
-  do is = n1, n2, n2-n1 
+  do is = n1, n2, dn 
   P_seq = 1.0_DP
   P_bias = 1.0_DP
   nrg_ring_frag_tot = 0.0_DP
@@ -387,13 +390,13 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! detect core overlaps.
 
 !FSL to speed up the calculation, we're skipping the next loop if there's any overlap
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
        if (cbmc_overlap(is)) cbmc_rej_pair = .TRUE.
   enddo
 
 
   if (.NOT. cbmc_rej_pair) then
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   E_inter_vdw = 0.0_DP
   E_inter_qq = 0.0_DP
   E_intra_vdw = 0.0_DP
@@ -427,14 +430,14 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   endif
 
   ! 3.3) Reject the move if there is any core overlap
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   IF (cbmc_overlap(is) .OR. inter_overlap(is) .OR. intra_overlap(is)) THEN
         rej_pair = .TRUE.
   ENDIF
   enddo
 
   if (rej_pair) then
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
      molecule_list(alive(is),is)%live = .FALSE.
      atom_list(:,alive(is),is)%exist = .FALSE.
      if (is == n2) RETURN
@@ -460,7 +463,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! If the molecule was grown via CBMC, we already have the intramolecular 
   ! bond energies? Otherwise we need to compute them.
 
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   E_bond = 0.0_DP
   E_angle = 0.0_DP
   E_dihedral = 0.0_DP
@@ -492,7 +495,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
 
   ! 3.5) Ewald energies
 
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   E_reciprocal_move = 0.0_DP
   E_self_move = 0.0_DP
   IF ( (int_charge_sum_style(this_box) == charge_ewald) .AND. &
@@ -525,7 +528,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
      ! increase number of integer beads
      nbeads_in = nint_beads(:,this_box)
 
-     do is = n1, n2, n2-n1
+     do is = n1, n2, dn
      DO i = 1, natoms(is)
         i_type = nonbond_list(i,is)%atom_type_number
         nint_beads(i_type,this_box) = nint_beads(i_type,this_box) + 1
@@ -562,7 +565,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! absorbed into the chemical potential and fugacity, respectively.
 
   ! Compute the acceptance criterion
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   IF(species_list(is)%int_insert == int_igas) THEN 
      isgas = .TRUE.
      igas_en = igas_en + energy_igas(rand_igas,is)%total
@@ -604,7 +607,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   
   IF (accept) THEN
      ! update the number of molecules
-     do is = n1, n2, n2-n1
+     do is = n1, n2, dn
      nmols(is,this_box) = nmols(is,this_box) + 1
      enddo
      ! update the energies
@@ -632,13 +635,13 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
      END IF
 
      ! Increment counter
-     do is = n1, n2, n2-n1
+     do is = n1, n2, dn
      nsuccess(is,this_box)%insertion = nsuccess(is,this_box)%insertion + 1
      enddo
 
   ELSE
   
-     do is = n1, n2, n2-n1
+     do is = n1, n2, dn
      molecule_list(alive(is),is)%live = .FALSE.
      atom_list(:,alive(is),is)%exist = .FALSE.
      molecule_list(alive(is),is)%molecule_type = int_none

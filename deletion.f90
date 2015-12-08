@@ -74,7 +74,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   INTEGER :: kappa_tot, which_anchor
   INTEGER, ALLOCATABLE :: frag_order(:)
   INTEGER :: k, position
-  INTEGER :: tn1, tn2, n1, n2, nplocal, npair
+  INTEGER :: tn1, tn2, n1, n2, nplocal, npair, dn
 
   REAL(DP) :: ppt, pp(n_insertable), randnpair, loc_chem_pot
   REAL(DP) :: delta_e, delta_e_pacc, dblocal
@@ -172,7 +172,10 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   ! Now that a deletion will be attempted, we need to do some bookkeeping:
   !  * Increment the counters to compute success ratios
 
-  do is = n1, n2, n2-n1
+  dn = n2 - n1
+  if (dn .EQ. 0) dn = 1
+
+  do is = n1, n2, dn
   ntrials(is,this_box)%deletion = ntrials(is,this_box)%deletion + 1  
   enddo
 
@@ -183,7 +186,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   !*****************************************************************************
   !
 
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   im(is) = INT(rranf() * nmols(is,this_box)) + 1
   CALL Get_Index_Molecule(this_box,is,im(is),alive(is)) ! sets the value of 'alive(is)'
 
@@ -212,7 +215,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   !          b) Calculate the probability of the fragment's current dihedral
   !
   ! These steps are implemented in the subroutine Build_Molecule
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   P_seq = 1.0_DP
   P_bias = 1.0_DP
   nrg_ring_frag_tot = 0.0_DP
@@ -287,7 +290,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   !   4.5) Long-range energy correction
   ! 
 
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   ! Recompute the COM
   CALL Get_COM(alive(is),is)
 
@@ -319,7 +322,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   ! 4.2) Bonded intramolecular energies
 
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   CALL Compute_Molecule_Bond_Energy(alive(is),is,E_bond)
   CALL Compute_Molecule_Angle_Energy(alive(is),is,E_angle)
   CALL Compute_Molecule_Dihedral_Energy(alive(is),is,E_dihedral)
@@ -334,7 +337,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   
   ! 4.3) Nonbonded intramolecular energies
 
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   CALL Compute_Molecule_Nonbond_Intra_Energy(alive(is),is, &
           E_intra_vdw,E_intra_qq,intra_overlap(is))
   f_intra_vdw = f_intra_vdw + E_intra_vdw
@@ -345,7 +348,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   ! 4.4) Ewald energies
 
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   IF ( (int_charge_sum_style(this_box) == charge_ewald) .AND. &
        (has_charge(is)) ) THEN
     if (n1 /= n2) then
@@ -375,7 +378,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
      ! subtract off beads for this species
      nbeads_out(:) = nint_beads(:,this_box)
 
-     do is = n1, n2, n2-n1
+     do is = n1, n2, dn
      DO i = 1, natoms(is)
         i_type = nonbond_list(i,is)%atom_type_number
         nint_beads(i_type,this_box) = nint_beads(i_type,this_box) - 1
@@ -413,7 +416,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   f_vdw_igas = 0.0_DP
   f_qq_igas = 0.0_DP
-  do is = n1, n2, n2-n1
+  do is = n1, n2, dn
   E_intra_vdw_igas = 0.0_DP
   E_intra_qq_igas = 0.0_DP
   IF(species_list(is)%int_insert == int_igas) THEN
@@ -492,7 +495,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
      ! obtain the original position of the deleted molecule so that the
      ! linked list can be updated
 
-     do is = n1, n2, n2-n1
+     do is = n1, n2, dn
      CALL Get_Position_Molecule(this_box,is,im(is),position)
 
      IF (position < SUM(nmols(is,:))) THEN
