@@ -1187,7 +1187,7 @@ CONTAINS
              ! Only allow interactions in the same box
              IF (this_box /= molecule_list(im,is)%which_box) CYCLE MoleculeLoop
              
-             ! Check tos see if atom is to interact with the molecule based
+             ! Check to see if atom is to interact with the molecule based
              ! on COM cutoff.
              
              CALL Check_Interaction(im,is,this_molecule,this_species,get_interaction,rcom,rx,ry,rz)

@@ -1738,10 +1738,10 @@ SUBROUTINE Get_Bond_Info(is)
               WRITE(logunit,'(A,I6,1x,I6, A, I4)') & 
                    'Harmonic Bond between atoms: ',bond_list(ib,is)%atom1, bond_list(ib,is)%atom2, &
                    ' in species', is
-              bond_list(ib,is)%bond_param(1) = String_To_Double(line_array(5))
+              bond_list(ib,is)%bond_param(2) = String_To_Double(line_array(5))
               WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond length, in A:',bond_list(ib,is)%bond_param(1)
-              bond_list(ib,is)%bond_param(2) = String_To_Double(line_array(6))
-              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond constant, in K/rad^2:',bond_list(ib,is)%bond_param(2)
+              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond constant, in K/A^2:',String_To_Double(line_array(6))
+              bond_list(ib,is)%bond_param(1) = String_To_Double(line_array(6))/atomic_to_K
 
               ! Set number of bond parameters
               nbr_bond_params = 2
