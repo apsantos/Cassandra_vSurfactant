@@ -651,7 +651,7 @@ CONTAINS
     
     ! Local
     INTEGER :: idihed, atom1, atom2, atom3, atom4
-    REAL(DP) :: a0,a1,a2,a3,a4,a5,a6,a7,a8,edihed,phi,twophi,threephi
+    REAL(DP) :: a0,a1,a2,a3,a4,a5,a6,a7,a8,edihed,phi,twophi,threephi, cosine, cosine2, cosine4
   !----------------------------------------------------------------------------------------------              
 
     energy_dihed = 0.0_DP
@@ -686,6 +686,38 @@ CONTAINS
           threephi = 3.0_DP*phi
           edihed =  a0 + a1*(1.0_DP+COS(phi)) + &
                a2*(1.0_DP-COS(twophi)) + a3*(1.0_DP+COS(threephi))
+
+       ELSEIF (dihedral_list(idihed,species)%int_dipot_type == int_rb ) THEN
+
+          ! Check to see if the atoms of this dihedral exists. This is required
+          ! for CBMC moves in which only a part of the molecule is present in
+          ! the simulation
+
+          atom1 = dihedral_list(idihed,species)%atom1
+          atom2 = dihedral_list(idihed,species)%atom2
+          atom3 = dihedral_list(idihed,species)%atom3
+          atom4 = dihedral_list(idihed,species)%atom4
+
+          IF ( .NOT. atom_list(atom1,molecule,species)%exist) CYCLE
+          IF ( .NOT. atom_list(atom2,molecule,species)%exist) CYCLE
+          IF ( .NOT. atom_list(atom3,molecule,species)%exist) CYCLE
+          IF ( .NOT. atom_list(atom4,molecule,species)%exist) CYCLE
+
+          
+          a0 = dihedral_list(idihed,species)%dihedral_param(1)
+          a1 = dihedral_list(idihed,species)%dihedral_param(2)
+          a2 = dihedral_list(idihed,species)%dihedral_param(3)
+          a3 = dihedral_list(idihed,species)%dihedral_param(4)
+          a4 = dihedral_list(idihed,species)%dihedral_param(5)
+          a5 = dihedral_list(idihed,species)%dihedral_param(6)
+
+          CALL Get_Dihedral_Angle(idihed,molecule,species,phi)
+
+          cosine = COS(phi)
+          cosine2 = cosine * cosine
+          cosine4 = cosine2 * cosine2
+          edihed =  a0 + (a1 * cosine) + (a2 * cosine2) + (a3 * cosine2 * cosine) + &
+                    (a4 * cosine4) + (a5 * cosine4 * cosine)
 
 
        ELSEIF (dihedral_list(idihed,species)%int_dipot_type == int_charmm ) THEN

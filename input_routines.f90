@@ -2069,6 +2069,43 @@ SUBROUTINE Get_Dihedral_Info(is)
               nbr_dihedral_params = 4
 
               
+           ELSE IF (dihedral_list(idihed,is)%dihedral_potential_type == 'RB') THEN
+
+              IF(species_list(is)%int_species_type == int_sorbate) zig_calc = .TRUE.
+              dihedral_list(idihed,is)%int_dipot_type = int_rb
+              !a0, a1, a2, a3, a4, a5 in kJ/mol
+              dihedral_list(idihed,is)%dihedral_param(1) = String_To_Double(line_array(7))
+              dihedral_list(idihed,is)%dihedral_param(2) = String_To_Double(line_array(8))
+              dihedral_list(idihed,is)%dihedral_param(3) = String_To_Double(line_array(9))
+              dihedral_list(idihed,is)%dihedral_param(4) = String_To_Double(line_array(10))
+              dihedral_list(idihed,is)%dihedral_param(5) = String_To_Double(line_array(11))
+              dihedral_list(idihed,is)%dihedral_param(6) = String_To_Double(line_array(12))
+
+              WRITE(logunit,'(A,T25,F10.4)') ' a0, kJ/mol:', &
+                   dihedral_list(idihed,is)%dihedral_param(1)
+              WRITE(logunit,'(A,T25,F10.4)') ' a1, kJ/mol:', &
+                   dihedral_list(idihed,is)%dihedral_param(2)
+              WRITE(logunit,'(A,T25,F10.4)') ' a2, kJ/mol:', &
+                   dihedral_list(idihed,is)%dihedral_param(3)
+              WRITE(logunit,'(A,T25,F10.4)') ' a3, kJ/mol:', &
+                   dihedral_list(idihed,is)%dihedral_param(4)
+              WRITE(logunit,'(A,T25,F10.4)') ' a4, kJ/mol:', &
+                   dihedral_list(idihed,is)%dihedral_param(5)
+              WRITE(logunit,'(A,T25,F10.4)') ' a5, kJ/mol:', &
+                   dihedral_list(idihed,is)%dihedral_param(6)
+
+              ! Convert to molecular units amu A^2/ps^2
+              dihedral_list(idihed,is)%dihedral_param(1) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(1)
+              dihedral_list(idihed,is)%dihedral_param(2) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(2)
+              dihedral_list(idihed,is)%dihedral_param(3) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(3)
+              dihedral_list(idihed,is)%dihedral_param(4) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(4)
+              dihedral_list(idihed,is)%dihedral_param(5) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(5)
+              dihedral_list(idihed,is)%dihedral_param(6) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(6)
+
+              ! Set number of dihedral parameters
+              nbr_dihedral_params = 6
+
+              
            ELSE IF (dihedral_list(idihed,is)%dihedral_potential_type == 'CHARMM') THEN
               IF(species_list(is)%int_species_type == int_sorbate) zig_calc = .TRUE.
               dihedral_list(idihed,is)%int_dipot_type = int_charmm

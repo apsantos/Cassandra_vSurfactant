@@ -247,6 +247,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: int_harmonic = 3
   INTEGER, PARAMETER :: int_cvff = 4
   INTEGER, PARAMETER :: int_amber = 5  
+  INTEGER, PARAMETER :: int_rb = 6  
 
   ! Define integers for molecule type
   INTEGER, PARAMETER :: int_noexist = -1
