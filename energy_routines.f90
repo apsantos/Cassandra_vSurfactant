@@ -1637,7 +1637,7 @@ CONTAINS
           Eij_vdw = 4.0_DP * epswca * (SigOverR12 - SigOverR6)
 
           IF(rij .LE. rwca) E_wca = epswca
-          IF(rij .GT. rwca) E_wca = -Eij_vdw
+          IF(rij .GT. rwca) E_wca = 0.0_DP
 
         Eij_vdw = Eij_vdw + E_wca
 !End WCA calculation
