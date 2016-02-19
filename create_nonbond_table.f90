@@ -351,6 +351,9 @@ SUBROUTINE Read_Nonbond_Table
         IF (line_string(1:12) == '# Atom_Types') THEN
             DO iatom = 1, tot_natoms
                 CALL Parse_String(mixfile_unit, i_line, 1, nbr_entries, line_array, ierr)
+                IF (TRIM(line_array(2)) == 'Done_Atom_Types') THEN
+                   EXIT
+                ENDIF
                 temp_name = line_array(1)
                 temp_type = String_To_Int( line_array(2) )
                 IF ( ALL(temp_type_list /= temp_type) ) THEN
