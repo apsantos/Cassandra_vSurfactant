@@ -23,11 +23,10 @@ MODULE Cluster_Routines
 
   !******************************************************************************
   ! 
-  ! This module contains rotations routines that are used to perform rotation
-  ! moves. It consists of rotation about a randomly chosen axis and eulerian angle
-  ! change
+  ! This module contains routines that identify clusters using a version of the 
+  ! Hoshen-Kopelman algorithm.
   !
-  !
+  ! - Andrew P. Santos
   !
   !*******************************************************************************
 
@@ -38,195 +37,190 @@ MODULE Cluster_Routines
 
 CONTAINS
 
-  SUBROUTINE Rotate_Molecule_Eulerian(alive,is)
+  SUBROUTINE Find_Clusters(this_box)
 
-    
     !*********************************************************************************
-    ! takes in the identity of the molecule and rotates the molecule with random
-    ! eulerian angles
     !
-    ! Gets called by
+    ! Hoshen-Kopelman algorithm for efficiently identifying clusters
     !
-    !    Insertion.f90
-    !
-    !
-    ! 12/10/13  : Beta Release
+    ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    
-   IMPLICIT NONE
+    INTEGER, INTENT(IN) :: this_box
+    INTEGER :: tot_natoms, tot_nmol
+    INTEGER :: imol, jmol, iatom, is
+    LOGICAL, ALLOCATABLE, DIMENSION(:) :: neigh_list
 
-   INTEGER, INTENT(IN) :: alive, is
-   
-   REAL(DP) :: theta, phi, psi, rot11, rot12, rot13, rot21, rot22, rot23
-   REAL(DP) :: rot31, rot32, rot33, rxpnew, rypnew, rzpnew
-   
-   INTEGER :: i, ia
-   
-   ! Pick random eulerians
-   
-   theta = ACOS(1.0_DP-2.0_DP*rranf())
-   phi  = (1.0_DP - 2.0_DP * rranf()) * PI
-   psi   = (1.0_DP - 2.0_DP * rranf()) * PI
-   
-   ! shift the origin to the COM of the molecule, do this for atoms that are currently 
-   ! present in the simulation box so that the routine can be used for partially grown
-   ! molecules
-   
-   DO ia = 1,natoms(is)
+    tot_nmol = 0
+    DO is = 1, cluster%n_species_type
+        tot_nmol = tot_nmol + nmols(cluster%species_type(is), this_box)
+    END DO
 
-      IF (atom_list(ia,alive,is)%exist) THEN
-         
-         atom_list(ia,alive,is)%rxp = atom_list(ia,alive,is)%rxp - molecule_list(alive,is)%xcom
-         atom_list(ia,alive,is)%ryp = atom_list(ia,alive,is)%ryp - molecule_list(alive,is)%ycom
-         atom_list(ia,alive,is)%rzp = atom_list(ia,alive,is)%rzp - molecule_list(alive,is)%zcom
-         
-      END IF
+    IF (tot_nmol /= 0) THEN
+        ALLOCATE(neigh_list(tot_nmol))
+    ELSE 
+        RETURN
+    END IF
 
-   END DO
+    tot_natoms = SUM(natoms(:))
+    !IF (tot_natoms /= 0) THEN
+    !    ALLOCATE(neigh_list(tot_natoms))
+    !END IF
 
-   ! Construct the rotation matrix that needs to be applied to each of the vectors
-   ! This is the A matrix in Goldstein notation
-   
-   rot11 = DCOS(psi) * DCOS(phi) - DCOS(theta) * DSIN(phi) * DSIN(psi)
-   rot12 = DCOS(psi) * DSIN(phi) + DCOS(theta) * DCOS(phi) * DSIN(psi)
-   rot13 = DSIN(psi) * DSIN(theta)
-   
-   rot21 = -DSIN(psi) * DCOS(phi) - DCOS(theta) * DSIN(phi) * DCOS(psi)
-   rot22 = -DSIN(psi) * DSIN(phi) + DCOS(theta) * DCOS(phi) * DCOS(psi)
-   rot23 = DCOS(psi) * DSIN(theta)
+    cluster%clusmax = 0
 
-   rot31 = DSIN(theta) * DSIN(phi)
-   rot32 = -DSIN(theta) * DCOS(phi)
-   rot33 = DCOS(theta)
+    IF (cluster%criteria == int_com) THEN
+        ! cluster label of labels
+        ! counts how many atoms are in the cluster
+        ALLOCATE(cluster%N(tot_nmol))
+        ALLOCATE(cluster%clabel(tot_nmol))
+        cluster%N = 0
+        cluster%clabel = 0
+        DO imol = 1, tot_nmol 
+            !Get a list of the neighbors to an atom in the frame
+            neigh_list = .FALSE.
+            DO jmol = imol+1, tot_nmol
+                DO is = 1, cluster%n_species_type
+                    neigh_list(jmol) = Neighbor(jmol, imol, cluster%species_type(is), cluster%species_type(is))
+                END DO
+            END DO
+            
+            ! Update cluster label list
+            CALL Update_Labels(imol, tot_nmol, neigh_list)
 
-   ! Now rotate the relative vectors to obtain the new positions
+        END DO
+    END IF
 
-   DO ia = 1, natoms(is)
+    DO imol = 1, tot_nmol
+        IF (cluster%N(imol) > 0) THEN
+            cluster%M( cluster%N(imol) ) = cluster%M( cluster%N(imol) ) + 1
+        END IF
+    END DO
 
-      IF (atom_list(ia,alive,is)%exist) THEN
-         
-         rxpnew = rot11*atom_list(ia,alive,is)%rxp + rot12*atom_list(ia,alive,is)%ryp + &
-              rot13*atom_list(ia,alive,is)%rzp
-         rypnew = rot21*atom_list(ia,alive,is)%rxp + rot22*atom_list(ia,alive,is)%ryp + &
-              rot23*atom_list(ia,alive,is)%rzp
-         rzpnew = rot31*atom_list(ia,alive,is)%rxp + rot32*atom_list(ia,alive,is)%ryp + &
-              rot33*atom_list(ia,alive,is)%rzp
-         
-         ! Shift the origin back to (0,0,0)
-         
-         atom_list(ia,alive,is)%rxp = rxpnew + molecule_list(alive,is)%xcom
-         atom_list(ia,alive,is)%ryp = rypnew + molecule_list(alive,is)%ycom
-         atom_list(ia,alive,is)%rzp = rzpnew + molecule_list(alive,is)%zcom
-         
-      END IF
-      
-   END DO
+    DEALLOCATE(cluster%clabel, cluster%N, neigh_list)
 
- END SUBROUTINE Rotate_Molecule_Eulerian
+  END SUBROUTINE Find_Clusters
 
+  SUBROUTINE Update_Labels(iatom, natom, neigh_list)
 
- SUBROUTINE Rotate_XYZ_Axes(alive,is,frag_start,lx,ly,lz,mtype) 
-    
     !*********************************************************************************
-    ! takes in the identity of the molecule and rotates the molecule with random
-    ! eulerian angles
     !
-    ! Gets called by
+    ! Part of the Hoshen-Kopelman, where the labels of atoms/molecules in each cluster
+    ! is updated
     !
-    !    Insertion.f90
+    ! 2/19/15  : Andrew P. Santos
+    !*********************************************************************************
+    INTEGER, INTENT(IN) :: iatom, natom
+    LOGICAL, INTENT(IN), DIMENSION(natom) :: neigh_list
+    INTEGER :: iclus, nclus, ineigh
+    INTEGER :: max_clus, min_clus
+
+    DO ineigh = 1, natom
+        IF (neigh_list(ineigh) == .FALSE.) CYCLE
+
+        ! current site' cluster label
+        iclus = cluster%clabel(iatom)
+        ! neighboring site's cluster label
+        nclus = cluster%clabel(ineigh)
+        ! IF the neighbor site has been assigned
+        IF (nclus /= 0) THEN
+            ! IF the current site has yet to be assigned
+            IF (iclus == 0) THEN
+                ! assign the cluster to the occupied neighbor's cluster
+                cluster%clabel(iatom) = nclus
+                DO WHILE (cluster%N(nclus) < 0)
+                    nclus = -cluster%N(nclus)
+                END DO
+
+                cluster%N(nclus) = cluster%N(nclus) + 1
+
+            ! IF the current site is defined
+            ELSE
+                ! assign both labels with the larger value to the lower
+                DO WHILE (cluster%N(nclus) < 0)
+                    nclus = -cluster%N(nclus)
+                END DO
+
+                DO WHILE (cluster%N(iclus) < 0)
+                    iclus = -cluster%N(iclus)
+                END DO
+
+                min_clus = min(nclus, iclus)
+                max_clus = max(nclus, iclus)
+                ! assign the cluster lower label value
+                cluster%clabel(iatom) = min_clus
+                IF (min_clus /= max_clus) THEN
+                    cluster%N(min_clus) = cluster%N(min_clus) + cluster%N(max_clus)
+                    cluster%N(max_clus) = -min_clus
+                END IF
+
+            END IF
+
+        ! IF the neighbor bead has not been assigned
+        ELSE 
+            ! IF the current site has yet to be assigned
+            IF (iclus == 0) THEN
+                ! assign site a new cluster label
+                cluster%clusmax = cluster%clusmax + 1
+                cluster%clabel(iatom) = cluster%clusmax
+                iclus = cluster%clusmax
+                cluster%N(cluster%clusmax) = 1
+            END IF
+
+            cluster%clabel(ineigh) = iclus
+
+            DO WHILE (cluster%N(iclus) < 0)
+                iclus = -cluster%N(iclus)
+            END DO
+
+            cluster%N(iclus) = cluster%N(iclus) + 1
+        END IF
+    END DO
+
+    IF (cluster%clabel(iatom) == 0) THEN
+        cluster%clusmax = cluster%clusmax + 1
+        cluster%clabel(iatom) = cluster%clusmax
+        cluster%N(cluster%clusmax) = 1
+    END IF
+
+  END SUBROUTINE Update_Labels
+
+  FUNCTION Neighbor(test_part, cur_part, test_type, cur_type)
+
+    !*********************************************************************************
     !
+    ! Return T/F if two atoms/molecules are neighbors
     !
-    ! 12/10/13 (EM): Beta Release
+    ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
+    LOGICAL :: Neighbor
+    INTEGER, INTENT(IN) :: test_part, cur_part, test_type, cur_type
+    REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
     
-   IMPLICIT NONE
+    Neighbor = .FALSE.
 
-   INTEGER, INTENT(IN) :: alive, is,frag_start,  mtype
-   INTEGER :: atom_orig
-   LOGICAL :: lx, ly,lz
-   REAL(DP) :: theta, phi, psi, rot11, rot12, rot13, rot21, rot22, rot23
-   REAL(DP) :: rot31, rot32, rot33, rxpnew, rypnew, rzpnew
-   
-   REAL(DP) :: x_orig,y_orig,z_orig
+    IF (ANY(cluster%species_type /= test_type)) THEN
+        RETURN
+    END IF
 
-   INTEGER :: i, ia, istart
-   
-   ! Pick random eulerians
-   
-   theta = ACOS(1.0_DP-2.0_DP*rranf())
-   phi  = (1.0_DP - 2.0_DP * rranf()) * PI
-   psi   = (1.0_DP - 2.0_DP * rranf()) * PI
-   
-   ! shift the origin to the COM of the molecule, do this for atoms that are currently 
-   ! present in the simulation box so that the routine can be used for partially grown
-   ! molecules
+    IF (cluster%criteria == int_com) THEN
+        ! Get the positions of the COM of the two molecule species
+        rxijp = molecule_list(test_part,test_type)%xcom - molecule_list(cur_part, cur_type)%xcom
+        ryijp = molecule_list(test_part,test_type)%ycom - molecule_list(cur_part, cur_type)%ycom
+        rzijp = molecule_list(test_part,test_type)%zcom - molecule_list(cur_part, cur_type)%zcom
+        
+        ! Now get the minimum image separation 
+        CALL Minimum_Image_Separation(1, rxijp, ryijp, rzijp, rxij, ryij, rzij)
 
-   atom_orig = frag_list(frag_start,is)%atoms(1)
+        rijsq = rxij*rxij + ryij*ryij + rzij*rzij
+        
+        IF (rijsq < cluster%min_distance(test_type)) THEN
+           Neighbor = .TRUE.
+        END IF
+                      
+    END IF
 
-   x_orig = atom_list(atom_orig,alive,is)%rxp
-   y_orig = atom_list(atom_orig,alive,is)%ryp
-   z_orig = atom_list(atom_orig,alive,is)%rzp
-
-   istart = 2
-
-   DO i = istart,frag_list(frag_start,is)%natoms
-      ia = frag_list(frag_start,is)%atoms(i)
- 
-      IF (atom_list(ia,alive,is)%exist) THEN
-         
-         atom_list(ia,alive,is)%rxp = atom_list(ia,alive,is)%rxp - x_orig
-         atom_list(ia,alive,is)%ryp = atom_list(ia,alive,is)%ryp - y_orig
-         atom_list(ia,alive,is)%rzp = atom_list(ia,alive,is)%rzp - z_orig
-         
-      END IF
-
-   END DO
-
-   ! Construct the rotation matrix that needs to be applied to each of the vectors
-   ! This is the A matrix in Goldstein notation
-   
-   rot11 = DCOS(psi) * DCOS(phi) - DCOS(theta) * DSIN(phi) * DSIN(psi)
-   rot12 = DCOS(psi) * DSIN(phi) + DCOS(theta) * DCOS(phi) * DSIN(psi)
-   rot13 = DSIN(psi) * DSIN(theta)
-   
-   rot21 = -DSIN(psi) * DCOS(phi) - DCOS(theta) * DSIN(phi) * DCOS(psi)
-   rot22 = -DSIN(psi) * DSIN(phi) + DCOS(theta) * DCOS(phi) * DCOS(psi)
-   rot23 = DCOS(psi) * DSIN(theta)
-
-   rot31 = DSIN(theta) * DSIN(phi)
-   rot32 = -DSIN(theta) * DCOS(phi)
-   rot33 = DCOS(theta)
-
-   ! Now rotate the relative vectors to obtain the new positions
-
-   DO ia = 2, natoms(is)
-
-      IF (atom_list(ia,alive,is)%exist) THEN
-         
-         rxpnew = rot11*atom_list(ia,alive,is)%rxp + rot12*atom_list(ia,alive,is)%ryp + &
-              rot13*atom_list(ia,alive,is)%rzp
-         rypnew = rot21*atom_list(ia,alive,is)%rxp + rot22*atom_list(ia,alive,is)%ryp + &
-              rot23*atom_list(ia,alive,is)%rzp
-         rzpnew = rot31*atom_list(ia,alive,is)%rxp + rot32*atom_list(ia,alive,is)%ryp + &
-              rot33*atom_list(ia,alive,is)%rzp
-         
-         atom_list(ia,alive,is)%rxp = rxpnew
-         atom_list(ia,alive,is)%ryp = rypnew
-         atom_list(ia,alive,is)%rzp = rzpnew
-
-      END IF
-
-   END DO
-
-   ! Shift the origin back to (0,0,0)
-   DO i=istart,frag_list(frag_start,is)%natoms
-      ia = frag_list(frag_start,is)%atoms(i)
-      atom_list(ia,alive,is)%rxp = atom_list(ia,alive,is)%rxp + x_orig
-      atom_list(ia,alive,is)%ryp = atom_list(ia,alive,is)%ryp + y_orig
-      atom_list(ia,alive,is)%rzp = atom_list(ia,alive,is)%rzp + z_orig
-   END DO
- END SUBROUTINE Rotate_XYZ_Axes
+  END FUNCTION Neighbor
 
 END MODULE Cluster_Routines

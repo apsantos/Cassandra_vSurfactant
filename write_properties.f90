@@ -253,6 +253,16 @@ CONTAINS
 
          write_buff(ii+1) = P_ideal(this_box) + P_inst(this_box)
 
+      ELSE IF (prop_written == 'Energy_Intra_Angle') THEN
+
+         write_buff(ii+1) = energy(this_box)%angle
+         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
+
+      ELSE IF (prop_written == 'Energy_Intra_Dihedral') THEN
+
+         write_buff(ii+1) = energy(this_box)%dihedral
+         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
+
       ELSE IF (prop_written == 'Energy_Intra_VDW') THEN
 
          IF (block_average) THEN
@@ -450,4 +460,35 @@ SUBROUTINE Write_Coords(this_box)
 
 END SUBROUTINE Write_Coords
 
+SUBROUTINE Write_Cluster(this_box)
+  !************************************************************************************
+  ! The subroutine writes the cluster vists in the simulation box
+  !
+  ! CALLED BY
+  !
+  !        gcmc_driver
+  !
+  !************************************************************************************
 
+  USE Run_Variables
+  USE File_Names
+  USE Cluster_Routines
+  USE IO_Utilities
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: this_box
+  INTEGER :: iM, box_unit
+
+  cluster_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.clu'
+  box_unit = cluster_file_unit + this_box
+  OPEN(unit=cluster_file_unit+this_box, file=cluster_file)
+
+  WRITE(box_unit,*) '#   M    pop'
+  
+  DO iM = 1, SIZE(cluster%M)
+     WRITE(box_unit,'(I6, I10)') iM, cluster%M(iM)
+  END DO
+  CLOSE(unit=cluster_file_unit+this_box)
+
+END SUBROUTINE Write_Cluster

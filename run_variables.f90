@@ -469,7 +469,7 @@ USE Type_Definitions
   !*********************************************************************************************************
   ! Information on the output of data
 
-  INTEGER :: nthermo_freq, ncoord_freq, n_mcsteps, n_equilsteps, this_mcstep
+  INTEGER :: nthermo_freq, ncoord_freq, ncluster_freq, nexvol_freq, n_mcsteps, n_equilsteps, this_mcstep
  
   INTEGER,DIMENSION(:),ALLOCATABLE :: nbr_prop_files
 
@@ -563,6 +563,20 @@ INTEGER :: n_lat_atoms
 
 !!!!de Broglie of pair
 LOGICAL :: store_sum
+
+  !*********************************************************************************************************
+  ! Information on Clusters
+
+  ! Will have dimensions of (nspecies,nbr_boxes)
+  TYPE(Cluster_Class), TARGET :: cluster
+
+  INTEGER, PARAMETER :: int_com = 1
+
+  !*********************************************************************************************************
+  ! Information on Excluded Volume calculation
+
+  ! Will have dimensions of (nspecies,nbr_boxes)
+  TYPE(ExVol_Class), TARGET :: exvol
   
 END MODULE Run_Variables
 

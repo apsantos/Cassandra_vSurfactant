@@ -547,4 +547,33 @@ MODULE Type_Definitions
 
  END TYPE Frag_Coord_Class
 
+!-------------------------------------------------------------------------------------------------
+
+ TYPE Cluster_Class
+    ! This class holds the information for the cluster
+
+    ! clustering criteria variables
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: min_distance
+    INTEGER  :: criteria, m_olig
+    INTEGER, DIMENSION(:), ALLOCATABLE :: species_type, atom_type
+    INTEGER :: n_species_type, n_atom_type
+
+    ! cluster finding variables
+    REAL(DP) :: clusmax, n_cluster
+    INTEGER, DIMENSION(:), ALLOCATABLE :: clabel, N, M
+
+ END TYPE Cluster_Class
+
+ TYPE ExVol_Class
+    ! This class holds the information for the cluster
+
+    ! clustering criteria variables
+    INTEGER  :: n_config, n_mono_config, n_mono_atom, species
+    REAL(DP), ALLOCATABLE, DIMENSION(:,:,:)  :: pos_mono
+    INTEGER, ALLOCATABLE, DIMENSION(:,:)  :: atype_mono
+    CHARACTER, ALLOCATABLE, DIMENSION(:,:)  :: aname_mono
+    CHARACTER :: mcf_file, frag_file
+
+ END TYPE ExVol_Class
+
 END MODULE Type_Definitions
