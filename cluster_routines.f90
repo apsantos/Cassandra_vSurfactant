@@ -48,46 +48,72 @@ CONTAINS
 
     INTEGER, INTENT(IN) :: this_box
     INTEGER :: tot_natoms, tot_nmol
-    INTEGER :: imol, jmol, iatom, is
+    INTEGER :: imol, jmol, iatom, i, im, jm
+    INTEGER :: is, js, is_clus, js_clus, start
     LOGICAL, ALLOCATABLE, DIMENSION(:) :: neigh_list
+    INTEGER, ALLOCATABLE, DIMENSION(:,:) :: live_mol_index
 
+    IF ( ALLOCATED(cluster%clabel) ) DEALLOCATE(cluster%clabel, cluster%N)
+
+    ALLOCATE( live_mol_index(MAXVAL(nmols(:,this_box)), cluster%n_species_type) )
+
+    live_mol_index = 0
     tot_nmol = 0
     DO is = 1, cluster%n_species_type
-        tot_nmol = tot_nmol + nmols(cluster%species_type(is), this_box)
+        is_clus = cluster%species_type(is)
+        i = 1
+        MoleculeLoop:DO imol = 1, nmolecules(is_clus)
+            im = locate(imol, is_clus)
+            ! Make sure that the molecule exists in the simulation
+            IF( .NOT. molecule_list(im,is_clus)%live ) CYCLE MoleculeLoop
+            live_mol_index(i,is_clus) = im
+            i = i + 1
+            tot_nmol = tot_nmol + 1
+        END DO MoleculeLoop
     END DO
 
-    IF (tot_nmol /= 0) THEN
-        ALLOCATE(neigh_list(tot_nmol))
-    ELSE 
+    IF (tot_nmol == 0) THEN
         RETURN
     END IF
 
     tot_natoms = SUM(natoms(:))
-    !IF (tot_natoms /= 0) THEN
-    !    ALLOCATE(neigh_list(tot_natoms))
-    !END IF
 
     cluster%clusmax = 0
 
     IF (cluster%criteria == int_com) THEN
         ! cluster label of labels
         ! counts how many atoms are in the cluster
-        ALLOCATE(cluster%N(tot_nmol))
-        ALLOCATE(cluster%clabel(tot_nmol))
+        ALLOCATE(cluster%N(0:tot_nmol))
+        ALLOCATE(cluster%clabel(MAXVAL(nmolecules(:)), cluster%n_species_type))
         cluster%N = 0
         cluster%clabel = 0
-        DO imol = 1, tot_nmol 
-            !Get a list of the neighbors to an atom in the frame
-            neigh_list = .FALSE.
-            DO jmol = imol+1, tot_nmol
-                DO is = 1, cluster%n_species_type
-                    neigh_list(jmol) = Neighbor(jmol, imol, cluster%species_type(is), cluster%species_type(is))
-                END DO
-            END DO
-            
-            ! Update cluster label list
-            CALL Update_Labels(imol, tot_nmol, neigh_list)
+        DO is = 1, cluster%n_species_type
+            is_clus = cluster%species_type(is)
+            DO imol = 1, nmols(is_clus,this_box)
+                !Get a list of the neighbors to an atom in the frame
+                im = live_mol_index(imol,is)
+                DO js = 1, cluster%n_species_type
 
+                    js_clus = cluster%species_type(js)
+                    IF (js_clus == is_clus) THEN
+                        start = imol+1
+                    ELSE
+                        start = 1
+                    END IF
+
+                    ALLOCATE(neigh_list(nmolecules(js_clus)))
+                    neigh_list = .FALSE.
+                    DO jmol = start, nmols(js_clus,this_box)
+                        jm = live_mol_index(jmol,is)
+                        neigh_list(jm) = Neighbor(jm, im, js_clus, is_clus)
+                    END DO
+
+                    ! Update cluster label list
+                    CALL Update_Labels(im, is_clus, js_clus, neigh_list)
+                    DEALLOCATE(neigh_list)
+                END DO
+
+            END DO
         END DO
     END IF
 
@@ -97,11 +123,9 @@ CONTAINS
         END IF
     END DO
 
-    DEALLOCATE(cluster%clabel, cluster%N, neigh_list)
-
   END SUBROUTINE Find_Clusters
 
-  SUBROUTINE Update_Labels(iatom, natom, neigh_list)
+  SUBROUTINE Update_Labels(imol, is, js, neigh_list)
 
     !*********************************************************************************
     !
@@ -110,24 +134,24 @@ CONTAINS
     !
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
-    INTEGER, INTENT(IN) :: iatom, natom
-    LOGICAL, INTENT(IN), DIMENSION(natom) :: neigh_list
+    INTEGER, INTENT(IN) :: imol, is, js
+    LOGICAL, INTENT(IN), DIMENSION(nmolecules(js)) :: neigh_list
     INTEGER :: iclus, nclus, ineigh
     INTEGER :: max_clus, min_clus
 
-    DO ineigh = 1, natom
+    DO ineigh = 1, nmolecules(js)
         IF (neigh_list(ineigh) == .FALSE.) CYCLE
 
         ! current site' cluster label
-        iclus = cluster%clabel(iatom)
+        iclus = cluster%clabel(imol, is)
         ! neighboring site's cluster label
-        nclus = cluster%clabel(ineigh)
+        nclus = cluster%clabel(ineigh, js)
         ! IF the neighbor site has been assigned
         IF (nclus /= 0) THEN
             ! IF the current site has yet to be assigned
             IF (iclus == 0) THEN
                 ! assign the cluster to the occupied neighbor's cluster
-                cluster%clabel(iatom) = nclus
+                cluster%clabel(imol, is) = nclus
                 DO WHILE (cluster%N(nclus) < 0)
                     nclus = -cluster%N(nclus)
                 END DO
@@ -148,7 +172,7 @@ CONTAINS
                 min_clus = min(nclus, iclus)
                 max_clus = max(nclus, iclus)
                 ! assign the cluster lower label value
-                cluster%clabel(iatom) = min_clus
+                cluster%clabel(imol, is) = min_clus
                 IF (min_clus /= max_clus) THEN
                     cluster%N(min_clus) = cluster%N(min_clus) + cluster%N(max_clus)
                     cluster%N(max_clus) = -min_clus
@@ -162,12 +186,12 @@ CONTAINS
             IF (iclus == 0) THEN
                 ! assign site a new cluster label
                 cluster%clusmax = cluster%clusmax + 1
-                cluster%clabel(iatom) = cluster%clusmax
+                cluster%clabel(imol, is) = cluster%clusmax
                 iclus = cluster%clusmax
                 cluster%N(cluster%clusmax) = 1
             END IF
 
-            cluster%clabel(ineigh) = iclus
+            cluster%clabel(ineigh, js) = iclus
 
             DO WHILE (cluster%N(iclus) < 0)
                 iclus = -cluster%N(iclus)
@@ -177,9 +201,9 @@ CONTAINS
         END IF
     END DO
 
-    IF (cluster%clabel(iatom) == 0) THEN
+    IF (cluster%clabel(imol, is) == 0) THEN
         cluster%clusmax = cluster%clusmax + 1
-        cluster%clabel(iatom) = cluster%clusmax
+        cluster%clabel(imol, is) = cluster%clusmax
         cluster%N(cluster%clusmax) = 1
     END IF
 
@@ -194,16 +218,17 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    LOGICAL :: Neighbor
+    LOGICAL :: Neighbor, cluster_type
     INTEGER, INTENT(IN) :: test_part, cur_part, test_type, cur_type
     REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
+    INTEGER :: itype
     
     Neighbor = .FALSE.
 
     IF (ANY(cluster%species_type /= test_type)) THEN
         RETURN
     END IF
-
+      
     IF (cluster%criteria == int_com) THEN
         ! Get the positions of the COM of the two molecule species
         rxijp = molecule_list(test_part,test_type)%xcom - molecule_list(cur_part, cur_type)%xcom
@@ -215,7 +240,7 @@ CONTAINS
 
         rijsq = rxij*rxij + ryij*ryij + rzij*rzij
         
-        IF (rijsq < cluster%min_distance(test_type)) THEN
+        IF (rijsq < cluster%min_distance_sq(test_type)) THEN
            Neighbor = .TRUE.
         END IF
                       
