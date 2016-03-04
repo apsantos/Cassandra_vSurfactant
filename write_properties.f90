@@ -127,6 +127,10 @@ CONTAINS
 
           prop_unit(ii) = '(molec/A^3)'
 
+       ELSE IF (prop_to_write(1:8) == 'Excluded') THEN
+
+          prop_unit(ii) = '(% excluded)'
+
        END IF
 
        WRITE(this_unit,'(A16,2X)',ADVANCE='NO') (TRIM(prop_unit(ii)))
@@ -150,6 +154,10 @@ CONTAINS
     ELSE IF (prop_to_write == 'Density') THEN
        
        prop_unit(ii) = '(molec/A^3)'
+
+    ELSE IF (prop_to_write(1:8) == 'Excluded') THEN
+
+       prop_unit(ii) = '(% excluded)'
 
     END IF
     
@@ -362,6 +370,14 @@ CONTAINS
          write_buff(ii+1) = chpot(is_cp,this_box) / REAL(ntrials(is_cp,this_box)%cpcalc)
          is_cp = is_cp + 1
          
+      ELSE IF (prop_written == 'Excluded Volume') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = exvol%excluded / REAL(nexvol_freq * exvol%n_iter,DP)
+         ELSE
+            write_buff(ii+1) = exvol%excluded / REAL(exvol%n_iter)
+         END IF
+
       END IF
       
       ! At the end increment property counter by 1

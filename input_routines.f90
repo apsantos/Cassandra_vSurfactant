@@ -5491,7 +5491,7 @@ SUBROUTINE Get_Frequency_Info
                  WRITE(logunit,*) 
                  WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will bec calculated/written at every', ncluster_freq, ' MC steps.'
 
-              ELSE IF (line_array(1) == 'Nexvol') THEN
+              ELSE IF (line_array(1) == 'Nexvolfreq') THEN
 
                  nexvol_freq = String_To_Int(line_array(2))
               
@@ -5715,6 +5715,10 @@ USE Run_Variables, ONLY: cpcollect
     
   END DO
 
+  IF (nexvol_freq /= 0) THEN
+     nbr_properties = nbr_properties + 1
+     max_properties = MAX(nbr_properties,max_properties)
+  END IF
    ! Now we will figure out which properties are to be output. Allocate
   ! property files related arrays.
 
@@ -5802,6 +5806,13 @@ USE Run_Variables, ONLY: cpcollect
      END IF
 
   END DO
+
+  IF (nexvol_freq /= 0) THEN
+     nbr_properties = nbr_properties + 1
+     prop_output(nbr_properties,nbr_prop_files(1),1) = 'Excluded Volume'
+     prop_per_file(nbr_prop_files(this_box),this_box) = nbr_properties
+  END IF
+
  ! Name the files for output
   DO ibox = 1, nbr_boxes
      DO i = 1, nbr_prop_files(ibox)
@@ -5873,6 +5884,7 @@ SUBROUTINE Get_Clustering_Info
   max_nmol = 0
   ierr = 0
   line_nbr = 0
+  cluster%criteria = 0
   DO
      line_nbr = line_nbr + 1
      CALL Read_String(inputunit,line_string,ierr)
@@ -5893,13 +5905,13 @@ SUBROUTINE Get_Clustering_Info
             END IF
             cluster%criteria = int_com
 
-            ALLOCATE(cluster%min_distance(nspecies))
-            cluster%min_distance = 0.0_DP
+            ALLOCATE(cluster%min_distance_sq(nspecies))
+            cluster%min_distance_sq = 0.0_DP
             cluster%n_species_type = 0
             DO is = 1, nspecies 
                 distance = String_To_Double(line_array(1 + is))
-                IF (distance > 0.0001) THEN
-                    cluster%min_distance(is) = distance
+                IF (distance > 0.001) THEN
+                    cluster%min_distance_sq(is) = distance**2.0_DP
                     cluster%n_species_type = cluster%n_species_type + 1
                     WRITE(logunit,*) 'species, ', is, ' is included in the Clustering calculation'
                     
@@ -5907,9 +5919,10 @@ SUBROUTINE Get_Clustering_Info
             END DO
 
             ALLOCATE(cluster%species_type(cluster%n_species_type))
+            cluster%species_type = 0
             i = 1
             DO is = 1, nspecies 
-                IF (cluster%min_distance(is) > 0.0001) THEN
+                IF (cluster%min_distance_sq(is) > 0.000001) THEN
                     cluster%species_type(i) = is
                     i = i + 1
                     max_nmol = max_nmol + nmolecules(is)
@@ -5921,7 +5934,11 @@ SUBROUTINE Get_Clustering_Info
         cluster%M = 0
 
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
-        IF (cluster%n_species_type == 0) THEN
+        IF (ncluster_freq /= 0 .AND. cluster%criteria == 0) THEN
+            err_msg = ''
+            err_msg(1) = '# Clustering info not given in input, but Nclusterfreq specified.'
+            CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+        ELSE IF (cluster%n_species_type == 0) THEN
             WRITE(logunit,*) '**** Not Performing Clustering calculation ****** '
         END IF
 
@@ -5941,13 +5958,15 @@ SUBROUTINE Get_Excluded_Volume_Info
 
   USE Excluded_Volume
 
-  INTEGER :: ierr, line_nbr, nbr_entries
+  INTEGER :: ierr, line_nbr, nbr_entries, is
   CHARACTER(120) :: line_string, line_array(20) !filename
 
   REWIND(inputunit)
   
   ierr = 0
-  exvol%n_config = 0
+  exvol%n_iter = 0
+  exvol%trials = 0
+  exvol%excluded = 0
 
   WRITE(logunit,*) 
   WRITE(logunit,*) '**** Reading Excluded Volume calculation information ****** '
@@ -5964,39 +5983,68 @@ SUBROUTINE Get_Excluded_Volume_Info
      END IF
 
      IF(line_string(1:17) == '# Excluded_Volume') THEN
-        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
-        IF (nbr_entries < 2 ) THEN
+        IF ( cluster%n_species_type == 0 ) THEN
             err_msg = ''
-            err_msg(1) = 'Must include both the mcf filename'
-            err_msg(2) = 'and the number of configurations to use'
-            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
-        ELSE IF (nbr_entries > 2 ) THEN
-            err_msg = ''
-            err_msg(1) = 'Too many options given'
+            err_msg(1) = 'Cannot compute excluded volume without clusterin information'
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
         END IF
-        exvol%mcf_file = line_array(1)
-        exvol%n_config = String_To_Int(line_array(2))
 
-        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
-        IF (nbr_entries < 2 ) THEN
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= nspecies ) THEN
             err_msg = ''
-            err_msg(1) = 'Must include both the fragment filename with the inserting monomer positions'
-            err_msg(2) = 'and the species corresponding'
-            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
-        ELSE IF (nbr_entries > 2 ) THEN
-            err_msg = ''
-            err_msg(1) = 'Too many options given'
+            err_msg(1) = 'Must have the number of configurations for ex. vol.'
+            err_msg(2) = 'calculation for each species (should be0 if not ex vol).'
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
         END IF
-        exvol%frag_file = line_array(1)
-        exvol%species = String_To_Int(line_array(2))
 
-        !CALL Read_ExVol_Monomers(filename)
+        DO is = 1, nspecies
+            IF (exvol%n_iter == 0) THEN
+                exvol%n_iter = String_To_Int(line_array(is))
+                exvol%species = is
+
+            ELSE IF (exvol%n_iter /= 0 .AND. String_To_Int(line_array(is)) /= 0) THEN
+                err_msg = ''
+                err_msg(1) = 'Species '//Int_To_String(is)//' and '//Int_To_String(exvol%species)
+                err_msg(2) = ' specified. Only 1 excluded volume species allowed'
+                CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
+            END IF
+        END DO
+
+        IF (nmolecules(exvol%species) /= 1) THEN
+            err_msg = ''
+            err_msg(1) = 'Max of 1 molecule for excluded volume species. '//TRIM(Int_To_String(nmolecules(exvol%species)))//' given.'
+            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
+        END IF
+
+        IF (start_type == 'read_old' .AND. species_list(exvol%species)%nmoltotal /= 0) THEN
+            err_msg = ''
+            err_msg(1) = 'No excluded volume species ('//TRIM(Int_To_String(exvol%species))//') allowed to initialize.'
+            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
+        END IF
+
+        IF (species_list(exvol%species)%int_insert /= int_noinsert) THEN
+            err_msg = ''
+            err_msg(1) = 'Excluded volume species ('//TRIM(Int_To_String(exvol%species))//') can not be insertable!'
+            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
+        END IF
+
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= nspecies ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must give a M_olig value for each species'
+            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
+        END IF
+
+        ALLOCATE(cluster%M_olig(nspecies))
+        DO is = 1, nspecies
+            cluster%M_olig(is) = String_To_Int(line_array(is))
+        END DO
 
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
-        IF (exvol%n_config == 0) THEN
-            WRITE(logunit,*) '**** Not Performing Excluded Volume calculation ****** '
+        IF (nexvol_freq /= 0 .AND. exvol%species == 0 .OR. nexvol_freq == 0 .AND. exvol%species /= 0) THEN
+            err_msg = ''
+            err_msg(1) = '# Excluded_Volume info not given in input, but Nexvolfreq specified.'
+            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
         END IF
 
         EXIT

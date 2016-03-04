@@ -116,6 +116,10 @@ SUBROUTINE NVTMC_Control
 
   CALL Get_Frequency_Info
 
+  CALL Get_Clustering_Info
+
+  CALL Get_Excluded_Volume_Info
+
   CALL Average_Info
 
   CALL Get_Property_Info

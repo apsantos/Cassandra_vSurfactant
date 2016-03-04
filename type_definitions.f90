@@ -553,14 +553,15 @@ MODULE Type_Definitions
     ! This class holds the information for the cluster
 
     ! clustering criteria variables
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: min_distance
-    INTEGER  :: criteria, m_olig
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: min_distance_sq
+    INTEGER  :: criteria
     INTEGER, DIMENSION(:), ALLOCATABLE :: species_type, atom_type
     INTEGER :: n_species_type, n_atom_type
 
     ! cluster finding variables
     REAL(DP) :: clusmax, n_cluster
-    INTEGER, DIMENSION(:), ALLOCATABLE :: clabel, N, M
+    INTEGER, DIMENSION(:), ALLOCATABLE :: N, M, M_olig
+    INTEGER, DIMENSION(:,:), ALLOCATABLE :: clabel
 
  END TYPE Cluster_Class
 
@@ -568,11 +569,9 @@ MODULE Type_Definitions
     ! This class holds the information for the cluster
 
     ! clustering criteria variables
-    INTEGER  :: n_config, n_mono_config, n_mono_atom, species
-    REAL(DP), ALLOCATABLE, DIMENSION(:,:,:)  :: pos_mono
-    INTEGER, ALLOCATABLE, DIMENSION(:,:)  :: atype_mono
-    CHARACTER, ALLOCATABLE, DIMENSION(:,:)  :: aname_mono
-    CHARACTER :: mcf_file, frag_file
+    INTEGER  :: n_iter, species
+    INTEGER  :: excluded, trials
+    REAL(DP)  :: criteria
 
  END TYPE ExVol_Class
 
