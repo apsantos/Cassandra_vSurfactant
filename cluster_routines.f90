@@ -80,42 +80,40 @@ CONTAINS
 
     cluster%clusmax = 0
 
-    IF (cluster%criteria == int_com) THEN
-        ! cluster label of labels
-        ! counts how many atoms are in the cluster
-        ALLOCATE(cluster%N(0:tot_nmol))
-        ALLOCATE(cluster%clabel(MAXVAL(nmolecules(:)), cluster%n_species_type))
-        cluster%N = 0
-        cluster%clabel = 0
-        DO is = 1, cluster%n_species_type
-            is_clus = cluster%species_type(is)
-            DO imol = 1, nmols(is_clus,this_box)
-                !Get a list of the neighbors to an atom in the frame
-                im = live_mol_index(imol,is)
-                DO js = 1, cluster%n_species_type
+    ! cluster label of labels
+    ! counts how many atoms are in the cluster
+    ALLOCATE(cluster%N(0:tot_nmol))
+    ALLOCATE(cluster%clabel(MAXVAL(nmolecules(:)), cluster%n_species_type))
+    cluster%N = 0
+    cluster%clabel = 0
+    DO is = 1, cluster%n_species_type
+        is_clus = cluster%species_type(is)
+        DO imol = 1, nmols(is_clus,this_box)
+            !Get a list of the neighbors to an atom in the frame
+            im = live_mol_index(imol,is)
+            DO js = 1, cluster%n_species_type
 
-                    js_clus = cluster%species_type(js)
-                    IF (js_clus == is_clus) THEN
-                        start = imol+1
-                    ELSE
-                        start = 1
-                    END IF
+                js_clus = cluster%species_type(js)
+                IF (js_clus == is_clus) THEN
+                    start = imol+1
+                ELSE
+                    start = 1
+                END IF
 
-                    ALLOCATE(neigh_list(nmolecules(js_clus)))
-                    neigh_list = .FALSE.
-                    DO jmol = start, nmols(js_clus,this_box)
-                        jm = live_mol_index(jmol,is)
-                        neigh_list(jm) = Neighbor(jm, im, js_clus, is_clus)
-                    END DO
-
-                    ! Update cluster label list
-                    CALL Update_Labels(im, is_clus, js_clus, neigh_list)
-                    DEALLOCATE(neigh_list)
+                ALLOCATE(neigh_list(nmolecules(js_clus)))
+                neigh_list = .FALSE.
+                DO jmol = start, nmols(js_clus,this_box)
+                    jm = live_mol_index(jmol,is)
+                    neigh_list(jm) = Neighbor(jm, im, js_clus, is_clus)
                 END DO
 
+                ! Update cluster label list
+                CALL Update_Labels(im, is_clus, js_clus, neigh_list)
+                DEALLOCATE(neigh_list)
             END DO
+
         END DO
-    END IF
+    END DO
 
     DO imol = 1, tot_nmol
         IF (cluster%N(imol) > 0) THEN
@@ -221,11 +219,11 @@ CONTAINS
     LOGICAL :: Neighbor, cluster_type
     INTEGER, INTENT(IN) :: test_part, cur_part, test_type, cur_type
     REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
-    INTEGER :: itype
+    INTEGER :: test_atom, cur_atom
     
     Neighbor = .FALSE.
 
-    IF (ANY(cluster%species_type /= test_type)) THEN
+    IF (.not. ANY(cluster%species_type == test_type)) THEN
         RETURN
     END IF
       
@@ -240,10 +238,39 @@ CONTAINS
 
         rijsq = rxij*rxij + ryij*ryij + rzij*rzij
         
-        IF (rijsq < cluster%min_distance_sq(test_type)) THEN
+        IF (rijsq < (cluster%min_distance_sq(cur_type, 1) &
+                     + cluster%min_distance_sq(test_type, 1)) / 2.0) THEN
            Neighbor = .TRUE.
         END IF
                       
+    ELSE IF (cluster%criteria == int_type) THEN
+        DO test_atom = 1 , natoms(test_type)
+            IF (cluster%min_distance_sq(test_type, test_atom) < 0.000001) CYCLE
+
+            DO cur_atom = 1 , natoms(cur_type)
+                IF (cluster%min_distance_sq(cur_type, cur_atom) < 0.000001) CYCLE
+
+                ! Get the positions of the COM of the two molecule species
+                rxijp = atom_list(test_atom, test_part, test_type)%rxp - &
+                        atom_list(cur_atom, cur_part, cur_type)%rxp
+                ryijp = atom_list(test_atom, test_part, test_type)%ryp - &
+                        atom_list(cur_atom, cur_part, cur_type)%ryp
+                rzijp = atom_list(test_atom, test_part, test_type)%rzp - &
+                        atom_list(cur_atom, cur_part, cur_type)%rzp
+                
+                ! Now get the minimum image separation 
+                CALL Minimum_Image_Separation(1, rxijp, ryijp, rzijp, rxij, ryij, rzij)
+        
+                rijsq = rxij*rxij + ryij*ryij + rzij*rzij
+                
+                IF (rijsq < (cluster%min_distance_sq(cur_type, cur_atom) &
+                             + cluster%min_distance_sq(test_type, test_atom)) / 2.0) THEN
+                   Neighbor = .TRUE.
+                   RETURN
+                END IF
+
+            END DO
+        END DO
     END IF
 
   END FUNCTION Neighbor

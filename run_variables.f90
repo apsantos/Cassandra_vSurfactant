@@ -571,6 +571,7 @@ LOGICAL :: store_sum
   TYPE(Cluster_Class), TARGET :: cluster
 
   INTEGER, PARAMETER :: int_com = 1
+  INTEGER, PARAMETER :: int_type = 2
 
   !*********************************************************************************************************
   ! Information on Excluded Volume calculation

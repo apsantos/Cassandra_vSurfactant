@@ -553,7 +553,7 @@ MODULE Type_Definitions
     ! This class holds the information for the cluster
 
     ! clustering criteria variables
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: min_distance_sq
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: min_distance_sq
     INTEGER  :: criteria
     INTEGER, DIMENSION(:), ALLOCATABLE :: species_type, atom_type
     INTEGER :: n_species_type, n_atom_type

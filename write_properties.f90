@@ -503,7 +503,9 @@ SUBROUTINE Write_Cluster(this_box)
   WRITE(box_unit,*) '#   M    pop'
   
   DO iM = 1, SIZE(cluster%M)
-     WRITE(box_unit,'(I6, I10)') iM, cluster%M(iM)
+     IF (cluster%M(iM) > 0) THEN
+        WRITE(box_unit,'(I6, I10)') iM, cluster%M(iM)
+     END IF
   END DO
   CLOSE(unit=cluster_file_unit+this_box)
 

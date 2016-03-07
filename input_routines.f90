@@ -4018,6 +4018,7 @@ SUBROUTINE Get_Move_Probabilities
   ALLOCATE(max_disp(nspecies,nbr_boxes))
   ALLOCATE(max_rot(nspecies,nbr_boxes))
   ALLOCATE(prob_rot_species(nspecies))
+  species_list(:)%int_insert = int_noinsert
 
   REWIND(inputunit)
 
@@ -5489,14 +5490,14 @@ SUBROUTINE Get_Frequency_Info
                  ncluster_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will bec calculated/written at every', ncluster_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', ncluster_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nexvolfreq') THEN
 
                  nexvol_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will bec calculated/written at every', nexvol_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', nexvol_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Ncoordfreq') THEN
               
@@ -5872,7 +5873,7 @@ SUBROUTINE Get_Clustering_Info
   ! 
   !***************************************************************************************************
 
-  INTEGER :: ierr, line_nbr, nbr_entries, i, is, max_nmol
+  INTEGER :: ierr, line_nbr, nbr_entries, i, is, max_nmol, ia, itype
   CHARACTER(120) :: line_string, line_array(20)
   REAL(8) :: distance
 
@@ -5896,33 +5897,84 @@ SUBROUTINE Get_Clustering_Info
      END IF
 
      IF (line_string(1:12) == '# Clustering') THEN
-        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (line_array(1) == 'com') THEN
-            IF (nbr_entries < (1 + nspecies) ) THEN
-                err_msg = ''
-                err_msg(1) = 'Must include a distance for each species type'
-                CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-            END IF
             cluster%criteria = int_com
 
-            ALLOCATE(cluster%min_distance_sq(nspecies))
+            ALLOCATE(cluster%min_distance_sq(nspecies,1))
             cluster%min_distance_sq = 0.0_DP
             cluster%n_species_type = 0
             DO is = 1, nspecies 
-                distance = String_To_Double(line_array(1 + is))
+                CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+                IF ( ierr /= 0 ) THEN
+                    err_msg = ""
+                    err_msg(1) = "Error while reading inputfile"
+                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                END IF
+
+                distance = String_To_Double(line_array(1))
                 IF (distance > 0.001) THEN
-                    cluster%min_distance_sq(is) = distance**2.0_DP
+                    cluster%min_distance_sq(is,1) = distance**2.0_DP
                     cluster%n_species_type = cluster%n_species_type + 1
                     WRITE(logunit,*) 'species, ', is, ' is included in the Clustering calculation'
-                    
                 ENDIF
+
             END DO
 
             ALLOCATE(cluster%species_type(cluster%n_species_type))
             cluster%species_type = 0
             i = 1
             DO is = 1, nspecies 
-                IF (cluster%min_distance_sq(is) > 0.000001) THEN
+                IF (cluster%min_distance_sq(is,1) > 0.000001) THEN
+                    cluster%species_type(i) = is
+                    i = i + 1
+                    max_nmol = max_nmol + nmolecules(is)
+                END IF
+            END DO
+        ELSE IF (line_array(1) == 'type') THEN
+            cluster%criteria = int_type
+
+            ALLOCATE( cluster%min_distance_sq(nspecies, MAXVAL(natoms)) )
+            cluster%min_distance_sq = 0.0_DP
+            cluster%n_species_type = 0
+            DO is = 1, nspecies 
+                CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+                IF ( ierr /= 0 ) THEN
+                    err_msg = ""
+                    err_msg(1) = "Error while reading inputfile"
+                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                ELSE IF ( MOD(nbr_entries, 2) /= 0 ) THEN
+                    err_msg = ""
+                    err_msg(1) = "Must give the atom name and distance for however many are being clustered"
+                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                END IF
+
+                DO i = 1, INT(nbr_entries / 2.0)
+                    distance = String_To_Double(line_array(2))
+                    ! Figure out the type of the atom from the name, remember could be multiple with the same name
+                    IF (distance > 0.001) THEN
+                        DO ia = 1, natoms(is)
+                            IF (nonbond_list(ia,is)%atom_name == line_array(i*2 - 1)) THEN
+                                cluster%min_distance_sq(is, ia) = distance**2.0_DP
+                                WRITE(logunit,*) 'atom type "', TRIM(line_array(i*2 - 1)), '" of species, ', is
+                                WRITE(logunit,*) 'is included in the Clustering calculation'
+                            END IF
+                        END DO
+    
+                    ENDIF
+                END DO
+
+                IF (ANY(cluster%min_distance_sq(is,:) /= 0)) THEN
+                    cluster%n_species_type = cluster%n_species_type + 1
+                ENDIF
+
+            END DO
+
+            ALLOCATE(cluster%species_type(cluster%n_species_type))
+            cluster%species_type = 0
+            i = 1
+            DO is = 1, nspecies 
+                IF (ANY(cluster%min_distance_sq(is,:) > 0.000001)) THEN
                     cluster%species_type(i) = is
                     i = i + 1
                     max_nmol = max_nmol + nmolecules(is)
