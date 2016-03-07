@@ -39,6 +39,7 @@ SUBROUTINE GCMC_Driver
   USE Energy_Routines
   USE Read_Write_Checkpoint
   USE Cluster_Routines
+  USE Excluded_Volume
 
   IMPLICIT NONE
 
@@ -265,17 +266,6 @@ SUBROUTINE GCMC_Driver
 
         ! instantaneous values are to be printed   
 
-        IF ( MOD(i,nthermo_freq) == 0) THEN
-
-           DO ibox = 1, nbr_boxes
-           
-              CALL Write_Properties(i,ibox)
-              CALL Reset(ibox)
-              
-           END DO
-           
-        END IF
-        
         IF ( MOD(i,ncoord_freq) == 0 ) THEN
            
            DO ibox = 1, nbr_boxes
@@ -286,26 +276,44 @@ SUBROUTINE GCMC_Driver
            
         END IF
 
-        IF ( MOD(i,ncluster_freq) == 0 ) THEN
+        IF ( ncluster_freq /= 0 ) THEN
+           IF ( MOD(i,ncluster_freq) == 0 ) THEN
            
-           DO ibox = 1, nbr_boxes
+              DO ibox = 1, nbr_boxes
               
-              CALL Find_Clusters(ibox)
-              CALL Write_Cluster(ibox)
+                 CALL Find_Clusters(ibox)
+                 CALL Write_Cluster(ibox)
+              
+              END DO
+           
+           END IF
+        END IF
+        
+        IF ( nexvol_freq /= 0 ) THEN
+           IF ( MOD(i,nexvol_freq) == 0 ) THEN
+           
+              DO ibox = 1, nbr_boxes
+                 IF ( MOD(i,ncluster_freq) /= 0 ) THEN
+                    CALL Find_Clusters(ibox)
+                 END IF
+              
+                 CALL Calculate_Excluded_Volume(ibox)
+              
+              END DO
+           
+           END IF
+        END IF
+        
+        IF ( MOD(i,nthermo_freq) == 0) THEN
+
+           DO ibox = 1, nbr_boxes
+           
+              CALL Write_Properties(i,ibox)
+              CALL Reset(ibox)
               
            END DO
            
         END IF
-        
-!        IF ( MOD(i,nexvol_freq) == 0 ) THEN
-!           
-!           DO ibox = 1, nbr_boxes
-!              
-!              CALL Calculate_Excluded_Volume(ibox)
-!              
-!           END DO
-!           
-!        END IF
         
      ELSE
         
