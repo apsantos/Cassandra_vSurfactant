@@ -58,7 +58,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: this_box
     INTEGER :: i_mono_conf, i_type, iatom, im, is, i, j
     INTEGER :: ierr, line_nbr, nbr_entries
-    INTEGER :: alive(2)               ! molecule indices
+    INTEGER :: alive(nspecies)               ! molecule indices
 
     INTEGER :: ispec, imol, is_clus, t_im
     INTEGER :: i_ins
@@ -82,8 +82,8 @@ CONTAINS
     P_bias = 1.0_DP
 
     exvol%excluded = 0
-    exvol%criteria = LOG(1E8)
-    exvol%trials = exvol%trials + 1
+    exvol%criteria = LOG(1E0)
+    exvol%ntrials = exvol%ntrials + 1
 
     !*********************************************************************************
     !   Step 1) Temporarily remove molecules that are not in the clusters
@@ -112,13 +112,16 @@ CONTAINS
        !*********************************************************************************
    
        DO ispec = 1, cluster%n_species_type
-           DO imol = 1, nmols(ispec,this_box)
+           DO i = 1, nmols(cluster%species_type(ispec),this_box)
+               imol = locate(i,cluster%species_type(ispec) )
+               IF (ispec == is .and. imol == im) CYCLE
    
                in_cluster = Neighbor(imol, im, cluster%species_type(ispec), is)
                IF (in_cluster) THEN
                    ! remove monomer
                    CALL Select_Monomer(im, is, this_box)
                    exvol%excluded = exvol%excluded + 1
+                   !write(*,*) 'cluster', ispec, imol, i_ins
                    CYCLE ins_loop
                END IF
    
@@ -132,8 +135,10 @@ CONTAINS
        CALL Get_Monomer_DeltaE(im, is, this_box, overlap, delta_e)
    
        IF (overlap) THEN
+           ! remove monomer
            CALL Select_Monomer(im, is, this_box)
            exvol%excluded = exvol%excluded + 1
+           !write(*,*) 'overlap', i_ins
            CYCLE ins_loop
        END IF
    
@@ -145,16 +150,17 @@ CONTAINS
        ln_pacc = beta(this_box) * delta_e 
    
        ! P_seq and P_bias equal 1.0 unless changed by Build_Molecule.
-       P_seq = 1.0_DP
-       P_bias = 1.0_DP
-       ln_pacc = ln_pacc + DLOG(P_seq * P_bias) !&
+       !P_seq = 1.0_DP
+       !P_bias = 1.0_DP
+       !ln_pacc = ln_pacc + DLOG(P_seq * P_bias) !&
                          !+ 3.0_DP * DLOG(species_list(is)%de_broglie(this_box))
                          !+ 2.0_DP*DLOG(REAL(nmols(is,this_box)+1,DP)) &
                          !- 2.0_DP*DLOG(box_list(this_box)%volume) 
                          !- species_list(is)%chem_potential * beta(this_box) 
    
        IF (ln_pacc > exvol%criteria) THEN
-          exvol%excluded = exvol%excluded + 1
+           !write(*,*) 'ene', delta_e, i_ins
+           exvol%excluded = exvol%excluded + 1
        END IF
        
        ! Remove inserting monomer
@@ -172,7 +178,7 @@ CONTAINS
   SUBROUTINE Select_Monomer(im, is, this_box)
     INTEGER, INTENT(IN) :: im, is, this_box
     INTEGER :: this_atom, this_fragment, i
-    INTEGER :: alive(2)               ! molecule indices
+    INTEGER :: alive(nspecies)               ! molecule indices
 
     ! local fragment declarations
     INTEGER :: total_frags  ! total number of conformations for this fragment in the library
@@ -181,9 +187,12 @@ CONTAINS
     INTEGER :: frag_type
     REAL(DP) :: this_lambda
 
+    LOGICAL :: larson_lattice
+
+    larson_lattice = .FALSE.
     alive(is) = locate(im,is)
     IF (molecule_list(im, is)%live == .FALSE.) THEN
-    this_lambda = 1.0_DP
+       this_lambda = 1.0_DP
        frag_start = 1
        frag_type = frag_list(frag_start,is)%type
        ! Pull from the fragment reservoir with uniform probability
@@ -218,6 +227,24 @@ CONTAINS
                                 (rranf() - 0.5_DP) * box_list(this_box)%length(3,3)
        END IF
         
+       IF (larson_lattice) THEN
+           molecule_list(alive(is),is)%xcom = &
+                                NINT((rranf() - 0.5_DP) * box_list(this_box)%length(1,1))
+           IF (molecule_list(alive(is),is)%xcom == -box_list(this_box)%hlength(1,1)) THEN
+                molecule_list(alive(is),is)%xcom = molecule_list(alive(is),is)%xcom + 1
+           END IF
+           molecule_list(alive(is),is)%ycom = &
+                               NINT((rranf() - 0.5_DP) * box_list(this_box)%length(2,2))
+           IF (molecule_list(alive(is),is)%ycom == -box_list(this_box)%hlength(2,2)) THEN
+               molecule_list(alive(is),is)%ycom = molecule_list(alive(is),is)%ycom + 1
+           END IF
+           molecule_list(alive(is),is)%zcom = &
+                                NINT((rranf() - 0.5_DP) * box_list(this_box)%length(3,3))
+           IF (molecule_list(alive(is),is)%zcom == -box_list(this_box)%hlength(3,3)) THEN
+                molecule_list(alive(is),is)%zcom = molecule_list(alive(is),is)%zcom + 1
+           END IF
+       END IF
+
        atom_list(:,alive(is),is)%rxp = atom_list(:,alive(is),is)%rxp + molecule_list(alive(is),is)%xcom
        atom_list(:,alive(is),is)%ryp = atom_list(:,alive(is),is)%ryp + molecule_list(alive(is),is)%ycom
        atom_list(:,alive(is),is)%rzp = atom_list(:,alive(is),is)%rzp + molecule_list(alive(is),is)%zcom
@@ -245,19 +272,21 @@ CONTAINS
 
 
   SUBROUTINE Remove_Small_Clusters(this_box)
+
     INTEGER, INTENT(IN) :: this_box
-    INTEGER :: n_removed, ispec, imol, is_clus, t_im, position
+    INTEGER :: n_removed, imol, is_clus, t_im, position
     INTEGER :: k
+
     n_removed = 0
-    DO ispec = 1, cluster%n_species_type
-        is_clus = cluster%species_type(ispec)
+    DO is_clus = 1, nspecies
         MoleculeLoop: DO imol = 1, nmolecules(is_clus)
             ! Make sure that the molecule exists in the simulation
             t_im = locate(imol-n_removed, is_clus)
             IF( .NOT. molecule_list(t_im,is_clus)%live ) CYCLE MoleculeLoop
 
             ! IF the molecule is not in a cluster of the specified size
-            IF (cluster%N( cluster%clabel(t_im, is_clus) ) < cluster%M_olig(is_clus)) THEN
+            IF (.not. ANY(cluster%species_type == is_clus) .OR. &
+                cluster%N( cluster%clabel(t_im, is_clus) ) < cluster%M_olig(is_clus)) THEN
 
                 CALL Get_Position_Molecule(this_box,is_clus,t_im,position)
                 DO k = imol + 1 - n_removed, SUM(nmols(is_clus,:))
@@ -273,9 +302,9 @@ CONTAINS
                 nmols(is_clus,this_box) = nmols(is_clus,this_box) - 1
                 n_removed = n_removed + 1
             END IF
+
         END DO MoleculeLoop
     END DO
-
 
   END SUBROUTINE Remove_Small_Clusters
 
@@ -288,8 +317,13 @@ CONTAINS
     REAL(DP) :: E_inter_vdw, E_inter_qq
     REAL(DP) :: pair_vdw, pair_qq, igas_en
     REAL(DP) :: E_reciprocal_move, E_self_move, E_lrc
-    LOGICAL :: inter_overlap(2), intra_overlap(2)
-    INTEGER :: alive(2), i, i_type               ! molecule indices
+    LOGICAL :: inter_overlap(nspecies), intra_overlap(nspecies)
+    INTEGER :: alive(nspecies), i, i_type               ! molecule indices
+
+    LOGICAL :: larson_lattice
+    INTEGER :: js, jm, ja, ia, itype, jtype
+    REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
+    REAL(DP) :: eps 
 
     overlap = .FALSE.
     inter_overlap(:) = .FALSE.
@@ -298,6 +332,48 @@ CONTAINS
     E_inter_qq = 0.0_DP
     E_intra_vdw = 0.0_DP
     E_intra_qq = 0.0_DP
+
+    larson_lattice = .FALSE.
+    IF (larson_lattice) THEN 
+
+        delta_e = 0.0_DP
+        SpeciesLoop: DO js = 1, nspecies
+            MoleculeLoop: DO jm = 1, nmolecules(js)
+                IF( .NOT. molecule_list(jm,js)%live ) CYCLE MoleculeLoop
+
+                IF( is == js .and. im == jm ) CYCLE MoleculeLoop
+
+                AtomLoop: DO ja = 1, natoms(js)
+
+                    jtype = nonbond_list(ja,js)%atom_type_number
+                    DO ia = 1, natoms(is)
+                       ! Determine atom type indices
+                       itype = nonbond_list(ia,is)%atom_type_number
+                       eps = vdw_param1_table(itype,jtype)
+                       !IF (eps == 0.0) CYCLE
+
+                       ! Get the positions of the COM of the two molecule species
+                       rxijp = atom_list(ja, jm, js)%rxp - atom_list(ia, im, is)%rxp
+                       ryijp = atom_list(ja, jm, js)%ryp - atom_list(ia, im, is)%ryp
+                       rzijp = atom_list(ja, jm, js)%rzp - atom_list(ia, im, is)%rzp
+                       
+                       ! Now get the minimum image separation 
+                       CALL Minimum_Image_Separation(1, rxijp, ryijp, rzijp, rxij, ryij, rzij)
+               
+                       rijsq = rxij*rxij + ryij*ryij + rzij*rzij
+                       IF (rijsq < rcut_lowsq) THEN
+                           delta_e = delta_e + 500
+                           overlap = .TRUE.
+                           RETURN
+                       ELSE IF (rijsq < rcut_vdwsq(1)) THEN
+                           delta_e = delta_e - eps
+                       END IF
+                    END DO 
+                END DO AtomLoop
+            END DO MoleculeLoop
+        END DO SpeciesLoop
+        RETURN
+    END IF
 
     alive(is) = locate(im,is)
 

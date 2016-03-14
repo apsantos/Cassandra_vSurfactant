@@ -572,6 +572,7 @@ LOGICAL :: store_sum
 
   INTEGER, PARAMETER :: int_com = 1
   INTEGER, PARAMETER :: int_type = 2
+  INTEGER, PARAMETER :: int_skh = 3
 
   !*********************************************************************************************************
   ! Information on Excluded Volume calculation

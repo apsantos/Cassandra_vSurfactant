@@ -3251,11 +3251,12 @@ SUBROUTINE Get_Fragment_Coords
            
         END DO
 
+
      END IF
            
            
   END DO
-
+   
   DEALLOCATE(config_read)
 
 
@@ -5980,6 +5981,56 @@ SUBROUTINE Get_Clustering_Info
                     max_nmol = max_nmol + nmolecules(is)
                 END IF
             END DO
+
+        ELSE IF (line_array(1) == 'skh') THEN
+            cluster%criteria = int_skh
+            ALLOCATE( cluster%r1_sq(nspecies,0:MAXVAL(natoms)), cluster%r2_sq(nspecies,0:MAXVAL(natoms)), cluster%r3_sq(nspecies,0:MAXVAL(natoms)) )
+            cluster%r1_sq = 0.0_DP 
+            cluster%r2_sq = 0.0_DP
+            cluster%r3_sq = 0.0_DP
+            cluster%n_species_type = 0
+            DO is = 1, nspecies 
+                CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
+                IF ( ierr /= 0 ) THEN
+                    err_msg = ""
+                    err_msg(1) = "Error while reading inputfile"
+                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                END IF
+
+                cluster%r1_sq(is,0) = String_To_Double(line_array(1))**2.0
+                cluster%r2_sq(is,0) = String_To_Double(line_array(2))**2.0
+                cluster%r3_sq(is,0) = String_To_Double(line_array(3))**2.0
+                
+                ! Figure out the type of the atom from the name, remember could be multiple with the same name
+                IF ((cluster%r1_sq(is,0) + cluster%r2_sq(is,0) + cluster%r3_sq(is,0))> 0.00001) THEN
+                    DO i = 4, nbr_entries
+                        DO ia = 1, natoms(is)
+                            IF (nonbond_list(ia,is)%atom_name == line_array(i)) THEN
+                                cluster%r1_sq(is,ia) = cluster%r1_sq(is,0)
+                                cluster%r2_sq(is,ia) = cluster%r2_sq(is,0)
+                                cluster%r3_sq(is,ia) = cluster%r3_sq(is,0)
+                                WRITE(logunit,*) 'atom type "', TRIM(line_array(i)), '" of species, ', is
+                                WRITE(logunit,*) 'is included in the Clustering calculation'
+                            END IF
+                        END DO
+    
+                    END DO
+                    cluster%n_species_type = cluster%n_species_type + 1
+                ENDIF
+
+            END DO
+
+            ALLOCATE(cluster%species_type(cluster%n_species_type))
+            cluster%species_type = 0
+            i = 1
+            DO is = 1, nspecies 
+                IF (ANY(cluster%r3_sq(is,:) > 0.000001)) THEN
+                    cluster%species_type(i) = is
+                    i = i + 1
+                    max_nmol = max_nmol + nmolecules(is)
+                END IF
+            END DO
+
         END IF
         
         ALLOCATE( cluster%M(max_nmol) )
@@ -6017,7 +6068,7 @@ SUBROUTINE Get_Excluded_Volume_Info
   
   ierr = 0
   exvol%n_iter = 0
-  exvol%trials = 0
+  exvol%ntrials = 0
   exvol%excluded = 0
 
   WRITE(logunit,*) 

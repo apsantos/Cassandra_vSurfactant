@@ -216,14 +216,16 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    LOGICAL :: Neighbor, cluster_type
+    LOGICAL :: Neighbor
     INTEGER, INTENT(IN) :: test_part, cur_part, test_type, cur_type
     REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
-    INTEGER :: test_atom, cur_atom
-    
+    INTEGER :: test_atom, cur_atom, n_accept
+
     Neighbor = .FALSE.
 
     IF (.not. ANY(cluster%species_type == test_type)) THEN
+        RETURN
+    ELSE IF( .NOT. molecule_list(test_part,test_type)%live ) THEN
         RETURN
     END IF
       
@@ -238,8 +240,8 @@ CONTAINS
 
         rijsq = rxij*rxij + ryij*ryij + rzij*rzij
         
-        IF (rijsq < (cluster%min_distance_sq(cur_type, 1) &
-                     + cluster%min_distance_sq(test_type, 1)) / 2.0) THEN
+        IF (rijsq < (cluster%min_distance_sq(cur_type, 1) ))THEN!&
+                     !+ cluster%min_distance_sq(test_type, 1)) / 2.0) THEN
            Neighbor = .TRUE.
         END IF
                       
@@ -267,6 +269,57 @@ CONTAINS
                              + cluster%min_distance_sq(test_type, test_atom)) / 2.0) THEN
                    Neighbor = .TRUE.
                    RETURN
+                END IF
+
+            END DO
+        END DO
+    ELSE IF (cluster%criteria == int_skh) THEN
+        ! Get the positions of the COM of the two molecule species
+        rxijp = molecule_list(test_part,test_type)%xcom - molecule_list(cur_part, cur_type)%xcom
+        ryijp = molecule_list(test_part,test_type)%ycom - molecule_list(cur_part, cur_type)%ycom
+        rzijp = molecule_list(test_part,test_type)%zcom - molecule_list(cur_part, cur_type)%zcom
+        
+        ! Now get the minimum image separation 
+        CALL Minimum_Image_Separation(1, rxijp, ryijp, rzijp, rxij, ryij, rzij)
+
+        rijsq = rxij*rxij + ryij*ryij + rzij*rzij
+        
+        n_accept = 0.0 
+        IF (rijsq < cluster%r1_sq(cur_type, 0)) THEN
+           Neighbor = .TRUE.
+        ELSE IF (rijsq < cluster%r2_sq(cur_type, 0)) THEN
+           n_accept = n_accept + 1.5
+        ELSE IF (rijsq < cluster%r3_sq(cur_type, 0)) THEN
+           n_accept = n_accept + 1.0
+        END IF
+
+        DO test_atom = 1 , natoms(test_type)
+            IF (cluster%r3_sq(test_type, test_atom) < 0.000001) CYCLE
+
+            DO cur_atom = 1 , natoms(cur_type)
+                IF (cluster%r3_sq(cur_type, cur_atom) < 0.000001) CYCLE
+
+                ! Get the positions of the COM of the two molecule species
+                rxijp = atom_list(test_atom, test_part, test_type)%rxp - &
+                        atom_list(cur_atom, cur_part, cur_type)%rxp
+                ryijp = atom_list(test_atom, test_part, test_type)%ryp - &
+                        atom_list(cur_atom, cur_part, cur_type)%ryp
+                rzijp = atom_list(test_atom, test_part, test_type)%rzp - &
+                        atom_list(cur_atom, cur_part, cur_type)%rzp
+                
+                ! Now get the minimum image separation 
+                CALL Minimum_Image_Separation(1, rxijp, ryijp, rzijp, rxij, ryij, rzij)
+        
+                rijsq = rxij*rxij + ryij*ryij + rzij*rzij
+                
+                IF (rijsq < cluster%r1_sq(cur_type, 0)) THEN
+                   Neighbor = .TRUE.
+                ELSE IF (rijsq < cluster%r2_sq(cur_type, 0)) THEN
+                   n_accept = n_accept + 1.5
+                ELSE IF (rijsq < cluster%r3_sq(cur_type, 0)) THEN
+                   n_accept = n_accept + 1.0
+                ELSE IF (n_accept >= 3.0) THEN
+                   Neighbor = .TRUE.
                 END IF
 
             END DO
