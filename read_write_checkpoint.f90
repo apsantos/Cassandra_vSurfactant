@@ -36,6 +36,7 @@ MODULE Read_Write_Checkpoint
   USE Simulation_Properties
   USE Random_Generators, ONLY : s1,s2,s3,s4,s5, rranf
   USE Energy_Routines, ONLY : Compute_Molecule_Energy
+  USE IO_Utilities
   
   IMPLICIT NONE
 
@@ -144,6 +145,164 @@ CONTAINS
     
   END SUBROUTINE Write_Checkpoint
 !**************************************************************************************************
+
+SUBROUTINE Read_XYZ
+
+   INTEGER :: this_mc_step
+
+    INTEGER :: ibox, is, ii, jj, im, this_im, ia, nmolecules_is, this_box, mols_this, sp_nmoltotal(nspecies)
+    INTEGER :: this_species, nfrac_global, i, this_rxnum, j, m, alive
+    INTEGER :: this_unit, i_lambda
+
+    REAL(DP) :: E_self, xcom_old, ycom_old, zcom_old
+    REAL(DP) :: xcom_new, ycom_new, zcom_new
+
+    LOGICAL :: f_checkpoint, f_read_old, overlap, cfc_defined
+    LOGICAL :: lopen, new_frame
+
+    TYPE(Energy_Class) :: inrg
+
+    CHARACTER(120) :: line_string, line_array(20)
+    INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line
+    
+    ! Let us read all the counters and count the number of molecules of
+    ! each of the species in all the boxes
+    nmols(:,:) = 0
+    sp_nmoltotal = 0
+    molecule_list(:,:)%live = .FALSE.
+    molecule_list(:,:)%molecule_type = int_none
+    molecule_list(:,:)%cfc_lambda = int_none
+    atom_list(:,:,:)%exist = .FALSE.
+    
+    DO ibox = 1, nbr_boxes
+
+       INQUIRE(file=xyz_config_file(ibox),opened=lopen)
+       IF (.not. lopen) OPEN(unit=xyz_config_unit(ibox), file=xyz_config_file(ibox))
+       CALL Parse_String(xyz_config_unit(ibox),line_nbr,1,nbr_entries,line_array,ierr)
+       
+       n_lines = String_To_Int(line_array(1))
+       IF (n_lines < 0) THEN
+          CLOSE(unit=xyz_config_unit(ibox))
+          IF (ibox == nbr_boxes) THEN
+             RETURN
+          ELSE
+             CYCLE
+          END IF
+       END IF
+
+       CALL Parse_String(xyz_config_unit(ibox),line_nbr,0,nbr_entries,line_array,ierr)
+
+       DO i_line = 1, n_lines 
+
+          CALL Parse_String(xyz_config_unit(ibox),line_nbr,6,nbr_entries,line_array,ierr)
+
+          is = String_To_Int(line_array(5))
+          im = String_To_Int(line_array(6))
+          DO i = 1, natoms(is)
+             IF (line_array(1) == nonbond_list(i,is)%element) THEN
+                ia = i
+                EXIT
+             END IF
+          END DO
+
+          IF (.not. molecule_list(im,is)%live) THEN
+              ! provide a linked number to this molecule
+              locate(im,is) = im 
+              this_im = locate(im,is)
+              sp_nmoltotal(is) = sp_nmoltotal(is) + 1
+              molecule_list(this_im,is)%live = .TRUE.
+
+              ! By default make all the molecules as integer molecules
+              molecule_list(this_im,is)%molecule_type = int_normal
+              molecule_list(this_im,is)%cfc_lambda = 1.0_DP
+
+              ! assign the box to this molecule
+              molecule_list(this_im,is)%which_box = ibox
+              nmols(is,ibox) = nmols(is,ibox) + 1
+                
+          END IF
+
+          this_im = locate(im,is)
+          
+          nonbond_list(ia,is)%element = line_array(1)
+    
+          atom_list(ia,this_im,is)%rxp = String_To_Double(line_array(2))
+          atom_list(ia,this_im,is)%ryp = String_To_Double(line_array(3))
+          atom_list(ia,this_im,is)%rzp = String_To_Double(line_array(4))
+          
+          atom_list(ia,this_im,is)%exist = .TRUE.
+
+       END DO
+    END DO
+
+    DO is = 1, nspecies
+       IF(sp_nmoltotal(is) .LT. nmolecules(is)) THEN
+          DO im = sp_nmoltotal(is)+1,nmolecules(is)
+             locate(im,is) = im
+             molecule_list(im,is)%live = .FALSE.
+             molecule_list(im,is)%cfc_lambda = 1.0_DP
+             molecule_list(im,is)%molecule_type = int_normal
+             molecule_list(im,is)%which_box = 0
+          END DO
+       END IF
+    END DO
+
+    CALL Get_Internal_Coords
+    
+    ! Calculate COM and distance of the atom farthest to the COM.
+    
+    DO is = 1, nspecies
+       DO im = 1, nmolecules(is)
+          this_im = locate(im,is)
+          IF( .NOT. molecule_list(this_im,is)%live) CYCLE
+          ! Now let us ensure that the molecular COM is inside the central simulation box
+          !
+          CALL Get_COM(this_im,is)
+          
+          xcom_old = molecule_list(this_im,is)%xcom
+          ycom_old = molecule_list(this_im,is)%ycom
+          zcom_old = molecule_list(this_im,is)%zcom
+          
+          ! Apply PBC
+
+          this_box = molecule_list(this_im,is)%which_box
+
+          IF (l_cubic(this_box)) THEN
+             
+             CALL Apply_PBC_Anint(this_box,xcom_old,ycom_old,zcom_old, &
+                  xcom_new, ycom_new, zcom_new)
+
+          ELSE
+             
+             CALL Minimum_Image_Separation(this_box,xcom_old,ycom_old,zcom_old, &
+                  xcom_new, ycom_new, zcom_new)
+
+          END IF
+          
+          ! COM in the central simulation box
+          
+          molecule_list(this_im,is)%xcom = xcom_new
+          molecule_list(this_im,is)%ycom = ycom_new
+          molecule_list(this_im,is)%zcom = zcom_new
+          
+          ! displace atomic coordinates
+          
+          atom_list(1:natoms(is),this_im,is)%rxp = atom_list(1:natoms(is),this_im,is)%rxp + &
+               xcom_new - xcom_old
+          atom_list(1:natoms(is),this_im,is)%ryp = atom_list(1:natoms(is),this_im,is)%ryp + &
+               ycom_new - ycom_old
+          atom_list(1:natoms(is),this_im,is)%rzp = atom_list(1:natoms(is),this_im,is)%rzp + &
+               zcom_new - zcom_old
+          
+          CALL Compute_Max_Com_Distance(this_im,is)
+       END DO
+    END DO
+    
+    DO ibox = 1, nbr_boxes
+       IF(int_vdw_sum_style(ibox) == vdw_cut_tail) CALL Compute_Beads(ibox)
+    END DO
+
+  END SUBROUTINE Read_XYZ
 
 SUBROUTINE Read_Checkpoint
 
