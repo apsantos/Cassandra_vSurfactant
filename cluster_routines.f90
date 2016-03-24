@@ -49,11 +49,9 @@ CONTAINS
     INTEGER, INTENT(IN) :: this_box
     INTEGER :: tot_natoms, tot_nmol
     INTEGER :: imol, jmol, iatom, i, im, jm
-    INTEGER :: is, js, is_clus, js_clus, start
+    INTEGER :: is, js, is_clus, js_clus, start, N
     LOGICAL, ALLOCATABLE, DIMENSION(:) :: neigh_list
     INTEGER, ALLOCATABLE, DIMENSION(:,:) :: live_mol_index
-
-    IF ( ALLOCATED(cluster%clabel) ) DEALLOCATE(cluster%clabel, cluster%N)
 
     ALLOCATE( live_mol_index(MAXVAL(nmols(:,this_box)), cluster%n_species_type) )
 
@@ -82,8 +80,6 @@ CONTAINS
 
     ! cluster label of labels
     ! counts how many atoms are in the cluster
-    ALLOCATE(cluster%N(0:tot_nmol))
-    ALLOCATE(cluster%clabel(MAXVAL(nmolecules(:)), cluster%n_species_type))
     cluster%N = 0
     cluster%clabel = 0
     DO is = 1, cluster%n_species_type
@@ -115,11 +111,21 @@ CONTAINS
         END DO
     END DO
 
-    DO imol = 1, tot_nmol
-        IF (cluster%N(imol) > 0) THEN
-            cluster%M( cluster%N(imol) ) = cluster%M( cluster%N(imol) ) + 1
-        END IF
+    cluster%n_oligomers = 0
+    DO is = 1, cluster%n_species_type
+        is_clus = cluster%species_type(is)
+        DO imol = 1, nmols(is_clus,this_box)
+            im = live_mol_index(imol,is)
+            N = cluster%N( cluster%clabel(im, is_clus) )
+            IF (N > 0) THEN
+                cluster%M( N ) = cluster%M( N ) + 1
+                IF (N <= cluster%M_olig(is_clus)) THEN
+                    cluster%n_oligomers = cluster%n_oligomers + N
+                END IF
+            END IF
+        END DO
     END DO
+  DEALLOCATE( live_mol_index )
 
   END SUBROUTINE Find_Clusters
 
