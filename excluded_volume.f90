@@ -83,7 +83,6 @@ CONTAINS
 
     exvol%excluded = 0
     exvol%criteria = LOG(1E0)
-    exvol%ntrials = exvol%ntrials + 1
 
     !*********************************************************************************
     !   Step 1) Temporarily remove molecules that are not in the clusters
@@ -279,14 +278,15 @@ CONTAINS
 
     n_removed = 0
     DO is_clus = 1, nspecies
+        IF (.not. ANY(cluster%species_type == is_clus)) CYCLE
+
         MoleculeLoop: DO imol = 1, nmolecules(is_clus)
             ! Make sure that the molecule exists in the simulation
             t_im = locate(imol-n_removed, is_clus)
             IF( .NOT. molecule_list(t_im,is_clus)%live ) CYCLE MoleculeLoop
 
             ! IF the molecule is not in a cluster of the specified size
-            IF (.not. ANY(cluster%species_type == is_clus) .OR. &
-                cluster%N( cluster%clabel(t_im, is_clus) ) < cluster%M_olig(is_clus)) THEN
+            IF (cluster%N( cluster%clabel(t_im, is_clus) ) <= cluster%M_olig(is_clus)) THEN
 
                 CALL Get_Position_Molecule(this_box,is_clus,t_im,position)
                 DO k = imol + 1 - n_removed, SUM(nmols(is_clus,:))

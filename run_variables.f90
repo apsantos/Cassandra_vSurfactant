@@ -80,6 +80,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: sim_gemc_npt = 7
   INTEGER, PARAMETER :: sim_gemc_ig = 8
   INTEGER, PARAMETER :: sim_mcf = 9
+  INTEGER, PARAMETER :: sim_pp = 10
   LOGICAL :: lfugacity, lchempot, timed_run, openmp_flag, en_flag
 
   ! The starting seed for the random generator
@@ -469,7 +470,7 @@ USE Type_Definitions
   !*********************************************************************************************************
   ! Information on the output of data
 
-  INTEGER :: nthermo_freq, ncoord_freq, ncluster_freq, nexvol_freq, n_mcsteps, n_equilsteps, this_mcstep
+  INTEGER :: nthermo_freq, ncoord_freq, ncluster_freq, nexvol_freq, nalpha_freq, n_mcsteps, n_equilsteps, this_mcstep
  
   INTEGER,DIMENSION(:),ALLOCATABLE :: nbr_prop_files
 
@@ -565,6 +566,8 @@ INTEGER :: n_lat_atoms
 LOGICAL :: store_sum
 
   !*********************************************************************************************************
+  ! Post Processing
+  !*********************************************************************************************************
   ! Information on Clusters
 
   ! Will have dimensions of (nspecies,nbr_boxes)
@@ -579,6 +582,8 @@ LOGICAL :: store_sum
 
   ! Will have dimensions of (nspecies,nbr_boxes)
   TYPE(ExVol_Class), TARGET :: exvol
+  ! Information on Degree Association calculation
+  TYPE(DegreeAssociation_Class), TARGET :: alpha
   
 END MODULE Run_Variables
 

@@ -555,7 +555,7 @@ MODULE Type_Definitions
     ! clustering criteria variables
     REAL(DP), DIMENSION(:,:), ALLOCATABLE :: min_distance_sq
     REAL(DP), DIMENSION(:,:), ALLOCATABLE :: r1_sq, r2_sq, r3_sq
-    INTEGER  :: criteria
+    INTEGER  :: criteria, n_oligomers
     INTEGER, DIMENSION(:), ALLOCATABLE :: species_type, atom_type
     INTEGER :: n_species_type, n_atom_type
 
@@ -567,13 +567,20 @@ MODULE Type_Definitions
  END TYPE Cluster_Class
 
  TYPE ExVol_Class
-    ! This class holds the information for the cluster
-
-    ! clustering criteria variables
+    ! exlcuded volume variables
     INTEGER  :: n_iter, species
-    INTEGER  :: excluded, ntrials
+    INTEGER  :: excluded
     REAL(DP)  :: criteria
 
  END TYPE ExVol_Class
+
+ TYPE DegreeAssociation_Class
+    ! degree of ion association variables
+    INTEGER  :: n_assoc, assoc_species, clus_species
+    INTEGER, DIMENSION(:), ALLOCATABLE  :: atype
+    REAL(DP) :: cutoff_sq
+    CHARACTER(6), DIMENSION(:), ALLOCATABLE :: aname
+
+ END TYPE DegreeAssociation_Class
 
 END MODULE Type_Definitions

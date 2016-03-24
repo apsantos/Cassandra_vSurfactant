@@ -131,6 +131,10 @@ CONTAINS
 
           prop_unit(ii) = '(% excluded)'
 
+       ELSE IF (prop_to_write(1:6) == 'Degree') THEN
+
+          prop_unit(ii) = '(% associated)'
+
        END IF
 
        WRITE(this_unit,'(A16,2X)',ADVANCE='NO') (TRIM(prop_unit(ii)))
@@ -158,6 +162,10 @@ CONTAINS
     ELSE IF (prop_to_write(1:8) == 'Excluded') THEN
 
        prop_unit(ii) = '(% excluded)'
+
+    ELSE IF (prop_to_write(1:6) == 'Degree') THEN
+
+       prop_unit(ii) = '(% associated)'
 
     END IF
     
@@ -370,7 +378,15 @@ CONTAINS
          write_buff(ii+1) = chpot(is_cp,this_box) / REAL(ntrials(is_cp,this_box)%cpcalc)
          is_cp = is_cp + 1
          
-      ELSE IF (prop_written == 'Excluded Volume') THEN
+      ELSE IF (prop_written == 'Noligomers') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = cluster%n_oligomers / REAL(ncluster_freq,DP)
+         ELSE
+            write_buff(ii+1) = cluster%n_oligomers
+         END IF
+
+      ELSE IF (prop_written == 'Excluded_Volume') THEN
 
          IF (block_average) THEN
             write_buff(ii+1) = exvol%excluded / REAL(nexvol_freq * exvol%n_iter,DP)
@@ -378,6 +394,13 @@ CONTAINS
             write_buff(ii+1) = exvol%excluded / REAL(exvol%n_iter)
          END IF
 
+      ELSE IF (prop_written == 'Degree_Association') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = alpha%n_assoc / REAL(nalpha_freq * nmols(alpha%assoc_species, this_box),DP)
+         ELSE
+            write_buff(ii+1) = alpha%n_assoc / REAL(nmols(alpha%assoc_species, this_box), DP)
+         END IF
       END IF
       
       ! At the end increment property counter by 1

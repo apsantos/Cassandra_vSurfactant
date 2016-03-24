@@ -132,6 +132,10 @@ CHARACTER(FILENAME_LEN),DIMENSION(:,:),ALLOCATABLE :: prop_files
 ! Names of property output, dimensions of (max_nbr_properties,nbr_prop_files)
 CHARACTER(FILENAME_LEN),DIMENSION(:,:,:), ALLOCATABLE :: prop_output
 
+! Variables associated with xyz configuration file
+INTEGER,DIMENSION(:),ALLOCATABLE :: xyz_config_unit
+CHARACTER(FILENAME_LEN),DIMENSION(:),ALLOCATABLE :: xyz_config_file
+
 ! Variables associated with old configuration file
 INTEGER :: old_config_unit = 120
 CHARACTER(FILENAME_LEN),DIMENSION(:),ALLOCATABLE :: old_config_file

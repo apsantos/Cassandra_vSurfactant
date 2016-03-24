@@ -208,6 +208,8 @@ PROGRAM Main
      CALL NVT_MC_Fragment_Control
   ELSE IF (int_sim_type == sim_mcf) THEN
      CALL MCF_Control
+  ELSE IF (int_sim_type == sim_pp) THEN
+     CALL PP_Control
   ELSE
      err_msg = ""
      err_msg(1) = 'Sim_Type unknown'
@@ -267,6 +269,11 @@ PROGRAM Main
   IF (start_type == 'make_config') THEN
      ! Get required info from inputfile, then grow molecules using CBMC
      CALL Grow_Molecules
+
+  ELSEIF (start_type == 'read_xyz') THEN
+     ! Read in xyz coordinates for post processing
+
+     CALL Read_XYZ
 
   ELSEIF (start_type == 'read_old') THEN
      ! Read in old coordinates and restart a new simulation, 
@@ -550,6 +557,10 @@ PROGRAM Main
   ELSE IF (int_sim_type == sim_ring) THEN
 
      CALL NVT_MC_Ring_Fragment
+
+  ELSE IF (int_sim_type == sim_pp) THEN
+
+     CALL PP_Driver
 
   END IF
 

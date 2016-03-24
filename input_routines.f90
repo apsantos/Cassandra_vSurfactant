@@ -356,6 +356,8 @@ SUBROUTINE Get_Sim_Type
      int_sim_type = sim_frag
   ELSEIF(sim_type == 'NVT_MC_Ring_Fragment') THEN
      int_sim_type = sim_ring
+  ELSEIF(sim_type == 'PP') THEN
+     int_sim_type = sim_pp
   ELSEIF(sim_type == 'MCF_Gen') THEN
      int_sim_type = sim_mcf
   END IF
@@ -4906,6 +4908,7 @@ SUBROUTINE Get_Start_Type
   !               --- molecules
   ! 'read_old' --- read from an exisiting file
   ! 'checkpoint'  --- read from a crash file
+  ! 'xyz'  --- read from an xyz file
 
   INTEGER :: ierr, line_nbr, nbr_entries, i,j, ibox
   CHARACTER(120) :: line_string, line_array(20)
@@ -5032,6 +5035,42 @@ SUBROUTINE Get_Start_Type
               
               EXIT inputLOOP
 
+           ELSE IF (line_array(1) == 'read_xyz') THEN
+              ! in this case we will read in the information of coordinates from
+              ! an output xyz file with multiple timesteps for processing
+              ALLOCATE(xyz_config_file(nbr_boxes))
+              ALLOCATE(xyz_config_unit(nbr_boxes))
+              IF (int_sim_type /= sim_pp) THEN
+                 err_msg = ""
+                 err_msg(1) = 'Cannot read xyz unless simulation type is "PP"'
+                 CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+              END IF 
+
+              start_type = 'read_xyz'
+
+              WRITE(logunit,*)
+              WRITE(logunit,*) 'Configurations will be read from xyz files'
+              DO i = 1,nbr_boxes
+                 line_nbr = line_nbr + 1
+                 xyz_config_unit(i) = 119 + i
+                 CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+                 ! Make sure that the characters of the string are alphanumeric with
+                 ! a possibility of a . (dot). The first character must be an alphabet
+                 CALL Check_String(line_array(1),ierr)
+                 IF (ierr /= 0 ) THEN
+                    err_msg = ""
+                    err_msg(1) = 'An error in the input line ' // TRIM(Int_to_String(line_nbr)) &
+                         // ' of input file.'
+                    CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+                 END IF
+
+                 WRITE(logunit,*)
+                 WRITE(logunit,'(A,T40,I3,A,T50)')'Starting configuration for box ', i, ' is'
+                 WRITE(logunit,*) ADJUSTL(line_array(1))
+                 xyz_config_file(i) = TRIM(ADJUSTL(line_array(1)))
+                 
+              END DO
+              EXIT inputLOOP
            ELSE IF (line_array(1) == 'read_old') THEN
               ! in this case we will read in the information of coordinates for
               ! all the boxes so that there must be nbr_boxes lines following the
@@ -5412,6 +5451,7 @@ SUBROUTINE Get_Frequency_Info
   n_equilsteps = 0
   ncluster_freq = 0
   nexvol_freq = 0
+  nalpha_freq = 0
 
   DO
      line_nbr = line_nbr + 1
@@ -5498,7 +5538,14 @@ SUBROUTINE Get_Frequency_Info
                  nexvol_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', nexvol_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The excluded volume by clusters be calculated/written at every', nexvol_freq, ' MC steps.'
+
+              ELSE IF (line_array(1) == 'Ndegreefreq') THEN
+
+                 nalpha_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The Degree of ion association to cluster will be calculated/written at every', nalpha_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Ncoordfreq') THEN
               
@@ -5559,19 +5606,21 @@ SUBROUTINE Get_Frequency_Info
 
   ! Check to make sure that all the quantities are defined in the input file
 
-  IF (n_mcsteps == 0 .OR. ncoord_freq == 0 .OR. nthermo_freq == 0) THEN
-  
-     err_msg = ""
-     err_msg(1) = 'At least one of the keywords is missing in the input file.'
-
-     IF(timed_run) THEN
-        err_msg(2) = 'Check for coordfreq, thermofreq and Stop.'
-     ELSE
-        err_msg(2) = 'Check for Ncoordfreq, Nthermofreq, and MCsteps'
+  IF (.not. int_sim_type == sim_pp) THEN
+     IF (n_mcsteps == 0 .OR. ncoord_freq == 0 .OR. nthermo_freq == 0) THEN
+     
+        err_msg = ""
+        err_msg(1) = 'At least one of the keywords is missing in the input file.'
+   
+        IF(timed_run) THEN
+           err_msg(2) = 'Check for coordfreq, thermofreq and Stop.'
+        ELSE
+           err_msg(2) = 'Check for Ncoordfreq, Nthermofreq, and MCsteps'
+        END IF
+   
+        CALL Clean_Abort(err_msg,'Get_Frequency_Info')
+   
      END IF
-
-     CALL Clean_Abort(err_msg,'Get_Frequency_Info')
-
   END IF
   
 END SUBROUTINE Get_Frequency_Info
@@ -5717,11 +5766,7 @@ USE Run_Variables, ONLY: cpcollect
     
   END DO
 
-  IF (nexvol_freq /= 0) THEN
-     nbr_properties = nbr_properties + 1
-     max_properties = MAX(nbr_properties,max_properties)
-  END IF
-   ! Now we will figure out which properties are to be output. Allocate
+  ! Now we will figure out which properties are to be output. Allocate
   ! property files related arrays.
 
   ! Name of the property files
@@ -5740,8 +5785,6 @@ USE Run_Variables, ONLY: cpcollect
   prop_per_file(:,:) = 0
   first_open(:,:) = .TRUE.
 
- 
-  
   REWIND(inputunit)
 
   ierr = 0
@@ -5808,12 +5851,6 @@ USE Run_Variables, ONLY: cpcollect
      END IF
 
   END DO
-
-  IF (nexvol_freq /= 0) THEN
-     nbr_properties = nbr_properties + 1
-     prop_output(nbr_properties,nbr_prop_files(1),1) = 'Excluded Volume'
-     prop_per_file(nbr_prop_files(this_box),this_box) = nbr_properties
-  END IF
 
  ! Name the files for output
   DO ibox = 1, nbr_boxes
@@ -6033,8 +6070,11 @@ SUBROUTINE Get_Clustering_Info
 
         END IF
         
-        ALLOCATE( cluster%M(max_nmol) )
+        ALLOCATE( cluster%M(max_nmol), cluster%N(max_nmol) )
+        ALLOCATE( cluster%clabel(MAXVAL(nmolecules(:)), cluster%n_species_type) )
         cluster%M = 0
+        cluster%N = 0
+        cluster%clabel = 0
 
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
         IF (ncluster_freq /= 0 .AND. cluster%criteria == 0) THEN
@@ -6051,6 +6091,172 @@ SUBROUTINE Get_Clustering_Info
 
 END SUBROUTINE Get_Clustering_Info
 
+SUBROUTINE Get_Degree_Association_Info
+  !***************************************************************************************************
+  ! 
+  ! Gets information about the degree of ion association calculation
+  ! 
+  !***************************************************************************************************
+
+  USE Degree_Association
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is, ia
+  CHARACTER(120) :: line_string, line_array(20) !filename
+
+  REWIND(inputunit)
+  
+  ierr = 0
+  alpha%cutoff_sq = 0.0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Degree Association calculation information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+     END IF
+
+     IF(line_string(1:20) == '# Degree_Association') THEN
+        IF ( cluster%n_species_type == 0 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Cannot compute degree ion association without clustering information'
+            CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+        END IF
+
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+
+        alpha%cutoff_sq = (String_To_Double(line_array(1)))**2.0_DP
+        ALLOCATE(alpha%aname(nspecies))
+        ALLOCATE(alpha%atype(nspecies))
+
+        alpha%atype = -1
+        alpha%assoc_species = 0
+        alpha%clus_species = 0
+
+        DO is = 1, nspecies
+            CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+            IF ( ierr /= 0 ) THEN
+                err_msg = ''
+                err_msg(1) = 'Error while reading inputfile, likely not including 1 line per species'
+                CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+            ELSE IF (nbr_entries > 2) THEN
+                err_msg = ''
+                err_msg(1) = 'Error while reading inputfile, Too many arguments per species line'
+                CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+            END IF
+            alpha%aname(is) = line_array(1)
+            IF (alpha%aname(is) == 'NONE' .OR. alpha%aname(is) == 'none') THEN
+                alpha%atype(is) = 0
+            ELSE
+                DO ia = 1, natoms(is)
+                    IF (nonbond_list(ia,is)%atom_name == alpha%aname(is)) THEN
+                        alpha%atype(is) = ia
+                    END IF
+                END DO
+            END IF
+
+            IF (alpha%atype(is) == -1) THEN
+                err_msg = ''
+                err_msg(1) = 'Degree Association name ('//TRIM(alpha%aname(is))//') is not part of the species: '//TRIM(Int_To_String(is))
+                CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+            END IF
+
+            IF (cluster%M_olig(is) == 0 .and. alpha%atype(is) /= 0) THEN
+                IF (alpha%assoc_species == 0) THEN
+                    alpha%assoc_species = is
+                ELSE
+                    err_msg = ''
+                    err_msg(1) = 'There can only be 1 clustered ion and 1 associating ion'
+                    err_msg(2) = 'M_olig can only be nonzero for 1 species`'
+                    CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+                END IF
+            ELSE IF (cluster%M_olig(is) /= 0 .and. alpha%atype(is) /= 0) THEN
+                IF (alpha%assoc_species == 0) THEN
+                    alpha%clus_species = is
+                ELSE
+                    err_msg = ''
+                    err_msg(1) = 'There can only be 1 clustered ion and 1 associating ion'
+                    err_msg(2) = 'M_olig can only be nonzero for 1 species`'
+                    CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+                END IF
+            END IF
+
+        END DO
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+        IF (nalpha_freq /= 0 .AND. SUM(alpha%atype(:)) == 0 .OR. nalpha_freq == 0 .AND. SUM(alpha%atype(:)) /= 0) THEN
+            err_msg = ''
+            err_msg(1) = '# Degree_Association info not given in input, but Nalphafreq specified.'
+            CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+        END IF
+
+        EXIT
+     END IF
+  END DO
+
+END SUBROUTINE Get_Degree_Association_Info
+
+SUBROUTINE Get_Oligomer_Cutoff_Info
+  !***************************************************************************************************
+  ! 
+  !***************************************************************************************************
+
+  USE Cluster_Routines
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is
+  CHARACTER(120) :: line_string, line_array(20) !filename
+
+  REWIND(inputunit)
+
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Oligomer Cutoff information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
+     END IF
+
+     IF(line_string(1:17) == '# Oligomer_Cutoff') THEN
+        IF ( cluster%n_species_type == 0 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Cannot compute oligomer cutoff without clustering information'
+            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
+        END IF
+
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= nspecies ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must give a M_olig value for each species'
+            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
+        END IF
+
+        ALLOCATE(cluster%M_olig(nspecies))
+        DO is = 1, nspecies
+            cluster%M_olig(is) = String_To_Int(line_array(is))
+        END DO
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+
+        EXIT
+     END IF
+  END DO
+
+END SUBROUTINE Get_Oligomer_Cutoff_Info
+  
 SUBROUTINE Get_Excluded_Volume_Info
   !***************************************************************************************************
   ! 
@@ -6068,7 +6274,6 @@ SUBROUTINE Get_Excluded_Volume_Info
   
   ierr = 0
   exvol%n_iter = 0
-  exvol%ntrials = 0
   exvol%excluded = 0
 
   WRITE(logunit,*) 
@@ -6088,7 +6293,7 @@ SUBROUTINE Get_Excluded_Volume_Info
      IF(line_string(1:17) == '# Excluded_Volume') THEN
         IF ( cluster%n_species_type == 0 ) THEN
             err_msg = ''
-            err_msg(1) = 'Cannot compute excluded volume without clusterin information'
+            err_msg(1) = 'Cannot compute excluded volume without clustering information'
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
         END IF
 
@@ -6130,18 +6335,6 @@ SUBROUTINE Get_Excluded_Volume_Info
             err_msg(1) = 'Excluded volume species ('//TRIM(Int_To_String(exvol%species))//') can not be insertable!'
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
         END IF
-
-        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-        IF (nbr_entries /= nspecies ) THEN
-            err_msg = ''
-            err_msg(1) = 'Must give a M_olig value for each species'
-            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
-        END IF
-
-        ALLOCATE(cluster%M_olig(nspecies))
-        DO is = 1, nspecies
-            cluster%M_olig(is) = String_To_Int(line_array(is))
-        END DO
 
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
         IF (nexvol_freq /= 0 .AND. exvol%species == 0 .OR. nexvol_freq == 0 .AND. exvol%species /= 0) THEN

@@ -301,6 +301,7 @@ CONTAINS
 
           ! Add more potential functions here.
        ENDIF
+       !write(*,*) 'ibond', ibond, 'length', l0, 'energy', eb
        energy = energy + eb
     ENDDO
   
@@ -436,6 +437,7 @@ CONTAINS
           ea = k*(theta-theta0)**2
           ! Add more potential functions here.
        ENDIF
+       !write(*,*) 'iangle', iangle, 'theta', theta, 'energy', ea
        energy = energy + ea
     ENDDO
 
@@ -686,6 +688,7 @@ CONTAINS
           threephi = 3.0_DP*phi
           edihed =  a0 + a1*(1.0_DP+COS(phi)) + &
                a2*(1.0_DP-COS(twophi)) + a3*(1.0_DP+COS(threephi))
+          !write(*,*) 'dihedral', idihed, 'phi', phi, 'energy', edihed
 
        ELSEIF (dihedral_list(idihed,species)%int_dipot_type == int_rb ) THEN
 
@@ -1627,19 +1630,25 @@ CONTAINS
           epswca = vdw_param3_table(itype,jtype)
           rwca = vdw_param4_table(itype,jtype)
           rij = SQRT(rijsq)
+          IF(rij .LT. rwca) THEN
+              SigOverRsq = (sig**2) / rijsq
+              SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
+              SigOverR12 = SigOverR6 * SigOverR6
 
-          Eij_vdw = 0.0_DP
-
-          SigOverRsq = (sig**2) / rijsq
-          SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
-          SigOverR12 = SigOverR6 * SigOverR6
-
-          Eij_vdw = 4.0_DP * epswca * (SigOverR12 - SigOverR6)
-
-          IF(rij .LE. rwca) E_wca = epswca
-          IF(rij .GT. rwca) E_wca = -Eij_vdw
-
-        Eij_vdw = Eij_vdw + E_wca
+              E_wca = 4.0_DP * epswca * (SigOverR12 - SigOverR6) + epswca
+          ENDIF
+!          Eij_vdw = 0.0_DP
+!
+!          SigOverRsq = (sig**2) / rijsq
+!          SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
+!          SigOverR12 = SigOverR6 * SigOverR6
+!
+!          Eij_vdw = 4.0_DP * epswca * (SigOverR12 - SigOverR6)
+!
+!          IF(rij .LE. rwca) E_wca = epswca
+!          IF(rij .GT. rwca) E_wca = -Eij_vdw
+!
+          Eij_vdw = Eij_vdw + E_wca
 !End WCA calculation
        ELSE
 
@@ -1743,7 +1752,8 @@ CONTAINS
           rij = SQRT(rijsq)
 
           Preexph = Hhyd/(Shyd*(SQRT(twopi)))
-          Powerh = ((rij - Rhyd)**2)/(2.0_DP*(Shyd**2))
+          Powerh = ((rij - Rhyd)**2)/(2*(Shyd**2))
+          !Powerh = ((rij - Rhyd)**2.0_DP)/(2.0_DP*(Shyd**2.0_DP))
           E_hyd = Preexph*EXP(-Powerh)
 
        ELSE
