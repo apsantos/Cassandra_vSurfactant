@@ -146,13 +146,14 @@ CONTAINS
   END SUBROUTINE Write_Checkpoint
 !**************************************************************************************************
 
-SUBROUTINE Read_XYZ
+SUBROUTINE Read_XYZ(this_mc_step)
 
-   INTEGER :: this_mc_step
+   INTEGER, INTENT(IN) :: this_mc_step
 
     INTEGER :: ibox, is, ii, jj, im, this_im, ia, nmolecules_is, this_box, mols_this, sp_nmoltotal(nspecies)
     INTEGER :: this_species, nfrac_global, i, this_rxnum, j, m, alive
     INTEGER :: this_unit, i_lambda
+    INTEGER :: check_nmol
 
     REAL(DP) :: E_self, xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
@@ -194,6 +195,11 @@ SUBROUTINE Read_XYZ
 
        DO i_line = 1, n_lines 
 
+          IF (1 < this_mc_step .and. this_mc_step < n_equilsteps) THEN
+             READ(xyz_config_unit(ibox), *) 
+             CYCLE
+          END IF
+
           CALL Parse_String(xyz_config_unit(ibox),line_nbr,6,nbr_entries,line_array,ierr)
 
           is = String_To_Int(line_array(5))
@@ -233,6 +239,18 @@ SUBROUTINE Read_XYZ
           atom_list(ia,this_im,is)%exist = .TRUE.
 
        END DO
+
+       check_nmol = 0
+       DO is = 1, nspecies
+          check_nmol = check_nmol + nmols(is,ibox)*natoms(is)
+       END DO
+
+       IF (check_nmol .LT. n_lines) THEN
+          err_msg = ""
+          err_msg(1) = "More molecules in XYZ than listed in the input file."
+          CALL Clean_Abort(err_msg,'Read_XYZ')
+       ENDIF
+
     END DO
 
     DO is = 1, nspecies
