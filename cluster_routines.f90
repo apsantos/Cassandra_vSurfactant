@@ -120,11 +120,12 @@ CONTAINS
             IF (N > 0) THEN
                 cluster%M( N ) = cluster%M( N ) + 1
                 IF (N <= cluster%M_olig(is_clus)) THEN
-                    cluster%n_oligomers = cluster%n_oligomers + N
+                    cluster%n_oligomers = cluster%n_oligomers + 1
                 END IF
             END IF
         END DO
     END DO
+
   DEALLOCATE( live_mol_index )
 
   END SUBROUTINE Find_Clusters
