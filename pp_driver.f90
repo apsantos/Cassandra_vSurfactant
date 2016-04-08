@@ -78,12 +78,14 @@ SUBROUTINE PP_Driver
   
      which_step = i
      ioldN = nmols(1,1)  ! store beginning molecule number 
-     CALL Read_XYZ
+
+     IF (i == n_mcsteps) complete = .TRUE.
+
+     CALL Read_XYZ(i)
  
      next_write(this_box) = .true.
      next_rdf_write(this_box) = .true.
 
-     IF (i == n_mcsteps) complete = .TRUE.
 
      INQUIRE(file=xyz_config_file(this_box),opened=lopen)
      IF (.not. lopen) THEN
