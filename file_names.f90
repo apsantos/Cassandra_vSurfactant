@@ -136,6 +136,12 @@ CHARACTER(FILENAME_LEN),DIMENSION(:,:,:), ALLOCATABLE :: prop_output
 INTEGER,DIMENSION(:),ALLOCATABLE :: xyz_config_unit
 CHARACTER(FILENAME_LEN),DIMENSION(:),ALLOCATABLE :: xyz_config_file
 
+! Variables associated with gro configuration file
+INTEGER,DIMENSION(:),ALLOCATABLE :: gro_config_unit
+CHARACTER(FILENAME_LEN),DIMENSION(:),ALLOCATABLE :: gro_config_file
+INTEGER,DIMENSION(:),ALLOCATABLE :: gro_ndx_unit
+CHARACTER(FILENAME_LEN),DIMENSION(:),ALLOCATABLE :: gro_ndx_file
+
 ! Variables associated with old configuration file
 INTEGER :: old_config_unit = 120
 CHARACTER(FILENAME_LEN),DIMENSION(:),ALLOCATABLE :: old_config_file

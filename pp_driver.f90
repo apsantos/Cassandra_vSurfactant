@@ -45,7 +45,7 @@ SUBROUTINE PP_Driver
 
 !  !$ include 'omp_lib.h'
 
-  INTEGER :: i, this_box, ibox, is, which_step
+  INTEGER :: i, this_box, ibox, is
   INTEGER :: ioldN,  delta_n  ! old molecule number and change in molecule number
 
   REAL(DP) :: time_start, now_time
@@ -59,6 +59,7 @@ SUBROUTINE PP_Driver
   next_write(:) = .false.
   next_rdf_write(:) = .false.
   complete = .FALSE.
+  lopen = .FALSE.
  
   this_box = 1
 
@@ -76,20 +77,24 @@ SUBROUTINE PP_Driver
 
      ! We will select a move from Golden Sampling scheme
   
-     which_step = i
      ioldN = nmols(1,1)  ! store beginning molecule number 
 
      IF (i == n_mcsteps) complete = .TRUE.
 
-     CALL Read_XYZ(i)
+     IF ( start_type == 'read_xyz' ) THEN
+        IF (i > 1) THEN
+           CALL Read_XYZ(i)
+        ENDIF
+        INQUIRE(file=xyz_config_file(this_box),opened=lopen)
+     ELSEIF (start_type == 'read_gro' ) THEN
+        IF (i > 1) THEN
+           CALL Read_GRO(i)
+        ENDIF
+        INQUIRE(file=gro_config_file(this_box),opened=lopen)
+     ENDIF
  
-     next_write(this_box) = .true.
-     next_rdf_write(this_box) = .true.
-
-
-     INQUIRE(file=xyz_config_file(this_box),opened=lopen)
      IF (.not. lopen) THEN
-        WRITE(*,*) 'Only, '//TRIM(Int_To_String(i-1))//', steps in xyz file'
+        WRITE(*,*) 'Only, '//TRIM(Int_To_String(i-1))//', steps in config file'
         IF (i < n_equilsteps) THEN
             WRITE(*,*) 'Too many equil steps given'
         ELSE
@@ -99,7 +104,11 @@ SUBROUTINE PP_Driver
         nthermo_freq = 0
      ENDIF
 
+     next_write(this_box) = .true.
+     next_rdf_write(this_box) = .true.
+
      IF (i < n_equilsteps) CYCLE
+     IF (MOD(20,i)) write(*,*) 'step', i
 
      CALL Accumulate(this_box)
      
@@ -121,6 +130,7 @@ SUBROUTINE PP_Driver
 
         IF ( ncluster_freq /= 0 ) THEN
            IF ( MOD(i,ncluster_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
            
               DO ibox = 1, nbr_boxes
               
@@ -129,11 +139,14 @@ SUBROUTINE PP_Driver
               
               END DO
            
+              !CALL cpu_time(now_time)
+              !print '("clus Time = ",f6.3," seconds.")',now_time-time_start
            END IF
         END IF
         
         IF ( nexvol_freq /= 0 ) THEN
            IF ( MOD(i,nexvol_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
            
               DO ibox = 1, nbr_boxes
                  IF ( MOD(i,ncluster_freq) /= 0 ) THEN
@@ -142,6 +155,8 @@ SUBROUTINE PP_Driver
               
                  CALL Calculate_Excluded_Volume(ibox)
               
+              !CALL cpu_time(now_time)
+              !print '("exvol Time = ",f6.3," seconds.")',now_time-time_start
               END DO
            
            END IF
@@ -149,6 +164,7 @@ SUBROUTINE PP_Driver
 
         IF ( nalpha_freq /= 0 ) THEN
            IF ( MOD(i,nalpha_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
            
               DO ibox = 1, nbr_boxes
                  IF ( MOD(i,ncluster_freq) /= 0 ) THEN
@@ -157,6 +173,8 @@ SUBROUTINE PP_Driver
               
                  CALL Calculate_Degree_Association(ibox)
               
+              !CALL cpu_time(now_time)
+              !print '("alpha Time = ",f6.3," seconds.")',now_time-time_start
               END DO
            
            END IF

@@ -273,7 +273,13 @@ PROGRAM Main
   ELSEIF (start_type == 'read_xyz') THEN
      ! Read in xyz coordinates for post processing
 
-     CALL Read_XYZ
+     CALL Read_XYZ(0)
+
+  ELSEIF (start_type == 'read_gro') THEN
+     ! Read in xyz coordinates for post processing
+
+     CALL Read_GRO(-1)
+     CALL Read_GRO(1)
 
   ELSEIF (start_type == 'read_old') THEN
      ! Read in old coordinates and restart a new simulation, 

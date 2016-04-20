@@ -4470,8 +4470,8 @@ SUBROUTINE Get_Move_Probabilities
                        END DO
                     ELSE
                        ! Assume equal probability of inserting each insertable entity
-                       prob_species_ins_pair(is, is) = REAL(1.0 / nspec_insert)
-                       sum_prob_species_ins_pair = sum_prob_species_ins_pair + prob_species_ins_pair(is, is)
+                       prob_species_ins_pair(js, js) = REAL(1.0 / nspec_insert)
+                       sum_prob_species_ins_pair = sum_prob_species_ins_pair + prob_species_ins_pair(js, js)
                        l_all_pair = .FALSE.
                     END IF
                  END IF
@@ -5068,6 +5068,46 @@ SUBROUTINE Get_Start_Type
                  WRITE(logunit,'(A,T40,I3,A,T50)')'Starting configuration for box ', i, ' is'
                  WRITE(logunit,*) ADJUSTL(line_array(1))
                  xyz_config_file(i) = TRIM(ADJUSTL(line_array(1)))
+                 
+              END DO
+              EXIT inputLOOP
+           ELSE IF (line_array(1) == 'read_gro') THEN
+              ! in this case we will read in the information of coordinates from
+              ! an output gro file with multiple timesteps for processing
+              ALLOCATE(gro_config_file(nbr_boxes))
+              ALLOCATE(gro_ndx_file(nbr_boxes))
+              ALLOCATE(gro_config_unit(nbr_boxes))
+              ALLOCATE(gro_ndx_unit(nbr_boxes))
+              IF (int_sim_type /= sim_pp) THEN
+                 err_msg = ""
+                 err_msg(1) = 'Cannot read gro unless simulation type is "PP"'
+                 CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+              END IF 
+
+              start_type = 'read_gro'
+
+              WRITE(logunit,*)
+              WRITE(logunit,*) 'Configurations will be read from gro files'
+              DO i = 1,nbr_boxes
+                 line_nbr = line_nbr + 1
+                 gro_config_unit(i) = 117 + i
+                 gro_ndx_unit(i) = 717 + i
+                 CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+                 ! Make sure that the characters of the string are alphanumeric with
+                 ! a possibility of a . (dot). The first character must be an alphabet
+                 CALL Check_String(line_array(1),ierr)
+                 IF (ierr /= 0 ) THEN
+                    err_msg = ""
+                    err_msg(1) = 'An error in the input line ' // TRIM(Int_to_String(line_nbr)) &
+                         // ' of input file.'
+                    CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+                 END IF
+
+                 WRITE(logunit,*)
+                 WRITE(logunit,'(A,T40,I3,A,T50)')'Starting configuration for box ', i, ' is'
+                 WRITE(logunit,*) ADJUSTL(line_array(1))
+                 gro_config_file(i) = TRIM(ADJUSTL(line_array(1)))
+                 gro_ndx_file(i) = TRIM(ADJUSTL(line_array(2)))
                  
               END DO
               EXIT inputLOOP

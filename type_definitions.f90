@@ -555,7 +555,7 @@ MODULE Type_Definitions
     ! clustering criteria variables
     REAL(DP), DIMENSION(:,:), ALLOCATABLE :: min_distance_sq
     REAL(DP), DIMENSION(:,:), ALLOCATABLE :: r1_sq, r2_sq, r3_sq
-    INTEGER  :: criteria, n_oligomers
+    INTEGER  :: criteria, n_oligomers, n_clusters
     INTEGER, DIMENSION(:), ALLOCATABLE :: species_type, atom_type
     INTEGER :: n_species_type, n_atom_type
 

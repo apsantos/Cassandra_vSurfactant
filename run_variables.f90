@@ -149,6 +149,8 @@ USE Type_Definitions
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_intra_scale, charge_intra_scale
   LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: l_bonded
 
+  ! Gromacs file parameters
+  INTEGER, DIMENSION(:), ALLOCATABLE :: ndx_type
   ! How many simulation boxes we have. 
   INTEGER :: nbr_boxes
   INTEGER, PARAMETER :: int_cubic = 0

@@ -146,6 +146,253 @@ CONTAINS
   END SUBROUTINE Write_Checkpoint
 !**************************************************************************************************
 
+SUBROUTINE Read_GRO(this_mc_step)
+
+   INTEGER, INTENT(IN) :: this_mc_step
+
+    INTEGER :: ibox, is, ii, jj, im, this_im, ia, nmolecules_is, this_box, mols_this, sp_nmoltotal(nspecies)
+    INTEGER :: this_species, nfrac_global, i, this_rxnum, j, m, alive
+    INTEGER :: this_unit, i_lambda
+    INTEGER :: check_nmol
+
+    REAL(DP) :: E_self, xcom_old, ycom_old, zcom_old
+    REAL(DP) :: xcom_new, ycom_new, zcom_new
+
+    LOGICAL :: f_checkpoint, f_read_old, overlap, cfc_defined
+    LOGICAL :: lopen, new_frame
+
+    TYPE(Energy_Class) :: inrg
+
+    CHARACTER(120) :: line_string, line_array(20), t_ndx_name
+    INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line, idx, i_ndx, totatoms, ps
+    
+    ! Let us read all the counters and count the number of molecules of
+    ! each of the species in all the boxes
+    nmols(:,:) = 0
+    sp_nmoltotal = 0
+    molecule_list(:,:)%live = .FALSE.
+    molecule_list(:,:)%molecule_type = int_none
+    molecule_list(:,:)%cfc_lambda = int_none
+    atom_list(:,:,:)%exist = .FALSE.
+
+    ! write(*,*) this_mc_step
+    ! READ NDX FILE before anything
+    IF ( this_mc_step == -1 ) THEN
+        totatoms = 0
+        DO is = 1 , nspecies
+            totatoms = totatoms + nmolecules(is) * natoms(is)
+        ENDDO
+
+        ALLOCATE( ndx_type( totatoms ) )
+        idx = 0
+        DO ibox = 1, nbr_boxes
+            OPEN(unit=gro_ndx_unit(ibox), file=gro_ndx_file(ibox))
+            DO 
+                CALL Parse_String(gro_ndx_unit(ibox),line_nbr,0,nbr_entries,line_array,ierr)
+                IF (ierr /= 0) THEN
+                    EXIT
+                END IF
+                ! skip empty lines
+                IF (nbr_entries == 0) CYCLE
+
+                IF (line_array(1) == '[' .AND. line_array(3) == ']') THEN
+                    IF (line_array(2) /= 'System') THEN
+                        idx = idx + 1
+                    END IF
+                    IF (idx > nspecies ) THEN
+                        err_msg = ""
+                        err_msg(1) = "*.ndx file should only have System and nspecies told."
+                        CALL Clean_Abort(err_msg,'Read_GRO')
+                    END IF
+
+                ELSE IF ( nbr_entries >= 1 ) THEN
+                    DO i_ndx = 1, nbr_entries
+                        ndx_type( String_To_Int( line_array(i_ndx) ) ) = idx
+                    END DO
+                END IF
+            END DO
+            CLOSE(unit=gro_ndx_unit(ibox))
+            IF (idx < nspecies ) THEN
+                err_msg = ""
+                err_msg(1) = "*.ndx file should have all nspecies told."
+                CALL Clean_Abort(err_msg,'Read_GRO')
+            END IF
+        END DO
+        RETURN
+    END IF
+    
+    ! Read configuration
+    DO ibox = 1, nbr_boxes
+
+       INQUIRE(file=gro_config_file(ibox),opened=lopen)
+       IF (.not. lopen) OPEN(unit=gro_config_unit(ibox), file=gro_config_file(ibox))
+
+       READ(gro_config_unit(ibox), *) ! read header
+       CALL Parse_String(gro_config_unit(ibox),line_nbr,1,nbr_entries,line_array,ierr)
+       
+       n_lines = String_To_Int(line_array(1))
+       IF (n_lines < 0) THEN
+          CLOSE(unit=gro_config_unit(ibox))
+          IF (ibox == nbr_boxes) THEN
+             RETURN
+          ELSE
+             CYCLE
+          END IF
+       END IF
+
+       im = 1
+       ia = 1
+       ps = ndx_type(1)
+       DO i_line = 1, n_lines 
+
+          IF (1 < this_mc_step .and. this_mc_step < n_equilsteps) THEN
+             READ(gro_config_unit(ibox), *) 
+             CYCLE
+          END IF
+
+          CALL Parse_String(gro_config_unit(ibox),line_nbr,6,nbr_entries,line_array,ierr)
+ 
+          is = ndx_type( i_line )
+
+          IF ( ia == natoms(is)+1 ) THEN
+             im = im + 1
+             ia = 1
+          ELSE IF ( is /= ps ) THEN
+             im = 1
+             ia = 1
+             ps = is
+          END IF
+
+          IF ( im > nmolecules(is) ) THEN
+             err_msg = ""
+             err_msg(1) = "Found more than "// TRIM(Int_To_String(nmolecules(is)))//" molecules in file:"
+             err_msg(2) = gro_config_file(ibox)
+             err_msg(3) = " Check the *.ndx and gro files."
+             CALL Clean_Abort(err_msg,'Read_GRO')
+          END IF
+
+          IF (.not. molecule_list(im,is)%live) THEN
+              ! provide a linked number to this molecule
+              locate(im,is) = im 
+              this_im = locate(im,is)
+              sp_nmoltotal(is) = sp_nmoltotal(is) + 1
+              molecule_list(this_im,is)%live = .TRUE.
+
+              ! By default make all the molecules as integer molecules
+              molecule_list(this_im,is)%molecule_type = int_normal
+              molecule_list(this_im,is)%cfc_lambda = 1.0_DP
+
+              ! assign the box to this molecule
+              molecule_list(this_im,is)%which_box = ibox
+              nmols(is,ibox) = nmols(is,ibox) + 1
+                
+          END IF
+
+          this_im = locate(im,is)
+          
+          nonbond_list(ia,is)%element = line_array(2)
+    
+          atom_list(ia,this_im,is)%rxp = String_To_Double(line_array(4)) * 10.0_DP
+          atom_list(ia,this_im,is)%ryp = String_To_Double(line_array(5)) * 10.0_DP
+          atom_list(ia,this_im,is)%rzp = String_To_Double(line_array(6)) * 10.0_DP
+          
+          atom_list(ia,this_im,is)%exist = .TRUE.
+          ia = ia + 1
+
+       END DO
+       CALL Parse_String(gro_config_unit(ibox),line_nbr,3,nbr_entries,line_array,ierr)
+       IF (box_list(ibox)%length(1,1) /= String_To_Double(line_array(1))*10.0 .OR. &
+           box_list(ibox)%length(2,2) /= String_To_Double(line_array(2))*10.0 .OR. &
+           box_list(ibox)%length(3,3) /= String_To_Double(line_array(3))*10.0 ) THEN
+             err_msg = ""
+             err_msg(1) = "Box size in input and gromacs config do not agree."
+             CALL Clean_Abort(err_msg,'Read_GRO')
+       ENDIF
+
+       IF (0 .eq. this_mc_step .or. this_mc_step .gt. n_equilsteps) THEN
+          check_nmol = 0
+          DO is = 1, nspecies
+             check_nmol = check_nmol + (nmols(is,ibox)*natoms(is))
+          END DO
+
+          IF (check_nmol .LT. n_lines) THEN
+             err_msg = ""
+             err_msg(1) = "More molecules in GRO, than possible from nmolecules in the input file."
+             CALL Clean_Abort(err_msg,'Read_GRO')
+          ENDIF
+       ENDIF
+
+    END DO
+
+    DO is = 1, nspecies
+       IF(sp_nmoltotal(is) .LT. nmolecules(is)) THEN
+          DO im = sp_nmoltotal(is)+1,nmolecules(is)
+             locate(im,is) = im
+             molecule_list(im,is)%live = .FALSE.
+             molecule_list(im,is)%cfc_lambda = 1.0_DP
+             molecule_list(im,is)%molecule_type = int_normal
+             molecule_list(im,is)%which_box = 0
+          END DO
+       END IF
+    END DO
+
+    CALL Get_Internal_Coords
+    
+    ! Calculate COM and distance of the atom farthest to the COM.
+    
+    DO is = 1, nspecies
+       DO im = 1, nmolecules(is)
+          this_im = locate(im,is)
+          IF( .NOT. molecule_list(this_im,is)%live) CYCLE
+          ! Now let us ensure that the molecular COM is inside the central simulation box
+          !
+          CALL Get_COM(this_im,is)
+          
+          xcom_old = molecule_list(this_im,is)%xcom
+          ycom_old = molecule_list(this_im,is)%ycom
+          zcom_old = molecule_list(this_im,is)%zcom
+          
+          ! Apply PBC
+
+          this_box = molecule_list(this_im,is)%which_box
+
+          IF (l_cubic(this_box)) THEN
+             
+             CALL Apply_PBC_Anint(this_box,xcom_old,ycom_old,zcom_old, &
+                  xcom_new, ycom_new, zcom_new)
+
+          ELSE
+             
+             CALL Minimum_Image_Separation(this_box,xcom_old,ycom_old,zcom_old, &
+                  xcom_new, ycom_new, zcom_new)
+
+          END IF
+          
+          ! COM in the central simulation box
+          
+          molecule_list(this_im,is)%xcom = xcom_new
+          molecule_list(this_im,is)%ycom = ycom_new
+          molecule_list(this_im,is)%zcom = zcom_new
+          
+          ! displace atomic coordinates
+          
+          atom_list(1:natoms(is),this_im,is)%rxp = atom_list(1:natoms(is),this_im,is)%rxp + &
+               xcom_new - xcom_old
+          atom_list(1:natoms(is),this_im,is)%ryp = atom_list(1:natoms(is),this_im,is)%ryp + &
+               ycom_new - ycom_old
+          atom_list(1:natoms(is),this_im,is)%rzp = atom_list(1:natoms(is),this_im,is)%rzp + &
+               zcom_new - zcom_old
+          
+          CALL Compute_Max_Com_Distance(this_im,is)
+       END DO
+    END DO
+    
+    DO ibox = 1, nbr_boxes
+       IF(int_vdw_sum_style(ibox) == vdw_cut_tail) CALL Compute_Beads(ibox)
+    END DO
+
+  END SUBROUTINE Read_GRO
+
 SUBROUTINE Read_XYZ(this_mc_step)
 
    INTEGER, INTENT(IN) :: this_mc_step
@@ -240,15 +487,17 @@ SUBROUTINE Read_XYZ(this_mc_step)
 
        END DO
 
-       check_nmol = 0
-       DO is = 1, nspecies
-          check_nmol = check_nmol + nmols(is,ibox)*natoms(is)
-       END DO
+       IF (0 .eq. this_mc_step .or. this_mc_step .gt. n_equilsteps) THEN
+          check_nmol = 0
+          DO is = 1, nspecies
+             check_nmol = check_nmol + (nmols(is,ibox)*natoms(is))
+          END DO
 
-       IF (check_nmol .LT. n_lines) THEN
-          err_msg = ""
-          err_msg(1) = "More molecules in XYZ than listed in the input file."
-          CALL Clean_Abort(err_msg,'Read_XYZ')
+          IF (check_nmol .LT. n_lines) THEN
+             err_msg = ""
+             err_msg(1) = "More molecules in XYZ, than possible from nmolecules in the input file."
+             CALL Clean_Abort(err_msg,'Read_XYZ')
+          ENDIF
        ENDIF
 
     END DO
