@@ -61,7 +61,7 @@ CONTAINS
     INTEGER :: alive(nspecies)               ! molecule indices
 
     INTEGER :: ispec, imol, is_clus, t_im
-    INTEGER :: i_ins
+    INTEGER :: i_ins, cs
 
     REAL(DP) :: ln_pacc, P_seq, P_bias, this_lambda, delta_e
 
@@ -73,16 +73,20 @@ CONTAINS
     LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: temp_exist
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: temp_nmols
 
+  REAL(DP) :: time_start, now_time
+
     ALLOCATE( temp_locate(MAXVAL(nmolecules),nspecies) )
     ALLOCATE( temp_live(MAXVAL(nmolecules),nspecies) )
-    ALLOCATE( temp_exist(MAXVAL(natoms),MAXVAL(nmolecules)+1,nspecies) )
+    ALLOCATE( temp_exist(MAXVAL(natoms),MAXVAL(nmolecules),nspecies) )
     ALLOCATE( temp_nmols(nspecies,nbr_boxes) )
     ln_pacc = 0.0_DP
     P_seq = 1.0_DP
     P_bias = 1.0_DP
 
     exvol%excluded = 0
-    exvol%criteria = LOG(1E0)
+    exvol%criteria = LOG(1E8)
+
+    IF (cluster%n_clusters == 0) RETURN
 
     !*********************************************************************************
     !   Step 1) Temporarily remove molecules that are not in the clusters
@@ -111,11 +115,15 @@ CONTAINS
        !*********************************************************************************
    
        DO ispec = 1, cluster%n_species_type
-           DO i = 1, nmols(cluster%species_type(ispec),this_box)
-               imol = locate(i,cluster%species_type(ispec) )
-               IF (ispec == is .and. imol == im) CYCLE
+           cs = cluster%species_type(ispec)
+           DO i = 1, nmols(cs,this_box)
+           !DO i = 1, nmols(cluster%species_type(ispec),this_box)
+               !imol = locate(i,cluster%species_type(ispec) )
+               imol = locate(i,cs )
+               IF (cs == is .and. imol == im) CYCLE
+               !IF (cluster%species_type(ispec) == is .and. imol == im) CYCLE
    
-               in_cluster = Neighbor(imol, im, cluster%species_type(ispec), is)
+               in_cluster = Neighbor(imol, im, cs, is)
                IF (in_cluster) THEN
                    ! remove monomer
                    CALL Select_Monomer(im, is, this_box)
@@ -147,15 +155,6 @@ CONTAINS
        !*********************************************************************************
    
        ln_pacc = beta(this_box) * delta_e 
-   
-       ! P_seq and P_bias equal 1.0 unless changed by Build_Molecule.
-       !P_seq = 1.0_DP
-       !P_bias = 1.0_DP
-       !ln_pacc = ln_pacc + DLOG(P_seq * P_bias) !&
-                         !+ 3.0_DP * DLOG(species_list(is)%de_broglie(this_box))
-                         !+ 2.0_DP*DLOG(REAL(nmols(is,this_box)+1,DP)) &
-                         !- 2.0_DP*DLOG(box_list(this_box)%volume) 
-                         !- species_list(is)%chem_potential * beta(this_box) 
    
        IF (ln_pacc > exvol%criteria) THEN
            !write(*,*) 'ene', delta_e, i_ins
@@ -276,8 +275,8 @@ CONTAINS
     INTEGER :: n_removed, imol, is_clus, t_im, position
     INTEGER :: k
 
-    n_removed = 0
     DO is_clus = 1, nspecies
+        n_removed = 0
         IF (.not. ANY(cluster%species_type == is_clus)) CYCLE
 
         MoleculeLoop: DO imol = 1, nmolecules(is_clus)
@@ -382,18 +381,22 @@ CONTAINS
     CALL Compute_Molecule_Nonbond_Inter_Energy(alive(is),is, &
             E_inter_vdw,E_inter_qq,inter_overlap(is))
 
+    IF (inter_overlap(is) ) THEN
+        overlap = .TRUE.
+        RETURN
+    END IF
+
     ! Calculate the nonbonded energy interaction within the inserted molecule
     CALL Compute_Molecule_Nonbond_Intra_Energy(alive(is),is, &
             E_intra_vdw,E_intra_qq,intra_overlap(is))
 
-    IF (inter_overlap(is) .OR. intra_overlap(is)) THEN
+    IF (intra_overlap(is)) THEN
         overlap = .TRUE.
         RETURN
     END IF
 
     ! There are no overlaps, so we can calculate the change in potential energy.
     ! Already have the change in nonbonded energies
-    delta_e = E_inter_vdw + E_inter_qq + E_intra_vdw + E_intra_qq
 
     E_bond = 0.0_DP
     E_angle = 0.0_DP
@@ -404,20 +407,22 @@ CONTAINS
     CALL Compute_Molecule_Dihedral_Energy(alive(is),is,E_dihedral)
     CALL Compute_Molecule_Improper_Energy(alive(is),is,E_improper)
 
-    delta_e = delta_e + E_bond + E_angle + E_dihedral + E_improper
+    delta_e = E_inter_vdw + E_inter_qq + E_intra_vdw + E_intra_qq &
+              + E_bond + E_angle + E_dihedral + E_improper
 
-    E_reciprocal_move = 0.0_DP
-    E_self_move = 0.0_DP
     IF ( (int_charge_sum_style(this_box) == charge_ewald) .AND. &
          (has_charge(is)) ) THEN
+        E_reciprocal_move = 0.0_DP
+        E_self_move = 0.0_DP
        CALL Compute_Ewald_Reciprocal_Energy_Difference(alive(is),alive(is),is,this_box, &
              int_insertion,E_reciprocal_move)
 
        CALL Compute_Ewald_Self_Energy_Difference(alive(is),is,this_box, &
              int_insertion,E_self_move)
-    END IF
 
-    delta_e = delta_e + E_self_move + E_reciprocal_move - energy(this_box)%ewald_reciprocal
+        delta_e = delta_e + E_self_move + E_reciprocal_move - energy(this_box)%ewald_reciprocal
+
+    END IF
 
     ! 3.6) Long-range energy correction
     IF (int_vdw_sum_style(this_box) == vdw_cut_tail) THEN
