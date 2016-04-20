@@ -237,15 +237,15 @@ SUBROUTINE Read_Intra_Exclusion_Table
                   i_line = i_line + 1
                ENDDO
             ENDDO
-            DO is = 1, nspecies
-               DO js = is+1, nspecies
-                  IF (ANY(temp_type(:natoms(is),is) == temp_type(:natoms(js),js))) THEN
-                     err_msg(1) = "Atom types between among species"
-                     err_msg(2) = "must be unique in the intra scaling table."
-                     CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
-                  ENDIF
-               ENDDO
-            ENDDO
+            !DO is = 1, nspecies
+            !   DO js = is+1, nspecies
+            !      IF (ANY(temp_type(:natoms(is),is) == temp_type(:natoms(js),js))) THEN
+            !         err_msg(1) = "Atom types between species"
+            !         err_msg(2) = "must be unique in the intra scaling table."
+            !         CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+            !      ENDIF
+            !   ENDDO
+            !ENDDO
         ELSEIF (line_string(1:15) == '# Intra_Scaling') THEN
            ! read in values
            DO
