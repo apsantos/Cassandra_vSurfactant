@@ -112,6 +112,7 @@ CONTAINS
     END DO
 
     cluster%n_oligomers = 0
+    cluster%n_clusters = 0
     DO is = 1, cluster%n_species_type
         is_clus = cluster%species_type(is)
         DO imol = 1, nmols(is_clus,this_box)
@@ -121,6 +122,8 @@ CONTAINS
                 cluster%M( N ) = cluster%M( N ) + 1
                 IF (N <= cluster%M_olig(is_clus)) THEN
                     cluster%n_oligomers = cluster%n_oligomers + 1
+                ELSE
+                    cluster%n_clusters = cluster%n_clusters + 1
                 END IF
             END IF
         END DO

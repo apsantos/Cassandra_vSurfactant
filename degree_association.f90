@@ -50,16 +50,19 @@ CONTAINS
     REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
 
     alpha%n_assoc = 0
-    DO i = 1, nmolecules(alpha%assoc_species)
-        am = locate(i, alpha%assoc_species)
-        IF( .NOT. molecule_list(am, alpha%assoc_species)%live ) CYCLE
 
-        DO j = 1, nmolecules(alpha%clus_species)
-            cm = locate(j, alpha%clus_species)
-            IF( .NOT. molecule_list(cm, alpha%clus_species)%live ) CYCLE
+    IF (cluster%n_clusters == 0) RETURN
 
-            ! IF the molecule is not in a cluster of the specified size
-            IF (cluster%N( cluster%clabel(cm, alpha%clus_species) ) <= cluster%M_olig(alpha%clus_species)) CYCLE
+    DO i = 1, nmolecules(alpha%clus_species)
+        cm = locate(i, alpha%clus_species)
+        IF( .NOT. molecule_list(cm, alpha%clus_species)%live ) CYCLE
+
+        ! IF the molecule is not in a cluster of the specified size
+        IF (cluster%N( cluster%clabel(cm, alpha%clus_species) ) <= cluster%M_olig(alpha%clus_species)) CYCLE
+
+        DO j = 1, nmolecules(alpha%assoc_species)
+            am = locate(j, alpha%assoc_species)
+            IF( .NOT. molecule_list(am, alpha%assoc_species)%live ) CYCLE
 
             ! Get the positions of the COM of the two molecule species
             rxijp = atom_list(alpha%atype(alpha%assoc_species), am, alpha%assoc_species)%rxp - &
