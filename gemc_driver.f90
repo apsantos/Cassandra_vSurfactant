@@ -37,6 +37,7 @@ SUBROUTINE GEMC_Driver
   USE Random_Generators
   USE Read_Write_Checkpoint
   USE Energy_Routines, ONLY: Compute_Total_System_Energy
+  USE Cluster_Routines
   USE File_Names
   USE IO_Utilities, ONLY: Int_To_String
 
@@ -344,6 +345,19 @@ SUBROUTINE GEMC_Driver
 
         END IF
         
+        IF ( ncluster_freq /= 0 ) THEN
+           IF ( MOD(i,ncluster_freq) == 0 ) THEN
+           
+              DO ibox = 1, nbr_boxes
+              
+                 CALL Find_Clusters(ibox)
+                 CALL Write_Cluster(ibox)
+              
+              END DO
+           
+           END IF
+        END IF
+
         write_flag = .FALSE.
 
      ELSE

@@ -58,6 +58,7 @@ SUBROUTINE NVT_MC_Fragment_Driver
   USE Random_Generators
   USE Energy_Routines
   USE File_Names
+  USE Cluster_Routines
 
   IMPLICIT NONE
 

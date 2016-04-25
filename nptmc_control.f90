@@ -118,6 +118,9 @@ SUBROUTINE NPTMC_Control
   ! Determine the frequency with which information will be output 
   CALL Get_Frequency_Info
 
+  ! Determine the criteria and cutoff value for clustering
+  CALL Get_Clustering_Info
+
   ! Properties to be output
   CALL Get_Property_Info
 

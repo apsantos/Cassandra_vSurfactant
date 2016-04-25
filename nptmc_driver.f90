@@ -56,6 +56,7 @@ SUBROUTINE NPTMC_Driver
   USE Energy_Routines
   USE Read_Write_Checkpoint
   USE Simulation_Properties
+  USE Cluster_Routines
 
   IMPLICIT NONE
 
@@ -348,6 +349,19 @@ SUBROUTINE NPTMC_Driver
               
            END DO
 
+        END IF
+
+        IF ( ncluster_freq /= 0 ) THEN
+           IF ( MOD(i,ncluster_freq) == 0 ) THEN
+           
+              DO ibox = 1, nbr_boxes
+              
+                 CALL Find_Clusters(ibox)
+                 CALL Write_Cluster(ibox)
+              
+              END DO
+           
+           END IF
         END IF
         
         write_flag = .FALSE.

@@ -547,4 +547,21 @@ MODULE Type_Definitions
 
  END TYPE Frag_Coord_Class
 
+ TYPE Cluster_Class
+    ! This class holds the information for the cluster
+
+    ! clustering criteria variables
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: min_distance_sq
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: r1_sq, r2_sq, r3_sq
+    INTEGER  :: criteria, n_oligomers, n_clusters
+    INTEGER, DIMENSION(:), ALLOCATABLE :: species_type, atom_type
+    INTEGER :: n_species_type, n_atom_type
+
+    ! cluster finding variables
+    REAL(DP) :: clusmax, n_cluster
+    INTEGER, DIMENSION(:), ALLOCATABLE :: N, M, M_olig
+    INTEGER, DIMENSION(:,:), ALLOCATABLE :: clabel
+
+ END TYPE Cluster_Class
+
 END MODULE Type_Definitions

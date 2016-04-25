@@ -96,6 +96,9 @@ SUBROUTINE NVT_MC_Fragment_Control
 
   CALL Get_Frequency_Info
 
+  ! Determine the criteria and cutoff value for clustering
+  CALL Get_Clustering_Info
+
   ! Get the file names for each of the fragments
 
   CALL Get_File_Info

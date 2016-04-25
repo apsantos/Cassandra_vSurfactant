@@ -38,6 +38,7 @@ SUBROUTINE GCMC_Driver
   USE File_Names
   USE Energy_Routines
   USE Read_Write_Checkpoint
+  USE Cluster_Routines
 
   IMPLICIT NONE
 
@@ -283,6 +284,19 @@ SUBROUTINE GCMC_Driver
               
            END DO
            
+        END IF
+
+        IF ( ncluster_freq /= 0 ) THEN
+           IF ( MOD(i,ncluster_freq) == 0 ) THEN
+           
+              DO ibox = 1, nbr_boxes
+              
+                 CALL Find_Clusters(ibox)
+                 CALL Write_Cluster(ibox)
+              
+              END DO
+           
+           END IF
         END IF
         
      ELSE

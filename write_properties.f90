@@ -450,4 +450,39 @@ SUBROUTINE Write_Coords(this_box)
 
 END SUBROUTINE Write_Coords
 
+SUBROUTINE Write_Cluster(this_box)
+  !************************************************************************************
+  ! The subroutine writes the cluster vists in the simulation box
+  !
+  ! CALLED BY
+  !
+  !        *_driver
+  !
+  !************************************************************************************
+
+  USE Run_Variables
+  USE File_Names
+  USE Cluster_Routines
+  USE IO_Utilities
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: this_box
+  INTEGER :: iM, box_unit
+
+  cluster_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.clu'
+  box_unit = cluster_file_unit + this_box
+  OPEN(unit=cluster_file_unit+this_box, file=cluster_file)
+
+  WRITE(box_unit,*) '#   M    pop'
+  
+  DO iM = 1, SIZE(cluster%M)
+     IF (cluster%M(iM) > 0) THEN
+        WRITE(box_unit,'(I6, I10)') iM, cluster%M(iM)
+     END IF
+  END DO
+  CLOSE(unit=cluster_file_unit+this_box)
+ 
+END SUBROUTINE Write_Cluster
+
 
