@@ -386,6 +386,8 @@ SUBROUTINE Read_Nonbond_Table
     ! Create a character array containing the names of each unique atom type, with the index equal
     ! to the atom type number
 
+    ALLOCATE(atom_type_list(nbr_atomtypes), Stat=AllocateStatus)
+
     ! allocate arrays containing vdw parameters for all interaction pairs.
     ALLOCATE(vdw_param1_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param2_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
