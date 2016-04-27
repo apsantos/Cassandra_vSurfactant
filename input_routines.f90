@@ -4016,6 +4016,7 @@ SUBROUTINE Get_Move_Probabilities
   ALLOCATE(sorbate_file(nspecies))
   ALLOCATE(init_list(MAXVAL(natoms),1,nspecies))
   ALLOCATE(max_disp(nspecies,nbr_boxes))
+  ALLOCATE(max_clus_disp(nspecies,nbr_boxes))
   ALLOCATE(max_rot(nspecies,nbr_boxes))
   ALLOCATE(prob_rot_species(nspecies))
   species_list(:)%int_insert = int_noinsert
@@ -4677,6 +4678,31 @@ SUBROUTINE Get_Move_Probabilities
 
               delta_phi_max = delta_phi_max * PI/180.0_DP
 
+           ELSE IF (line_string(1:14) == '# Prob_Cluster') THEN
+              ! Probability for a cluster to be displaced
+              num_moves = num_moves + 1
+              line_nbr = line_nbr + 1
+              CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+              prob_cluster = String_To_Double(line_array(1))
+
+              WRITE(logunit,*)
+              WRITE(logunit,*) 'Claster translation enabled'
+              WRITE(logunit,*) 'Probability of this move', prob_cluster
+
+
+              DO j = 1, nbr_boxes
+                 line_nbr = line_nbr + 1
+                 CALL Parse_String(inputunit,line_nbr,nspecies,nbr_entries,line_array,ierr)
+
+                 ! assign the maximum displacement widths to each of the species
+                 DO i = 1, nspecies
+                    max_clus_disp(i,j) = String_To_Double(line_array(i))
+                    WRITE(logunit,'(A,T40,I3,A,T50,I3,T55,A,T60,F10.5)') 'Maximum cluster displacement width for species', & 
+                         i, ' in box', j, 'is', max_clus_disp(i,j)
+                    WRITE(logunit,*)
+                 END DO
+              END DO
+
            ELSE IF (line_string(1:23) == '# Done_Probability_Info') THEN
 
               ! finished the section 
@@ -4881,7 +4907,8 @@ SUBROUTINE Get_Move_Probabilities
   cut_swap = cut_deletion + prob_swap
   cut_regrowth = cut_swap + prob_regrowth
   cut_ring = cut_regrowth + prob_ring
-  cut_atom_displacement = cut_ring + prob_atom_displacement
+  cut_cluster = cut_ring + prob_cluster
+  cut_atom_displacement = cut_cluster + prob_atom_displacement
 
 
   IF (ABS(cut_atom_displacement-1.0_DP) > tiny_number ) THEN

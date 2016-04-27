@@ -32,10 +32,431 @@ MODULE Cluster_Routines
 
   USE Run_Variables
   USE Random_Generators
+  USE Energy_Routines
+  USE Pair_Nrg_Routines
 
   IMPLICIT NONE
 
 CONTAINS
+
+  SUBROUTINE Translate_Cluster(this_box)
+
+    !*********************************************************************************
+    !
+    ! Similar to regular translation
+    !
+    ! CALLED BY 
+    !
+    !        *_driver
+    !
+    ! Step 1) Pick a cluster with uniform probability
+    ! Step 2) Choose insertion monomer and insertion location
+    ! Step 3) Reject if any monomer has become part of a cluster
+    ! Step 4) Calculate the change in potential energy
+    ! Step 5) Accept or reject the test insertion
+    !   
+    ! 2/19/15  : Andrew P. Santos
+    !*********************************************************************************
+
+    INTEGER :: this_box
+    INTEGER :: tot_natoms, tot_nmol
+    INTEGER :: imol, jmol, iatom, i, jm
+    LOGICAL, ALLOCATABLE, DIMENSION(:) :: neigh_list
+    ! Arguments
+    INTEGER  :: mc_step
+  
+    ! Local declarations
+    INTEGER  :: ibox       ! box index
+    INTEGER  :: is, iclus  ! species index
+    INTEGER  :: im  ! molecule indices
+    INTEGER  :: total_mols ! number of molecules in the system
+    INTEGER  :: old_clusmax, old_n_oligomers, old_n_clusters
+    INTEGER, ALLOCATABLE, DIMENSION(:) :: old_N, old_M
+    INTEGER, ALLOCATABLE, DIMENSION(:) :: iclus_mol, iclus_is
+    INTEGER, ALLOCATABLE, DIMENSION(:,:) :: old_clabel
+    
+    REAL(DP) :: nmols_box(nbr_boxes)
+    REAL(DP), ALLOCATABLE :: x_box(:), x_species(:)
+    REAL(DP) :: rand_no
+    REAL(DP) :: dx, dy, dz
+    REAL(DP) :: delta_e, ln_pacc, success_ratio
+    REAL(DP) :: E_vdw, E_qq, E_vdw_move, E_qq_move, E_reciprocal_move
+    REAL(DP) :: rcut_small
+  
+    LOGICAL :: inter_overlap, overlap, accept, accept_or_reject
+  
+    ! Pair_Energy arrays and Ewald implementation
+    INTEGER :: position
+    REAL(DP), ALLOCATABLE :: cos_mol_old(:), sin_mol_old(:)
+
+    E_vdw_move = 0.0_DP
+    E_qq_move = 0.0_DP
+    E_vdw = 0.0_DP
+    E_qq = 0.0_DP
+    E_reciprocal_move = 0.0_DP
+    inter_overlap = .FALSE.
+  
+    ! Sum the total number of molecules 
+    total_mols = 0 ! sum over species, box
+    DO ibox = 1, nbr_boxes
+      nmols_box(ibox) = 0
+      DO is = 1, nspecies
+        ! Only count mobile species
+        IF ( max_clus_disp(is,ibox) > 0. ) THEN
+          total_mols = total_mols + nmols(is,ibox)
+          nmols_box(ibox) = nmols_box(ibox) + nmols(is,ibox)
+        END IF
+      END DO
+    END DO
+  
+    ! If there are no molecules then return
+    IF (total_mols == 0) RETURN
+  
+    ! If needed, choose a box based on its total mol fraction
+    IF(nbr_boxes .GT. 1) THEN
+  
+      ALLOCATE(x_box(nbr_boxes)) 
+  
+      DO ibox = 1, nbr_boxes
+         x_box(ibox) = REAL(nmols_box(ibox),DP)/REAL(total_mols,DP)
+         IF ( ibox > 1 ) THEN
+            x_box(ibox) = x_box(ibox) + x_box(ibox-1)
+         END IF
+      END DO
+    
+      DO ibox = 1, nbr_boxes
+         IF ( rranf() <= x_box(ibox)) EXIT
+      END DO
+  
+      this_box = ibox
+      DEALLOCATE(x_box)
+  
+    ELSE
+  
+      this_box = 1
+  
+    END IF
+  
+    ! If there are no molecules in this box then return
+    IF( nmols_box(this_box) == 0 ) RETURN
+  
+    ! Choose species based on the mol fraction, using Golden sampling
+    ALLOCATE(x_species(nspecies))
+  
+    DO is = 1, nspecies
+       IF ( max_clus_disp(is,this_box) > 0. ) THEN
+         x_species(is) = REAL(nmols(is,this_box), DP)/REAL(nmols_box(this_box),DP)
+       ELSE
+         x_species(is) = 0.0_DP
+       END IF
+       IF ( is > 1 ) THEN
+          x_species(is) = x_species(is) + x_species(is-1)
+       END IF
+    END DO
+  
+    rand_no = rranf()
+    DO is = 1, nspecies
+       IF( rand_no <= x_species(is)) EXIT
+    END DO
+  
+    DEALLOCATE(x_species)
+  
+    ! If the molecule can't move then return
+    IF ( max_clus_disp(is,this_box) == 0. ) RETURN
+  
+    !*********************************************************************************
+    !   Step 1) Pick a cluster with uniform probability
+    !*********************************************************************************
+  
+    ! Find Clusters
+    CALL Find_Clusters(this_box)
+    !write(*,*)  'clab', cluster%clabel, ( cluster%n_oligomers + cluster%n_clusters ), cluster%clusmax
+    !write(*,*)  'N', cluster%N(1:50)
+  
+    ! Choose a cluster at random for displacement
+    iclus = INT ( rranf() * cluster%clusmax ) + 1
+    DO WHILE (cluster%N(iclus) < 0)
+        iclus = -cluster%N(iclus)
+    END DO
+    !write(*,*) 'iclus', iclus
+  
+    ! update the trial counters
+    tot_trials(this_box) = tot_trials(this_box) + 1
+    ntrials(is,this_box)%cluster_translate = ntrials(is,this_box)%cluster_translate + 1
+  
+    !*********************************************************************************
+    !   Step 1) Save old energy
+    !           obtain the energy of the molecule before the move.  Note that due to
+    !           this move, the interatomic energies such as vdw and electrostatics will
+    !           change. Also the ewald_reciprocal energy will change but there will
+    !           be no change in intramolecular energies.
+    !*********************************************************************************
+
+    ! Generate a random displacement vector. Note that the current formalism will
+    ! work for cubic shaped boxes. However, it is easy to extend for nonorthorhombic
+    ! boxes where displacements along the basis vectors. 
+    dx = ( 2.0_DP * rranf() - 1.0_DP) * max_clus_disp(is,this_box)
+    dy = ( 2.0_DP * rranf() - 1.0_DP) * max_clus_disp(is,this_box)
+    dz = ( 2.0_DP * rranf() - 1.0_DP) * max_clus_disp(is,this_box)
+  
+    !*********************************************************************************
+    !   Step 2) Choose insertion cluster and insertion location
+    !*********************************************************************************
+
+    ! Loop over molecules in this cluster
+    ALLOCATE( iclus_is(cluster%N(iclus)), iclus_mol(cluster%N(iclus)) )
+    iclus_mol = 0
+    iclus_is = is
+    i = 1
+    DO imol = 1, nmolecules(is)
+        im = locate(imol, is)
+        IF( .NOT. molecule_list(im,is)%live ) CYCLE 
+
+        IF ( cluster%clabel(im, is)              == iclus .OR. &
+            -cluster%N( cluster%clabel(im, is) ) == iclus ) THEN
+            iclus_mol(i) = im
+            i = i + 1
+        END IF
+
+    END DO
+
+    IF (l_pair_nrg) THEN
+        CALL Store_Molecule_Pair_Interaction_Arrays(iclus_mol(1),is,this_box,E_vdw,E_qq, cluster%N(iclus), iclus_mol, iclus_is)
+    ELSE
+        CALL Compute_Molecule_Nonbond_Inter_Energy(iclus_mol(1),is,E_vdw,E_qq,inter_overlap)
+    END IF
+          
+    DO imol = 1, cluster%N(iclus)
+        im = iclus_mol(imol)
+
+        IF (inter_overlap)  THEN
+           WRITE(*,*) 'Disaster, overlap in the old configruation'
+           WRITE(*,*) 'Translate'
+           WRITE(*,*) im, is, this_box
+        END IF
+      
+        ! Store the old positions of the atoms
+        CALL Save_Old_Cartesian_Coordinates(im,is)
+
+        ! Move atoms by the above vector dx,dy,dz and also update the COM
+        atom_list(:,im,is)%rxp = atom_list(:,im,is)%rxp + dx
+        atom_list(:,im,is)%ryp = atom_list(:,im,is)%ryp + dy
+        atom_list(:,im,is)%rzp = atom_list(:,im,is)%rzp + dz
+
+        molecule_list(im,is)%xcom = molecule_list(im,is)%xcom + dx
+        molecule_list(im,is)%ycom = molecule_list(im,is)%ycom + dy
+        molecule_list(im,is)%zcom = molecule_list(im,is)%zcom + dz
+
+        CALL Fold_Molecule(im,is,this_box)
+
+    END DO
+  
+    ALLOCATE(old_M(SIZE(cluster%M)), old_N(SIZE(cluster%N)))
+    ALLOCATE( old_clabel(MAXVAL(nmolecules(:)), cluster%n_species_type) )
+  
+    old_clusmax = cluster%clusmax
+    old_N = cluster%N
+    old_M = cluster%M
+    old_clabel = cluster%clabel
+    old_n_oligomers = cluster%n_oligomers
+    old_n_clusters = cluster%n_clusters
+
+    !*********************************************************************************
+    !   Step 3) Reject if any monomer has become part of a cluster
+    !*********************************************************************************
+
+    CALL Find_Clusters(this_box)
+
+    ! IF cluster translate added a molecule, so move is rejected
+    IF ( old_clusmax == cluster%clusmax ) THEN 
+        accept = .FALSE.
+
+        cluster%clusmax = old_clusmax
+        cluster%N = old_N
+        cluster%M = old_M
+        cluster%clabel = old_clabel
+        cluster%n_oligomers = old_n_oligomers
+        cluster%n_clusters = old_n_clusters
+        DEALLOCATE(old_M, old_clabel, old_N)
+
+        DO imol = 1, cluster%N(iclus)
+            im = iclus_mol(imol)
+            CALL Revert_Old_Cartesian_Coordinates(im,is)
+
+        END DO
+
+        IF (l_pair_nrg) CALL Reset_Molecule_Pair_Interaction_Arrays(im,is,this_box, &
+                                      cluster%N(iclus), iclus_mol, iclus_is)
+
+    !*********************************************************************************
+    !   Step 4) Calculate the change in potential energy
+    !*********************************************************************************
+    ELSE
+
+        CALL Compute_Molecule_Nonbond_Inter_Energy(im,is,E_vdw_move,E_qq_move,inter_overlap)
+
+        IF (inter_overlap) THEN ! Move is rejected
+
+            accept = .FALSE.
+
+            cluster%clusmax = old_clusmax
+            cluster%n_oligomers = old_n_oligomers
+            cluster%n_clusters = old_n_clusters
+
+            cluster%N = old_N
+            cluster%M = old_M
+            cluster%clabel = old_clabel
+            DEALLOCATE(old_M, old_clabel, old_N)
+
+            DO imol = 1, cluster%N(iclus)
+                im = iclus_mol(imol)
+    
+                CALL Revert_Old_Cartesian_Coordinates(im,is)
+    
+            END DO
+
+            IF (l_pair_nrg) CALL Reset_Molecule_Pair_Interaction_Arrays(im,is,this_box, &
+                                           cluster%N(iclus), iclus_mol, iclus_is)
+    
+    
+        ELSE
+
+            delta_e = 0.0_DP
+       
+            IF ((int_charge_sum_style(this_box) == charge_ewald) .AND. (has_charge(is))) THEN
+       
+               ALLOCATE(cos_mol_old(nvecs(this_box)),sin_mol_old(nvecs(this_box)))
+               CALL Get_Position_Alive(iclus_mol(1),is,position)
+               
+               !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)
+               cos_mol_old(:) = cos_mol(1:nvecs(this_box),position)
+               sin_mol_old(:) = sin_mol(1:nvecs(this_box),position)
+               !$OMP END PARALLEL WORKSHARE
+       
+               CALL Compute_Ewald_Reciprocal_Energy_Difference(iclus_mol(1),iclus_mol(1),is,this_box,int_translation,E_reciprocal_move)
+               delta_e = E_reciprocal_move
+               
+            END IF
+            
+            ! Compute the difference in old and new energy
+            
+            delta_e = ( E_vdw_move - E_vdw ) + ( E_qq_move - E_qq ) + delta_e
+       
+            IF (int_sim_type == sim_nvt_min) THEN
+               IF (delta_e  <= 0.0_DP) THEN
+                  accept = .TRUE.
+               ELSE
+                  accept = .FALSE.
+               END IF
+            ELSE
+       
+                ln_pacc = beta(this_box) * delta_e
+                accept = accept_or_reject(ln_pacc)
+       
+            END IF
+
+    !*********************************************************************************
+    !   Step 5) Accept or reject the test insertion
+    !*********************************************************************************
+            IF ( accept ) THEN
+       
+               ! accept the move and update the global energies
+               energy(this_box)%inter_vdw = energy(this_box)%inter_vdw + E_vdw_move - E_vdw
+               energy(this_box)%inter_q   = energy(this_box)%inter_q   + E_qq_move - E_qq
+               
+               IF(int_charge_sum_style(this_box) == charge_ewald .AND. has_charge(is)) THEN
+                  energy(this_box)%ewald_reciprocal = energy(this_box)%ewald_reciprocal + E_reciprocal_move
+               END IF
+               
+               energy(this_box)%total = energy(this_box)%total + delta_e
+       
+               ! update success counter
+               
+               nsuccess(is,this_box)%displacement = nsuccess(is,this_box)%displacement + 1
+               nequil_success(is,this_box)%displacement = nequil_success(is,this_box)%displacement + 1
+       
+               IF (l_pair_nrg) DEALLOCATE(pair_vdw_temp,pair_qq_temp)
+               IF (ALLOCATED(cos_mol_old)) DEALLOCATE(cos_mol_old)
+               IF (ALLOCATED(sin_mol_old)) DEALLOCATE(sin_mol_old)
+       
+            ELSE
+       
+               cluster%clusmax = old_clusmax
+               cluster%N = old_N
+               cluster%M = old_M
+               cluster%clabel = old_clabel
+               cluster%n_oligomers = old_n_oligomers
+               cluster%n_clusters = old_n_clusters
+               DEALLOCATE(old_M, old_clabel, old_N)
+       
+               ! Revert to the old coordinates of atoms and com of the molecule
+               DO imol = 1, cluster%N(iclus)
+                   im = iclus_mol(imol)
+       
+                   CALL Revert_Old_Cartesian_Coordinates(im,is)
+       
+               END DO
+       
+               IF (l_pair_nrg) CALL Reset_Molecule_Pair_Interaction_Arrays(im,is,this_box, &
+                                              cluster%N(iclus), iclus_mol, iclus_is)
+       
+               IF ((int_charge_sum_style(this_box) == charge_ewald) .AND. (has_charge(is))) THEN
+                  ! Also reset the old cos_sum and sin_sum for reciprocal space vectors. Note
+                  ! that old vectors were set while difference in ewald reciprocal energy was computed.
+                  !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)           
+                  cos_sum(:,this_box) = cos_sum_old(:,this_box)
+                  sin_sum(:,this_box) = sin_sum_old(:,this_box)
+                  cos_mol(1:nvecs(this_box),position) = cos_mol_old(:)
+                  sin_mol(1:nvecs(this_box),position) = sin_mol_old(:)
+                  !$OMP END PARALLEL WORKSHARE
+                  DEALLOCATE(cos_mol_old,sin_mol_old)
+               END IF
+
+            ENDIF
+     
+        END IF
+
+    END IF
+
+
+    IF ( MOD(ntrials(is,this_box)%cluster_translate,nupdate) == 0 ) THEN
+       IF ( int_run_style == run_equil ) THEN 
+          success_ratio = REAL(nequil_success(is,this_box)%cluster_translate,DP)/REAL(nupdate,DP)
+       ELSE
+          success_ratio = REAL(nsuccess(is,this_box)%cluster_translate,DP)/REAL(ntrials(is,this_box)%cluster_translate,DP)
+       END IF
+  
+       WRITE(logunit,*)
+       WRITE(logunit,'(A,I3,A,I1,A,F8.5)')'Success ratio, cluster translation of species ', is , ' in box ', this_box, ' : ', success_ratio
+  
+       IF ( int_run_style == run_equil ) THEN
+  
+          ! check if the acceptace is close to 0.5
+  
+           nequil_success(is,this_box)%displacement = 0
+  
+           IF  ( success_ratio < 0.00005 ) THEN
+               max_clus_disp(is,this_box) = 0.1_DP*max_clus_disp(is,this_box)
+           ELSE
+               ! minimum max_disp for this species
+               IF (has_charge(is)) THEN
+                  rcut_small = MIN(rcut_vdw(this_box),rcut_coul(this_box))
+               ELSE
+                  rcut_small = rcut_vdw(this_box)
+               END IF
+               max_clus_disp(is,this_box) = MIN(rcut_small,2.0_DP*success_ratio*max_clus_disp(is,this_box))
+           END IF
+  
+           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is,' in box ', this_box, ' : ', max_clus_disp(is,this_box)
+          
+       END IF
+  
+    END IF
+
+    DEALLOCATE( iclus_is, iclus_mol )
+
+
+  END SUBROUTINE Translate_Cluster
 
   SUBROUTINE Find_Clusters(this_box)
 

@@ -198,6 +198,24 @@ SUBROUTINE NVTMC_Driver
 
         movetime(imove_regrowth) = movetime(imove_regrowth) + time_e - time_s
 
+     ELSE IF (rand_no <= cut_cluster) THEN
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_s)
+        ELSE
+!$        time_s = omp_get_wtime()
+        END IF
+
+        CALL Translate_Cluster(this_box)
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_e)
+        ELSE
+!$         time_e = omp_get_wtime()
+        END IF
+
+        movetime(imove_translate_cluster) = movetime(imove_translate_cluster) + time_e - time_s
+
      ELSE IF (rand_no <= cut_atom_displacement) THEN
 
         IF(.NOT. openmp_flag) THEN

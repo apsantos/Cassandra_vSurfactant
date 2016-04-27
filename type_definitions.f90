@@ -502,6 +502,7 @@ MODULE Type_Definitions
     
     INTEGER :: displacement, rotation, angle, bond, dihedral, insertion, deletion, cluster
     INTEGER :: disp_atom, cpcalc, displacement_e, rotation_e
+    INTEGER :: cluster_translate
 
  END TYPE MC_Moves_Class
  !-------------------------------------------------------------------------------------------------

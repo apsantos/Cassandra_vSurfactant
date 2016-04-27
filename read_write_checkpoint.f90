@@ -873,6 +873,18 @@ IF(movetime(imove_regrowth) .GT. 0.0_DP ) THEN
 
 END IF
 
+IF(movetime(imove_translate_cluster) .GT. 0.0_DP ) THEN
+
+   IF(movetime(imove_translate_cluster) .LT. 60.0_DP ) THEN
+        WRITE(logunit,'(1X,A,T25,F15.6,A)') &
+       'Cluster Move time = ', movetime(imove_translate_cluster), ' secs.'
+   ELSE 
+        WRITE(logunit,'(1X,A,T25,F15.6,A)') &
+       'Cluster Move time = ', movetime(imove_translate_cluster) / 3600.0_DP , ' hrs.'
+   END IF
+
+END IF
+
 END SUBROUTINE Write_Subroutine_Times
 
 END MODULE Read_Write_Checkpoint

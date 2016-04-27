@@ -445,6 +445,7 @@ USE Type_Definitions
   ! individual move probability
   REAL(DP) :: prob_trans, prob_rot, prob_torsion, prob_volume, prob_angle, prob_insertion
   REAL(DP) :: prob_deletion, prob_swap, prob_regrowth, prob_ring, prob_atom_displacement
+  REAL(DP) :: prob_cluster
   REAL(DP), ALLOCATABLE :: prob_swap_boxes(:,:)
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_rot_species
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_swap_species
@@ -461,10 +462,11 @@ USE Type_Definitions
   REAL(DP) :: omega_max, disp_max, delta_cos_max, delta_phi_max
   REAL(DP), DIMENSION(:), ALLOCATABLE, TARGET :: prob_species_trans, prob_species_rotate
   REAL(DP), DIMENSION(:), ALLOCATABLE::prob_growth_species ! dimension nspecies
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: max_disp, max_rot
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: max_disp, max_rot, max_clus_disp
 
   REAL(DP) :: cut_trans, cut_rot, cut_torsion, cut_volume, cut_angle, cut_insertion, cut_deletion
   REAL(DP) :: cut_swap, cut_regrowth, cut_ring, cut_atom_displacement, cut_lambda
+  REAL(DP) :: cut_cluster
  
   !*********************************************************************************************************
   ! Information on the output of data
@@ -514,6 +516,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: imove_regrowth = 8
   INTEGER, PARAMETER :: imove_check = 9
   INTEGER, PARAMETER :: imove_atom_displacement = 10
+  INTEGER, PARAMETER :: imove_translate_cluster = 11
 
 
   REAL(DP) :: time_s, time_e
