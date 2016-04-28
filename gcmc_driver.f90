@@ -213,6 +213,24 @@ SUBROUTINE GCMC_Driver
 
         movetime(imove_regrowth) = movetime(imove_regrowth) + time_e - time_s
 
+     ELSE IF (rand_no <= cut_cluster) THEN
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_s)
+        ELSE
+!$        time_s = omp_get_wtime()
+        END IF
+
+        CALL Translate_Cluster(this_box)
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_e)
+        ELSE
+!$         time_e = omp_get_wtime()
+        END IF
+
+        movetime(imove_translate_cluster) = movetime(imove_translate_cluster) + time_e - time_s
+
      ELSE IF (rand_no <= cut_atom_displacement) THEN
 
         IF(.NOT. openmp_flag) THEN
@@ -350,7 +368,7 @@ SUBROUTINE GCMC_Driver
   DO ibox = 1, nbr_boxes
      DO is = 1, nspecies
         write(logunit,'(A40,2X,I2,2X,A2,2X,I10)') 'Total number of insertions for species', is , 'is', ntrials(is,this_box)%insertion
-        write(logunit,'(A22,2X)') 'Successful insertions', nsuccess(is,this_box)%insertion
+        write(logunit,*) 'Successful insertions', nsuccess(is,this_box)%insertion
      END DO
      write(logunit,*)
   END DO
