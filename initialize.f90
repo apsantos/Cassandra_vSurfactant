@@ -79,6 +79,7 @@ SUBROUTINE Initialize(this_box)
   nsuccess(:,this_box)%insertion = 0
   nsuccess(:,this_box)%deletion = 0
   nsuccess(:,this_box)%disp_atom = 0
+  nsuccess(:,this_box)%cluster_translate = 0
 
   ! define success counters for equilibration runs
   IF (.NOT. ALLOCATED(nequil_success)) ALLOCATE(nequil_success(nspecies,nbr_boxes))
@@ -97,6 +98,7 @@ SUBROUTINE Initialize(this_box)
   ntrials(:,this_box)%deletion = 0
   ntrials(:,this_box)%disp_atom = 0
   ntrials(:,this_box)%cpcalc = 0
+  ntrials(:,this_box)%cluster_translate = 0
  
   IF ( SUM(nfragments) > 0 ) THEN
      IF ( .NOT. ALLOCATED(regrowth_trials))ALLOCATE(regrowth_trials(MAXVAL(nfragments),nspecies))

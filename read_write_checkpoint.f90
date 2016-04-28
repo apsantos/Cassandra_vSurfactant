@@ -681,6 +681,16 @@ SUBROUTINE Write_Trials_Success
 
         END IF
 
+        ! cluster trans
+
+        IF (ntrials(is,ibox)%cluster_translate /= 0 ) THEN
+           
+           WRITE(logunit,11) 'Cluster Translation', ntrials(is,ibox)%cluster_translate, &
+                nsuccess(is,ibox)%cluster_translate, &
+                100.0*dble(nsuccess(is,ibox)%cluster_translate)/dble(ntrials(is,ibox)%cluster_translate)
+
+        END IF
+
         ! atom displacement
 
         IF (ntrials(is,ibox)%disp_atom /= 0 ) THEN

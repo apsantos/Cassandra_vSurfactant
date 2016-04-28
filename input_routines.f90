@@ -4686,7 +4686,7 @@ SUBROUTINE Get_Move_Probabilities
               prob_cluster = String_To_Double(line_array(1))
 
               WRITE(logunit,*)
-              WRITE(logunit,*) 'Claster translation enabled'
+              WRITE(logunit,*) 'Cluster translation enabled'
               WRITE(logunit,*) 'Probability of this move', prob_cluster
 
 
