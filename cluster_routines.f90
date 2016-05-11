@@ -85,7 +85,7 @@ CONTAINS
   
     ! Pair_Energy arrays and Ewald implementation
     INTEGER :: position
-    REAL(DP), ALLOCATABLE :: cos_mol_old(:), sin_mol_old(:)
+    REAL(DP), ALLOCATABLE :: cos_mol_old(:,:), sin_mol_old(:,:)
 
     E_vdw_move = 0.0_DP
     E_qq_move = 0.0_DP
@@ -163,33 +163,32 @@ CONTAINS
     IF ( max_clus_disp(is,this_box) == 0. ) RETURN
   
     !*********************************************************************************
-    !   Step 1) Pick a cluster with uniform probability
+    !   Step 1) Pick a cluster with uniform probability and its location
     !*********************************************************************************
   
     ! Find Clusters
     CALL Find_Clusters(this_box)
-    !write(*,*)  'clab', cluster%clabel, ( cluster%n_oligomers + cluster%n_clusters ), cluster%clusmax
-    !write(*,*)  'N', cluster%N(1:50)
   
-    ! Choose a cluster at random for displacement
+    IF ( MAXVAL(cluster%N) < 2. ) RETURN
+
+    ! Choose a cluster (bigger than a monomer) at random
     iclus = INT ( rranf() * cluster%clusmax ) + 1
-    DO WHILE (cluster%N(iclus) < 0)
-        iclus = -cluster%N(iclus)
+    DO WHILE (cluster%N(iclus) < 2)
+        ! sort through labels of labels
+        DO WHILE (cluster%N(iclus) < 0)
+            iclus = -cluster%N(iclus)
+        END DO
+
+        ! too small pick another
+        IF (cluster%N(iclus) < 2) THEN
+            iclus = INT ( rranf() * cluster%clusmax ) + 1
+        END IF
     END DO
-    !write(*,*) 'iclus', iclus
   
     ! update the trial counters
     tot_trials(this_box) = tot_trials(this_box) + 1
     ntrials(is,this_box)%cluster_translate = ntrials(is,this_box)%cluster_translate + 1
   
-    !*********************************************************************************
-    !   Step 1) Save old energy
-    !           obtain the energy of the molecule before the move.  Note that due to
-    !           this move, the interatomic energies such as vdw and electrostatics will
-    !           change. Also the ewald_reciprocal energy will change but there will
-    !           be no change in intramolecular energies.
-    !*********************************************************************************
-
     ! Generate a random displacement vector. Note that the current formalism will
     ! work for cubic shaped boxes. However, it is easy to extend for nonorthorhombic
     ! boxes where displacements along the basis vectors. 
@@ -198,7 +197,11 @@ CONTAINS
     dz = ( 2.0_DP * rranf() - 1.0_DP) * max_clus_disp(is,this_box)
   
     !*********************************************************************************
-    !   Step 2) Choose insertion cluster and insertion location
+    !   Step 2) Save old energy
+    !           obtain the energy of the molecules in the cluster before the move.  Note that due to
+    !           this move, the interatomic energies such as vdw and electrostatics will
+    !           change. Also the ewald_reciprocal energy will change but there will
+    !           be no change in intramolecular energies.
     !*********************************************************************************
 
     ! Loop over molecules in this cluster
@@ -229,7 +232,6 @@ CONTAINS
     DO imol = 1, cluster%N(iclus)
         im = iclus_mol(imol)
 
-      
         ! Store the old positions of the atoms
         CALL Save_Old_Cartesian_Coordinates(im,is)
 
@@ -265,17 +267,18 @@ CONTAINS
     ! IF cluster translate added a molecule, so move is rejected
     IF ( old_clusmax /= cluster%clusmax ) THEN 
         accept = .FALSE.
-        print*, 'new cluster', cluster%N(iclus), (dx**2.0 + dy**2.0 + dz**2.0)**0.5
 
         cluster%clusmax = old_clusmax
         cluster%N = old_N
         cluster%M = old_M
+
         cluster%clabel = old_clabel
         cluster%n_oligomers = old_n_oligomers
         cluster%n_clusters = old_n_clusters
         DEALLOCATE(old_M, old_clabel, old_N)
 
         DO imol = 1, cluster%N(iclus)
+    
             im = iclus_mol(imol)
             CALL Revert_Old_Cartesian_Coordinates(im,is)
 
@@ -286,13 +289,11 @@ CONTAINS
     !*********************************************************************************
     ELSE
 
-        !CALL Compute_Molecule_Nonbond_Inter_Energy(iclus_mol(1),is,E_vdw_move,E_qq_move,inter_overlap)
-        CALL Compute_Cluster_Nonbond_Inter_Energy(cluster%N(iclus), iclus_mol,iclus_is,E_vdw_move,E_qq_move,inter_overlap)
+        CALL Compute_Cluster_Nonbond_Inter_Energy(cluster%N(iclus), iclus_mol, iclus_is, E_vdw_move, E_qq_move, inter_overlap)
 
         IF (inter_overlap) THEN ! Move is rejected
 
             accept = .FALSE.
-        print*, 'overlap', cluster%N(iclus), (dx**2.0 + dy**2.0 + dz**2.0)**0.5
 
             cluster%clusmax = old_clusmax
             cluster%n_oligomers = old_n_oligomers
@@ -304,35 +305,30 @@ CONTAINS
             DEALLOCATE(old_M, old_clabel, old_N)
 
             DO imol = 1, cluster%N(iclus)
-                im = iclus_mol(imol)
     
+                im = iclus_mol(imol)
                 CALL Revert_Old_Cartesian_Coordinates(im,is)
     
             END DO
 
         ELSE
 
-            delta_e = 0.0_DP
-       
             IF ((int_charge_sum_style(this_box) == charge_ewald) .AND. (has_charge(is))) THEN
        
-               ALLOCATE(cos_mol_old(nvecs(this_box)),sin_mol_old(nvecs(this_box)))
-               CALL Get_Position_Alive(iclus_mol(1),is,position)
+               ALLOCATE(cos_mol_old(nvecs(this_box),SUM(nmolecules)),sin_mol_old(nvecs(this_box),SUM(nmolecules)))
                
                !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)
-               cos_mol_old(:) = cos_mol(1:nvecs(this_box),position)
-               sin_mol_old(:) = sin_mol(1:nvecs(this_box),position)
+               cos_mol_old(:,:) = cos_mol(1:nvecs(this_box),:)
+               sin_mol_old(:,:) = sin_mol(1:nvecs(this_box),:)
                !$OMP END PARALLEL WORKSHARE
        
-               CALL Compute_Ewald_Reciprocal_Energy_Difference(iclus_mol(1),iclus_mol(1),is,this_box,int_translation,E_reciprocal_move)
-               delta_e = E_reciprocal_move
+               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(cluster%N(iclus), iclus_mol, iclus_is, int_cluster, this_box, E_reciprocal_move)
                
             END IF
             
             ! Compute the difference in old and new energy
             
-            delta_e = ( E_vdw_move - E_vdw ) + ( E_qq_move - E_qq ) + delta_e
-            print*, 'vdw_n-p qq', E_vdw_move, E_vdw, E_qq_move, E_qq
+            delta_e = ( E_vdw_move - E_vdw ) + ( E_qq_move - E_qq ) + E_reciprocal_move
        
             IF (int_sim_type == sim_nvt_min) THEN
                IF (delta_e  <= 0.0_DP) THEN
@@ -351,7 +347,6 @@ CONTAINS
     !   Step 5) Accept or reject the test insertion
     !*********************************************************************************
             IF ( accept ) THEN
-        print*, 'accept', ln_pacc, cluster%N(iclus), (dx**2.0 + dy**2.0 + dz**2.0)**0.5
        
                ! accept the move and update the global energies
                energy(this_box)%inter_vdw = energy(this_box)%inter_vdw + E_vdw_move - E_vdw
@@ -374,10 +369,10 @@ CONTAINS
        
             ELSE
        
-        print*, 'reject', ln_pacc, cluster%N(iclus), (dx**2.0 + dy**2.0 + dz**2.0)**0.5, dx, dy, dz
                cluster%clusmax = old_clusmax
                cluster%N = old_N
                cluster%M = old_M
+    
                cluster%clabel = old_clabel
                cluster%n_oligomers = old_n_oligomers
                cluster%n_clusters = old_n_clusters
@@ -385,8 +380,8 @@ CONTAINS
        
                ! Revert to the old coordinates of atoms and com of the molecule
                DO imol = 1, cluster%N(iclus)
-                   im = iclus_mol(imol)
        
+                   im = iclus_mol(imol)
                    CALL Revert_Old_Cartesian_Coordinates(im,is)
        
                END DO
@@ -400,8 +395,8 @@ CONTAINS
                   !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)           
                   cos_sum(:,this_box) = cos_sum_old(:,this_box)
                   sin_sum(:,this_box) = sin_sum_old(:,this_box)
-                  cos_mol(1:nvecs(this_box),position) = cos_mol_old(:)
-                  sin_mol(1:nvecs(this_box),position) = sin_mol_old(:)
+                  cos_mol(1:nvecs(this_box),:) = cos_mol_old(:,:)
+                  sin_mol(1:nvecs(this_box),:) = sin_mol_old(:,:)
                   !$OMP END PARALLEL WORKSHARE
                   DEALLOCATE(cos_mol_old,sin_mol_old)
                END IF
@@ -763,14 +758,10 @@ CONTAINS
     ! 
     ! Minimum_Image_Separation
     ! Pair_Energy
-    ! Clean_Abort
     !
     ! CALLED BY
     !
-    ! Translate
-    ! Rotation
-    ! Rigid_Dihedral_Change
-    ! Angle_Distortion
+    ! Translate_Cluster
     !
     ! Written by Jindal Shah on 12/07/07
     ! Adapted by Andrew Santos on 05/16
@@ -778,7 +769,7 @@ CONTAINS
 
     IMPLICIT NONE
 
-!    !$ include 'omp_lib.h'
+    !$ include 'omp_lib.h'
 
     INTEGER, INTENT(IN):: nclus_mol
     INTEGER, INTENT(IN):: clus_mol(:), clus_is(:)
@@ -863,5 +854,119 @@ CONTAINS
     END DO clusMolLoop
     
   END SUBROUTINE Compute_Cluster_Nonbond_Inter_Energy
+
+  SUBROUTINE Compute_Cluster_Ewald_Reciprocal_Energy_Difference(nclus_mol, clus_mol,clus_is,move_flag,this_box,v_recip_difference)
+    !************************************************************************************************
+    ! The subroutine computes the difference in Ewald reciprocal space energy for a given move.
+    !/
+    ! We will develop this routine for a number of moves.
+    !
+    ! Translation of COM
+    ! Rotation about COM
+    ! Angle Distortion
+    ! Rigid Dihedral rotation
+    ! Molecule insertion
+    ! Molecule Deletion
+    !***********************************************************************************************
+
+    USE Type_Definitions
+    USE Run_Variables
+    
+    IMPLICIT NONE
+
+!    !$ include 'omp_lib.h'
+
+    INTEGER, INTENT(IN):: nclus_mol
+    INTEGER, INTENT(IN):: clus_mol(:), clus_is(:)
+    INTEGER, INTENT(IN) :: move_flag, this_box
+    REAL(DP), INTENT(OUT) :: v_recip_difference
+
+    ! Local variables
+    
+    REAL(DP) :: const_val
+    INTEGER :: i, ia, im, ic_mol, is
+
+    REAL(DP) :: hdotr_new
+
+    REAL(DP) :: cos_sum_im, sin_sum_im
+
+    ! storage stuff
+
+
+    ! get the location of im 
+
+    v_recip_difference = 0.0_DP
+    const_val = 1.0_DP/(2.0_DP * alpha_ewald(this_box) * alpha_ewald(this_box))
+
+    !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)
+    cos_sum_old(1:nvecs(this_box),this_box) = cos_sum(1:nvecs(this_box),this_box)
+    sin_sum_old(1:nvecs(this_box),this_box) = sin_sum(1:nvecs(this_box),this_box)
+    !$OMP END PARALLEL WORKSHARE
+
+    IF ( move_flag == int_cluster) THEN
+
+
+       ! Cluster move. Therefore, the contribution of cos(hdotr) and
+       ! sin(hdotr) of the old coordinates will be subtracted off for each of reciprocal vectors
+       ! and corresponding terms for the new coordinates are added for all molecules in cluster
+
+       ! Note that the flag INTRA will refer to any of the moves that correspond to the 
+       ! intramolecular DOF change.
+       
+           
+       !$OMP PARALLEL DO DEFAULT(SHARED) &
+       !$OMP PRIVATE(i,ia,cos_sum_im,sin_sum_im) &
+       !$OMP PRIVATE(hdotr_new) &
+       !$OMP SCHEDULE(STATIC) &
+       !$OMP REDUCTION(+:v_recip_difference)
+       DO i = 1, nvecs(this_box)
+
+          clusMolLoop: DO ic_mol = 1, nclus_mol
+
+             im = clus_mol(ic_mol)
+             is = clus_is(ic_mol)
+
+             cos_sum_im = 0.0_DP
+             sin_sum_im = 0.0_DP
+
+             DO ia = 1,natoms(is)
+   
+                IF (nonbond_list(ia,is)%charge == 0) CYCLE
+   
+                ! let us compute the old and new hdotr
+   
+                hdotr_new = hx(i,this_box) * atom_list(ia,im,is)%rxp + &
+                            hy(i,this_box) * atom_list(ia,im,is)%ryp + &
+                            hz(i,this_box) * atom_list(ia,im,is)%rzp
+                
+                cos_sum_im = cos_sum_im + nonbond_list(ia,is)%charge * DCOS(hdotr_new)
+                sin_sum_im = sin_sum_im + nonbond_list(ia,is)%charge * DSIN(hdotr_new)
+   
+             END DO
+   
+             cos_sum(i,this_box) = cos_sum(i,this_box) + cos_sum_im - cos_mol(i,im)
+             sin_sum(i,this_box) = sin_sum(i,this_box) + sin_sum_im - sin_mol(i,im)
+   
+             ! set the molecules cos and sin terms to the one calculated here
+             cos_mol(i,im) = cos_sum_im
+             sin_mol(i,im) = sin_sum_im
+
+          END DO clusMolLoop
+
+          v_recip_difference = v_recip_difference + cn(i,this_box) * (cos_sum(i,this_box) * &
+                             cos_sum(i,this_box) + sin_sum(i,this_box) * sin_sum(i,this_box))
+   
+       END DO
+       !$OMP END PARALLEL DO
+
+       v_recip_difference = v_recip_difference*charge_factor(this_box) - &
+                            energy(this_box)%ewald_reciprocal
+
+       RETURN
+
+    END IF
+
+  END SUBROUTINE Compute_Cluster_Ewald_Reciprocal_Energy_Difference
+  !********************************************************************************************
 
 END MODULE Cluster_Routines

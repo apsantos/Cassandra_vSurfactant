@@ -228,6 +228,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: int_translation = 2
   INTEGER, PARAMETER :: int_rotation = 3
   INTEGER, PARAMETER :: int_intra = 4
+  INTEGER, PARAMETER :: int_cluster = 5
 
   ! Parameter for species type 
 
