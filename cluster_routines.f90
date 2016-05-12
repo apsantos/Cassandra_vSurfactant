@@ -64,7 +64,7 @@ CONTAINS
   
     ! Local declarations
     INTEGER  :: ibox       ! box index
-    INTEGER  :: is, iclus  ! species index
+    INTEGER  :: is, iclus, iclus_N, im_clab  ! species index
     INTEGER  :: im, imol, i  ! molecule indices
     INTEGER  :: total_mols ! number of molecules in the system
 
@@ -184,6 +184,7 @@ CONTAINS
             iclus = INT ( rranf() * cluster%clusmax ) + 1
         END IF
     END DO
+    iclus_N = cluster%N(iclus)
   
     ! update the trial counters
     tot_trials(this_box) = tot_trials(this_box) + 1
@@ -205,7 +206,7 @@ CONTAINS
     !*********************************************************************************
 
     ! Loop over molecules in this cluster
-    ALLOCATE( iclus_is(cluster%N(iclus)), iclus_mol(cluster%N(iclus)) )
+    ALLOCATE( iclus_is(iclus_N), iclus_mol(iclus_N) )
     iclus_mol = 0
     iclus_is = is
     i = 1
@@ -213,15 +214,19 @@ CONTAINS
         im = locate(imol, is)
         IF( .NOT. molecule_list(im,is)%live ) CYCLE 
 
-        IF ( cluster%clabel(im, is)              == iclus .OR. &
-            -cluster%N( cluster%clabel(im, is) ) == iclus ) THEN
+        im_clab = cluster%clabel(im, is)
+        DO WHILE ( cluster%N(im_clab) < 0 )
+            im_clab = -cluster%N(im_clab)
+        END DO
+
+        IF ( im_clab == iclus ) THEN
             iclus_mol(i) = im
             i = i + 1
         END IF
 
     END DO
 
-    CALL Compute_Cluster_Nonbond_Inter_Energy(cluster%N(iclus), iclus_mol,iclus_is,E_vdw,E_qq,inter_overlap)
+    CALL Compute_Cluster_Nonbond_Inter_Energy(iclus_N, iclus_mol,iclus_is,E_vdw,E_qq,inter_overlap)
 
     IF (inter_overlap)  THEN
         WRITE(*,*) 'Disaster, overlap in the old configruation'
@@ -229,7 +234,7 @@ CONTAINS
         WRITE(*,*) im, is, this_box
     END IF
           
-    DO imol = 1, cluster%N(iclus)
+    DO imol = 1, iclus_N
         im = iclus_mol(imol)
 
         ! Store the old positions of the atoms
@@ -277,7 +282,7 @@ CONTAINS
         cluster%n_clusters = old_n_clusters
         DEALLOCATE(old_M, old_clabel, old_N)
 
-        DO imol = 1, cluster%N(iclus)
+        DO imol = 1, iclus_N
     
             im = iclus_mol(imol)
             CALL Revert_Old_Cartesian_Coordinates(im,is)
@@ -289,7 +294,7 @@ CONTAINS
     !*********************************************************************************
     ELSE
 
-        CALL Compute_Cluster_Nonbond_Inter_Energy(cluster%N(iclus), iclus_mol, iclus_is, E_vdw_move, E_qq_move, inter_overlap)
+        CALL Compute_Cluster_Nonbond_Inter_Energy(iclus_N, iclus_mol, iclus_is, E_vdw_move, E_qq_move, inter_overlap)
 
         IF (inter_overlap) THEN ! Move is rejected
 
@@ -304,7 +309,7 @@ CONTAINS
             cluster%clabel = old_clabel
             DEALLOCATE(old_M, old_clabel, old_N)
 
-            DO imol = 1, cluster%N(iclus)
+            DO imol = 1, iclus_N
     
                 im = iclus_mol(imol)
                 CALL Revert_Old_Cartesian_Coordinates(im,is)
@@ -322,7 +327,7 @@ CONTAINS
                sin_mol_old(:,:) = sin_mol(1:nvecs(this_box),:)
                !$OMP END PARALLEL WORKSHARE
        
-               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(cluster%N(iclus), iclus_mol, iclus_is, int_cluster, this_box, E_reciprocal_move)
+               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(iclus_N, iclus_mol, iclus_is, int_cluster, this_box, E_reciprocal_move)
                
             END IF
             
@@ -348,6 +353,7 @@ CONTAINS
     !*********************************************************************************
             IF ( accept ) THEN
        
+            !print*, 'clus accep', E_vdw, E_vdw_move
                ! accept the move and update the global energies
                energy(this_box)%inter_vdw = energy(this_box)%inter_vdw + E_vdw_move - E_vdw
                energy(this_box)%inter_q   = energy(this_box)%inter_q   + E_qq_move - E_qq
@@ -379,7 +385,7 @@ CONTAINS
                DEALLOCATE(old_M, old_clabel, old_N)
        
                ! Revert to the old coordinates of atoms and com of the molecule
-               DO imol = 1, cluster%N(iclus)
+               DO imol = 1, iclus_N
        
                    im = iclus_mol(imol)
                    CALL Revert_Old_Cartesian_Coordinates(im,is)
@@ -387,7 +393,7 @@ CONTAINS
                END DO
        
                IF (l_pair_nrg) CALL Reset_Molecule_Pair_Interaction_Arrays(im,is,this_box, &
-                                              cluster%N(iclus), iclus_mol, iclus_is)
+                                              iclus_N, iclus_mol, iclus_is)
        
                IF ((int_charge_sum_style(this_box) == charge_ewald) .AND. (has_charge(is))) THEN
                   ! Also reset the old cos_sum and sin_sum for reciprocal space vectors. Note
@@ -748,7 +754,7 @@ CONTAINS
 
   END FUNCTION Neighbor
 
-  SUBROUTINE Compute_Cluster_Nonbond_Inter_Energy(nclus_mol, clus_mol,clus_is,E_inter_vdw,E_inter_qq,overlap)
+  SUBROUTINE Compute_Cluster_Nonbond_Inter_Energy(nclus_mol,clus_mol,clus_is,E_inter_vdw,E_inter_qq,overlap)
 
     !**************************************************************************************************
     ! This subroutine computes interatomic LJ and charge interactions as well as virials associated
@@ -784,7 +790,7 @@ CONTAINS
 
     LOGICAL :: get_interaction
 
-    INTEGER :: locate_1, locate_2, im, ic_mol, is
+    INTEGER :: im, ic_mol, is
 
     LOGICAL :: my_overlap, shared_overlap
 
@@ -794,6 +800,7 @@ CONTAINS
     my_overlap = .FALSE.
     shared_overlap = .false.
     
+        !print*, 'im, is, E_inter_vdw, E_inter_qq'
     clusMolLoop: DO ic_mol = 1, nclus_mol
 
         im = clus_mol(ic_mol)
@@ -803,7 +810,7 @@ CONTAINS
         speciesLoop: DO ispecies = 1, nspecies
            
            !$OMP PARALLEL DO DEFAULT(SHARED) &
-           !$OMP PRIVATE(imolecule,this_locate,locate_2,get_interaction) &
+           !$OMP PRIVATE(imolecule,this_locate,get_interaction) &
            !$OMP PRIVATE(rx,ry,rz,rcom,Eij_vdw,Eij_qq) &
            !$OMP SCHEDULE(DYNAMIC) &
            !$OMP REDUCTION(+:E_inter_vdw,E_inter_qq) & 
@@ -816,7 +823,7 @@ CONTAINS
               
               this_locate = locate(imolecule,ispecies)
               
-              IF (ispecies == is .AND. this_locate == im) CYCLE moleculeLOOP
+              IF( ANY(clus_mol == this_locate) .AND. ispecies == is) CYCLE moleculeLOOP
               
               IF (molecule_list(this_locate,ispecies)%which_box /= this_box) CYCLE moleculeLOOP
               
@@ -826,7 +833,7 @@ CONTAINS
               
               ! Skip those that are included in the clusters
               
-              IF( ANY(clus_mol == this_locate) ) CYCLE moleculeLOOP
+             ! print*,
               
               ! Determine if any atoms of these two molecules will interact
               CALL Check_Interaction(im,is,this_locate,ispecies,get_interaction,rcom,rx,ry,rz) 
@@ -850,6 +857,7 @@ CONTAINS
               RETURN
            ENDIF
            
+        !print*, im, ispecies, E_inter_vdw, E_inter_qq
         END DO speciesLoop
     END DO clusMolLoop
     
