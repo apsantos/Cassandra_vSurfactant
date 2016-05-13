@@ -823,6 +823,8 @@ CONTAINS
               
               this_locate = locate(imolecule,ispecies)
               
+              ! Skip those that are included in the clusters
+              
               IF( ANY(clus_mol == this_locate) .AND. ispecies == is) CYCLE moleculeLOOP
               
               IF (molecule_list(this_locate,ispecies)%which_box /= this_box) CYCLE moleculeLOOP
@@ -830,10 +832,6 @@ CONTAINS
               ! make sure that the molecule is currently part of the simulation
               
               IF(.NOT. molecule_list(this_locate,ispecies)%live) CYCLE moleculeLOOP
-              
-              ! Skip those that are included in the clusters
-              
-             ! print*,
               
               ! Determine if any atoms of these two molecules will interact
               CALL Check_Interaction(im,is,this_locate,ispecies,get_interaction,rcom,rx,ry,rz) 
