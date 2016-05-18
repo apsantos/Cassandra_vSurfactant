@@ -167,7 +167,7 @@ CONTAINS
     !*********************************************************************************
   
     ! Find Clusters
-    CALL Find_Clusters(this_box)
+    CALL Find_Clusters(this_box,2)
   
     IF ( MAXVAL(cluster%N) < 2. ) RETURN
 
@@ -254,7 +254,7 @@ CONTAINS
     END DO
   
     ALLOCATE(old_M(SIZE(cluster%M)), old_N(SIZE(cluster%N)))
-    ALLOCATE( old_clabel(MAXVAL(nmolecules(:)), cluster%n_species_type) )
+    ALLOCATE( old_clabel(MAXVAL(nmolecules(:)), cluster%n_species_type(2)) )
   
     old_clusmax = cluster%clusmax
     old_N = cluster%N
@@ -267,7 +267,7 @@ CONTAINS
     !   Step 3) Reject if any monomer has become part of a cluster
     !*********************************************************************************
 
-    CALL Find_Clusters(this_box)
+    CALL Find_Clusters(this_box,2)
 
     ! IF cluster translate added a molecule, so move is rejected
     IF ( old_clusmax /= cluster%clusmax ) THEN 
@@ -453,7 +453,7 @@ CONTAINS
 
   END SUBROUTINE Translate_Cluster
 
-  SUBROUTINE Find_Clusters(this_box)
+  SUBROUTINE Find_Clusters(this_box, count_or_move)
 
     !*********************************************************************************
     !
@@ -462,19 +462,19 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box
+    INTEGER, INTENT(IN) :: this_box, count_or_move
     INTEGER :: tot_natoms, tot_nmol
     INTEGER :: imol, jmol, iatom, i, im, jm
     INTEGER :: is, js, is_clus, js_clus, start, N
     LOGICAL, ALLOCATABLE, DIMENSION(:) :: neigh_list
     INTEGER, ALLOCATABLE, DIMENSION(:,:) :: live_mol_index
 
-    ALLOCATE( live_mol_index(MAXVAL(nmols(:,this_box)), cluster%n_species_type) )
+    ALLOCATE( live_mol_index(MAXVAL(nmols(:,this_box)), cluster%n_species_type(count_or_move)) )
 
     live_mol_index = 0
     tot_nmol = 0
-    DO is = 1, cluster%n_species_type
-        is_clus = cluster%species_type(is)
+    DO is = 1, cluster%n_species_type(count_or_move)
+        is_clus = cluster%species_type(count_or_move, is)
         i = 1
         MoleculeLoop:DO imol = 1, nmolecules(is_clus)
             im = locate(imol, is_clus)
@@ -498,14 +498,14 @@ CONTAINS
     ! counts how many atoms are in the cluster
     cluster%N = 0
     cluster%clabel = 0
-    DO is = 1, cluster%n_species_type
-        is_clus = cluster%species_type(is)
+    DO is = 1, cluster%n_species_type(count_or_move)
+        is_clus = cluster%species_type(count_or_move, is)
         DO imol = 1, nmols(is_clus,this_box)
             !Get a list of the neighbors to an atom in the frame
             im = live_mol_index(imol,is)
-            DO js = 1, cluster%n_species_type
+            DO js = 1, cluster%n_species_type(count_or_move)
 
-                js_clus = cluster%species_type(js)
+                js_clus = cluster%species_type(count_or_move, js)
                 IF (js_clus == is_clus) THEN
                     start = imol+1
                 ELSE
@@ -516,7 +516,7 @@ CONTAINS
                 neigh_list = .FALSE.
                 DO jmol = start, nmols(js_clus,this_box)
                     jm = live_mol_index(jmol,is)
-                    neigh_list(jm) = Neighbor(jm, im, js_clus, is_clus)
+                    neigh_list(jm) = Neighbor(count_or_move, jm, im, js_clus, is_clus)
                 END DO
 
                 ! Update cluster label list
@@ -529,8 +529,8 @@ CONTAINS
 
     cluster%n_oligomers = 0
     cluster%n_clusters = 0
-    DO is = 1, cluster%n_species_type
-        is_clus = cluster%species_type(is)
+    DO is = 1, cluster%n_species_type(count_or_move)
+        is_clus = cluster%species_type(count_or_move, is)
         DO imol = 1, nmols(is_clus,this_box)
             im = live_mol_index(imol,is)
             N = cluster%N( cluster%clabel(im, is_clus) )
@@ -633,7 +633,7 @@ CONTAINS
 
   END SUBROUTINE Update_Labels
 
-  FUNCTION Neighbor(test_part, cur_part, test_type, cur_type)
+  FUNCTION Neighbor(count_or_move, test_part, cur_part, test_type, cur_type)
 
     !*********************************************************************************
     !
@@ -643,19 +643,19 @@ CONTAINS
     !*********************************************************************************
 
     LOGICAL :: Neighbor
-    INTEGER, INTENT(IN) :: test_part, cur_part, test_type, cur_type
+    INTEGER, INTENT(IN) :: test_part, cur_part, test_type, cur_type, count_or_move
     REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
     INTEGER :: test_atom, cur_atom, n_accept
 
     Neighbor = .FALSE.
 
-    IF (.not. ANY(cluster%species_type == test_type)) THEN
+    IF (.not. ANY(cluster%species_type(count_or_move,:) == test_type)) THEN
         RETURN
     ELSE IF( .NOT. molecule_list(test_part,test_type)%live ) THEN
         RETURN
     END IF
       
-    IF (cluster%criteria == int_com) THEN
+    IF (cluster%criteria(count_or_move, int_com)) THEN
         ! Get the positions of the COM of the two molecule species
         rxijp = molecule_list(test_part,test_type)%xcom - molecule_list(cur_part, cur_type)%xcom
         ryijp = molecule_list(test_part,test_type)%ycom - molecule_list(cur_part, cur_type)%ycom
@@ -666,17 +666,18 @@ CONTAINS
 
         rijsq = rxij*rxij + ryij*ryij + rzij*rzij
         
-        IF (rijsq < (cluster%min_distance_sq(cur_type, 1) ))THEN!&
-                     !+ cluster%min_distance_sq(test_type, 1)) / 2.0) THEN
+        IF (rijsq < cluster%min_distance_sq(count_or_move, cur_type, test_type, 0, 0 ))THEN
            Neighbor = .TRUE.
+           RETURN
         END IF
                       
-    ELSE IF (cluster%criteria == int_type) THEN
+    END IF
+
+    IF (cluster%criteria(count_or_move, int_type)) THEN
         DO test_atom = 1 , natoms(test_type)
-            IF (cluster%min_distance_sq(test_type, test_atom) < 0.000001) CYCLE
 
             DO cur_atom = 1 , natoms(cur_type)
-                IF (cluster%min_distance_sq(cur_type, cur_atom) < 0.000001) CYCLE
+                IF (cluster%min_distance_sq(count_or_move, test_type, cur_type, test_atom, cur_atom) < 0.000001) CYCLE
 
                 ! Get the positions of the COM of the two molecule species
                 rxijp = atom_list(test_atom, test_part, test_type)%rxp - &
@@ -691,15 +692,15 @@ CONTAINS
         
                 rijsq = rxij*rxij + ryij*ryij + rzij*rzij
                 
-                IF (rijsq < (cluster%min_distance_sq(cur_type, cur_atom) &
-                             + cluster%min_distance_sq(test_type, test_atom)) / 2.0) THEN
+                IF (rijsq < cluster%min_distance_sq(count_or_move, cur_type, test_type, test_atom, cur_atom) ) THEN
                    Neighbor = .TRUE.
                    RETURN
                 END IF
 
             END DO
         END DO
-    ELSE IF (cluster%criteria == int_skh) THEN
+    END IF
+    IF (cluster%criteria(count_or_move, int_skh)) THEN
         ! Get the positions of the COM of the two molecule species
         rxijp = molecule_list(test_part,test_type)%xcom - molecule_list(cur_part, cur_type)%xcom
         ryijp = molecule_list(test_part,test_type)%ycom - molecule_list(cur_part, cur_type)%ycom
@@ -711,19 +712,20 @@ CONTAINS
         rijsq = rxij*rxij + ryij*ryij + rzij*rzij
         
         n_accept = 0.0 
-        IF (rijsq < cluster%r1_sq(cur_type, 0)) THEN
+        IF (rijsq < cluster%r1_sq(count_or_move, cur_type, 0)) THEN
            Neighbor = .TRUE.
-        ELSE IF (rijsq < cluster%r2_sq(cur_type, 0)) THEN
+           RETURN
+        ELSE IF (rijsq < cluster%r2_sq(count_or_move, cur_type, 0)) THEN
            n_accept = n_accept + 1.5
-        ELSE IF (rijsq < cluster%r3_sq(cur_type, 0)) THEN
+        ELSE IF (rijsq < cluster%r3_sq(count_or_move, cur_type, 0)) THEN
            n_accept = n_accept + 1.0
         END IF
 
         DO test_atom = 1 , natoms(test_type)
-            IF (cluster%r3_sq(test_type, test_atom) < 0.000001) CYCLE
+            IF (cluster%r3_sq(count_or_move, test_type, test_atom) < 0.000001) CYCLE
 
             DO cur_atom = 1 , natoms(cur_type)
-                IF (cluster%r3_sq(cur_type, cur_atom) < 0.000001) CYCLE
+                IF (cluster%r3_sq(count_or_move, cur_type, cur_atom) < 0.000001) CYCLE
 
                 ! Get the positions of the COM of the two molecule species
                 rxijp = atom_list(test_atom, test_part, test_type)%rxp - &
@@ -738,14 +740,16 @@ CONTAINS
         
                 rijsq = rxij*rxij + ryij*ryij + rzij*rzij
                 
-                IF (rijsq < cluster%r1_sq(cur_type, 0)) THEN
+                IF (rijsq < cluster%r1_sq(count_or_move, cur_type, 0)) THEN
                    Neighbor = .TRUE.
-                ELSE IF (rijsq < cluster%r2_sq(cur_type, 0)) THEN
+                   RETURN
+                ELSE IF (rijsq < cluster%r2_sq(count_or_move, cur_type, 0)) THEN
                    n_accept = n_accept + 1.5
-                ELSE IF (rijsq < cluster%r3_sq(cur_type, 0)) THEN
+                ELSE IF (rijsq < cluster%r3_sq(count_or_move, cur_type, 0)) THEN
                    n_accept = n_accept + 1.0
                 ELSE IF (n_accept >= 3.0) THEN
                    Neighbor = .TRUE.
+                   RETURN
                 END IF
 
             END DO

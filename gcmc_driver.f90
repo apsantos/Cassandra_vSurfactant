@@ -309,7 +309,7 @@ SUBROUTINE GCMC_Driver
            
               DO ibox = 1, nbr_boxes
               
-                 CALL Find_Clusters(ibox)
+                 CALL Find_Clusters(ibox,1)
                  CALL Write_Cluster(ibox)
               
               END DO
