@@ -6058,9 +6058,83 @@ EnLoop: DO ientry = 1, n_entries
     
                 END DO
     
+            ELSE IF (line_array(1) == 'micelle') THEN
+                cluster%criteria(c_or_m, int_micelle) = .TRUE.
+                cluster%criteria(c_or_m, int_com) = .TRUE.
+
+                line_nbr = line_nbr + 1
+                CALL Parse_String(inputunit,line_nbr,nspecies,nbr_entries,line_array,ierr)
+                IF ( ierr /= 0 ) THEN
+                    err_msg = ""
+                    err_msg(1) = "Error while reading inputfile"
+                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                ELSE IF ( nspecies /= nbr_entries ) THEN
+                    WRITE(logunit,*) 'Only need 1 entry for every species in the micelle clustering'
+                END IF
+
+                DO is = 1, nspecies 
+                    distance = String_To_Double(line_array(is))
+                    cluster%min_distance_sq(c_or_m, is, is, 0, 0) = distance**2.0
+                    IF (distance > 0.001) THEN
+                        WRITE(logunit,*) 'COM clustering between species, ', is
+                        cluster%micelle_species = is
+                    END IF
+                END DO
+
+                line_nbr = line_nbr + 1
+                CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
+                IF ( ierr /= 0 ) THEN
+                    err_msg = ""
+                    err_msg(1) = "Error while reading inputfile"
+                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                END IF
+
+                distance = String_To_Double(line_array(3))
+                ! Figure out the type of the atom from the name, remember could be multiple with the same name
+                IF (distance > 0.001) THEN
+                    DO is = 1, nspecies 
+                        DO ia = 1, natoms(is)
+
+                            IF (nonbond_list(ia,is)%atom_name == line_array(1) ) THEN
+                                DO js = 1, nspecies 
+                                    DO ja = 1, natoms(js)
+                                        IF (nonbond_list(ja,js)%atom_name == line_array(2) ) THEN
+                                            cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
+                                            WRITE(logunit,*) 'atom type "', TRIM(line_array(1)), '" of species, ', is, 'and'
+                                            WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', js
+                                            WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
+                                        END IF
+                                    END DO
+                                END DO
+                            END IF
+
+                        END DO
+                    END DO
+                ENDIF
+
+                ! Make sure equivalent distances agree
+                DO is = 1, nspecies 
+                    DO js = 1, nspecies 
+                        DO ja = 1, natoms(js)
+                            DO ia = 1, natoms(is)
+                                IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
+                                    IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
+                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja) = cluster%min_distance_sq(c_or_m, js, is, ja, ia)
+                                    ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
+                                        cluster%min_distance_sq(c_or_m, js, is, ja, ia) = cluster%min_distance_sq(c_or_m, is, js, ia, ja)
+                                    ELSE
+                                        err_msg = ""
+                                        err_msg(1) = "Two type clustering criteria do not agree"
+                                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                                    END IF
+                                END IF
+                            END DO
+                        END DO
+                    END DO
+                END DO
+
             ELSE IF (line_array(1) == 'skh') THEN
                 cluster%criteria(c_or_m, int_skh) = .TRUE.
-                cluster%n_species_type = 0
                 DO is = 1, nspecies 
                     line_nbr = line_nbr + 1
                     CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
