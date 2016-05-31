@@ -43,7 +43,7 @@ SUBROUTINE GEMC_Driver
 
   IMPLICIT NONE
 
-!$ include 'omp_lib.h'
+! !$ include 'omp_lib.h'
 
   INTEGER :: i,j, this_box, ibox, is, other_box, which_step
 
