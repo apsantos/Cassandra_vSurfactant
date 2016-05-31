@@ -70,6 +70,9 @@ SUBROUTINE NVTMC_Driver
   LOGICAL :: overlap, aok, write_flag, complete, inside_ch
   LOGICAL, DIMENSION(:), ALLOCATABLE :: next_write, next_rdf_write
 
+  INTEGER :: o_vdw, o_q, o_ewald_self, o_ewald_reciprocal
+  CHARACTER(4) :: o_m_type
+
   ! The total number of trial move array may not have been set if this
   ! is a fresh run i.e. start_type == make_config. Otherwise this array
   ! is set in read_checkpoint subroutine in the module Read_Write_Checkpoint
@@ -126,6 +129,8 @@ SUBROUTINE NVTMC_Driver
 
         movetime(imove_trans) = movetime(imove_trans) + time_e - time_s
 
+        o_m_type = 'tran'
+        !print*, i, 'trans 0'
      ELSE IF ( rand_no <= cut_rot) THEN
  
         IF(.NOT. openmp_flag) THEN
@@ -144,6 +149,8 @@ SUBROUTINE NVTMC_Driver
 
         movetime(imove_rot) = movetime(imove_rot) + time_e - time_s
 
+        o_m_type = 'rota'
+        !print*, i, 'rot 1'
      ELSE IF (rand_no <= cut_torsion) THEN
  
         IF(.NOT. openmp_flag) THEN
@@ -198,6 +205,8 @@ SUBROUTINE NVTMC_Driver
 
         movetime(imove_regrowth) = movetime(imove_regrowth) + time_e - time_s
 
+        o_m_type = 'regw'
+        !print*, i, 'regrow 2'
      ELSE IF (rand_no <= cut_cluster) THEN
 
         IF(.NOT. openmp_flag) THEN
@@ -216,6 +225,8 @@ SUBROUTINE NVTMC_Driver
 
         movetime(imove_translate_cluster) = movetime(imove_translate_cluster) + time_e - time_s
 
+        o_m_type = 'clus'
+        !print*, i, 'clus 3'
      ELSE IF (rand_no <= cut_atom_displacement) THEN
 
         IF(.NOT. openmp_flag) THEN
@@ -236,6 +247,25 @@ SUBROUTINE NVTMC_Driver
 
      END IF
 
+     ! check energy
+!     o_vdw = energy(this_box)%inter_vdw
+!     o_q = energy(this_box)%inter_q
+!     o_ewald_reciprocal = energy(this_box)%ewald_reciprocal
+!     o_ewald_self = energy(this_box)%ewald_self
+!     CALL Compute_Total_System_Energy(this_box,.TRUE., overlap)
+!     IF (1 < (o_vdw /= energy(this_box)%inter_vdw) ) THEN 
+!        print*, i, o_m_type, ' vdw', energy(this_box)%inter_vdw - o_vdw
+!     END IF
+!     IF (1 < (o_q /= energy(this_box)%inter_q) ) THEN 
+!        print*, i, o_m_type, ' qq', energy(this_box)%inter_q - o_q
+!     END IF
+!     IF (1 < (o_q - energy(this_box)%inter_q) ) THEN 
+!        print*, i, o_m_type, ' recip', energy(this_box)%ewald_reciprocal - o_ewald_reciprocal
+!     END IF
+!     IF (1 < (o_ewald_self /= energy(this_box)%ewald_self) ) THEN 
+!        print*, i, o_m_type, ' self', energy(this_box)%ewald_self - o_ewald_self
+!     END IF
+     
      ! Accumulate averages
 
      IF(cpcollect) THEN
@@ -323,7 +353,7 @@ SUBROUTINE NVTMC_Driver
            
               DO ibox = 1, nbr_boxes
               
-                 CALL Find_Clusters(ibox)
+                 CALL Find_Clusters(ibox,1)
                  CALL Write_Cluster(ibox)
               
               END DO

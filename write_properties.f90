@@ -352,6 +352,14 @@ CONTAINS
          write_buff(ii+1) = chpot(is_cp,this_box) / REAL(ntrials(is_cp,this_box)%cpcalc)
          is_cp = is_cp + 1
          
+      ELSE IF (prop_written == 'Noligomers') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = cluster%n_oligomers / REAL(ncluster_freq,DP)
+         ELSE
+            write_buff(ii+1) = cluster%n_oligomers
+         END IF
+
       END IF
       
       ! At the end increment property counter by 1

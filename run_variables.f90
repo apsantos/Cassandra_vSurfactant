@@ -579,6 +579,7 @@ TYPE(Cluster_Class), TARGET :: cluster
 INTEGER, PARAMETER :: int_com = 1
 INTEGER, PARAMETER :: int_type = 2
 INTEGER, PARAMETER :: int_skh = 3
+INTEGER, PARAMETER :: int_micelle = 4
 
 !*********************************************************************************************************
 

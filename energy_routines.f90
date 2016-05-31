@@ -1618,9 +1618,9 @@ CONTAINS
        VDW_calculation: IF (get_vdw) THEN
 
 !WCA calculation
-       IF(vdw_param3_table(itype,jtype) /= 0 .AND. is /= js & 
-        .OR. vdw_param3_table(itype,jtype) /= 0 .AND. is == js .AND. &
-        im /= jm) THEN
+       IF(vdw_param3_table(itype,jtype) /= 0 ) THEN !.AND. is /= js & 
+        !.OR. vdw_param3_table(itype,jtype) /= 0 .AND. is == js .AND. &
+        !im /= jm) THEN
 
           sig = vdw_param2_table(itype,jtype)
 
@@ -1628,18 +1628,25 @@ CONTAINS
           rwca = vdw_param4_table(itype,jtype)
           rij = SQRT(rijsq)
 
-          Eij_vdw = 0.0_DP
+             IF (is == js .AND. im == jm) THEN
+                
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                
+                epswca = epswca * vdw_intra_scale(ia,ja,is)
 
-          SigOverRsq = (sig**2) / rijsq
-          SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
-          SigOverR12 = SigOverR6 * SigOverR6
+             ENDIF
+                
+          IF(rij .GT. rwca) THEN
+             Eij_vdw = 0.0_DP
 
-          Eij_vdw = 4.0_DP * epswca * (SigOverR12 - SigOverR6)
+          ELSE
+             SigOverRsq = (sig**2) / rijsq
+             SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
+             SigOverR12 = SigOverR6 * SigOverR6
 
-          IF(rij .LE. rwca) E_wca = epswca
-          IF(rij .GT. rwca) E_wca = -Eij_vdw
+             Eij_vdw = 4.0_DP * epswca * (SigOverR12 - SigOverR6) + epswca
 
-        Eij_vdw = Eij_vdw + E_wca
+          END IF
 !End WCA calculation
        ELSE
 
@@ -1780,6 +1787,8 @@ CONTAINS
        ENDIF qq_calculation
        
     ENDIF ExistCheck
+
+  !writE(*,'(2A,F8.3,X,F11.5,X,F11.5)') nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), Eij_vdw, Eij_qq
 
   END SUBROUTINE Pair_Energy
 
