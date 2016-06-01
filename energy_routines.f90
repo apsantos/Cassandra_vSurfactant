@@ -1618,9 +1618,10 @@ CONTAINS
        VDW_calculation: IF (get_vdw) THEN
 
 !WCA calculation
-       IF(vdw_param3_table(itype,jtype) /= 0 ) THEN !.AND. is /= js & 
-        !.OR. vdw_param3_table(itype,jtype) /= 0 .AND. is == js .AND. &
-        !im /= jm) THEN
+       !IF(vdw_param3_table(itype,jtype) /= 0 ) THEN 
+       IF(vdw_param3_table(itype,jtype) /= 0 .AND. is /= js & 
+        .OR. vdw_param3_table(itype,jtype) /= 0 .AND. is == js .AND. &
+        im /= jm) THEN
 
           sig = vdw_param2_table(itype,jtype)
 
@@ -1788,7 +1789,9 @@ CONTAINS
        
     ENDIF ExistCheck
 
+  !IF ( vdw_param3_table(itype,jtype) /= 0 .AND. im == jm .AND. is /= js ) THEN
   !writE(*,'(2A,F8.3,X,F11.5,X,F11.5)') nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), Eij_vdw, Eij_qq
+  !END IF
 
   END SUBROUTINE Pair_Energy
 
