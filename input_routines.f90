@@ -5674,7 +5674,7 @@ SUBROUTINE Get_Frequency_Info
 
   ! Check to make sure that all the quantities are defined in the input file
 
-  IF (n_mcsteps == 0 .OR. ncoord_freq == 0 .OR. nthermo_freq == 0) THEN
+  IF (n_mcsteps == 0 .OR. nthermo_freq == 0) THEN
   
      err_msg = ""
      err_msg(1) = 'At least one of the keywords is missing in the input file.'
@@ -6363,7 +6363,7 @@ SUBROUTINE Get_Degree_Association_Info
      END IF
 
      IF(line_string(1:20) == '# Degree_Association') THEN
-        IF ( cluster%n_species_type == 0 ) THEN
+        IF ( cluster%n_species_type(1) == 0 ) THEN
             err_msg = ''
             err_msg(1) = 'Cannot compute degree ion association without clustering information'
             CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
@@ -6471,8 +6471,7 @@ SUBROUTINE Get_Oligomer_Cutoff_Info
      END IF
  
      IF(line_string(1:17) == '# Oligomer_Cutoff') THEN
-        IF ( ANY(cluster%n_species_type == 0) ) THEN
-        IF ( cluster%n_species_type == 0 ) THEN
+        IF ( .not. ANY(cluster%n_species_type /= 0) ) THEN
             err_msg = ''
             err_msg(1) = 'Cannot compute oligomer cutoff without clustering information'
             CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
@@ -6536,7 +6535,7 @@ SUBROUTINE Get_Excluded_Volume_Info
      END IF
 
      IF(line_string(1:17) == '# Excluded_Volume') THEN
-        IF ( cluster%n_species_type == 0 ) THEN
+        IF ( cluster%n_species_type(1) == 0 ) THEN
             err_msg = ''
             err_msg(1) = 'Cannot compute excluded volume without clustering information'
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')

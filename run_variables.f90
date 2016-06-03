@@ -120,6 +120,7 @@ USE Type_Definitions
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut9, rcut3
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut_vdw3, rcut_vdw6
   REAL(DP) :: edens_cut, rcut_clus, rcut_low, rcut_lowsq
+  REAL(DP) :: cut_cluster
   LOGICAL, DIMENSION(:), ALLOCATABLE :: l_half_len_cutoff
 
  ! Mixing Rules variables :
@@ -231,6 +232,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: int_translation = 2
   INTEGER, PARAMETER :: int_rotation = 3
   INTEGER, PARAMETER :: int_intra = 4
+  INTEGER, PARAMETER :: int_cluster = 5
 
   ! Parameter for species type 
 
@@ -448,6 +450,7 @@ USE Type_Definitions
   ! individual move probability
   REAL(DP) :: prob_trans, prob_rot, prob_torsion, prob_volume, prob_angle, prob_insertion
   REAL(DP) :: prob_deletion, prob_swap, prob_regrowth, prob_ring, prob_atom_displacement
+  REAL(DP) :: prob_cluster     ! APS
   REAL(DP), ALLOCATABLE :: prob_swap_boxes(:,:)
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_rot_species
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_swap_species
@@ -464,7 +467,7 @@ USE Type_Definitions
   REAL(DP) :: omega_max, disp_max, delta_cos_max, delta_phi_max
   REAL(DP), DIMENSION(:), ALLOCATABLE, TARGET :: prob_species_trans, prob_species_rotate
   REAL(DP), DIMENSION(:), ALLOCATABLE::prob_growth_species ! dimension nspecies
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: max_disp, max_rot
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: max_disp, max_rot, max_clus_disp
 
   REAL(DP) :: cut_trans, cut_rot, cut_torsion, cut_volume, cut_angle, cut_insertion, cut_deletion
   REAL(DP) :: cut_swap, cut_regrowth, cut_ring, cut_atom_displacement, cut_lambda
@@ -578,6 +581,7 @@ LOGICAL :: store_sum
   INTEGER, PARAMETER :: int_com = 1
   INTEGER, PARAMETER :: int_type = 2
   INTEGER, PARAMETER :: int_skh = 3
+  INTEGER, PARAMETER :: int_micelle = 4
 
   !*********************************************************************************************************
   ! Information on Excluded Volume calculation

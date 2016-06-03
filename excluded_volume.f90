@@ -114,8 +114,8 @@ CONTAINS
        !   Step 3) See if the test monomer is part of a cluster
        !*********************************************************************************
    
-       DO ispec = 1, cluster%n_species_type
-           cs = cluster%species_type(ispec)
+       DO ispec = 1, cluster%n_species_type(1)
+           cs = cluster%species_type(1,ispec)
            DO i = 1, nmols(cs,this_box)
            !DO i = 1, nmols(cluster%species_type(ispec),this_box)
                !imol = locate(i,cluster%species_type(ispec) )
@@ -123,7 +123,7 @@ CONTAINS
                IF (cs == is .and. imol == im) CYCLE
                !IF (cluster%species_type(ispec) == is .and. imol == im) CYCLE
    
-               in_cluster = Neighbor(imol, im, cs, is)
+               in_cluster = Neighbor(1, imol, im, cs, is)
                IF (in_cluster) THEN
                    ! remove monomer
                    CALL Select_Monomer(im, is, this_box)
@@ -277,7 +277,7 @@ CONTAINS
 
     DO is_clus = 1, nspecies
         n_removed = 0
-        IF (.not. ANY(cluster%species_type == is_clus)) CYCLE
+        IF (.not. ANY(cluster%species_type(1,:) == is_clus)) CYCLE
 
         MoleculeLoop: DO imol = 1, nmolecules(is_clus)
             ! Make sure that the molecule exists in the simulation

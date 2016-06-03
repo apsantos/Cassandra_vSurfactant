@@ -133,7 +133,7 @@ SUBROUTINE PP_Driver
            
               DO ibox = 1, nbr_boxes
               
-                 CALL Find_Clusters(ibox)
+                 CALL Find_Clusters(ibox,1)
                  CALL Write_Cluster(ibox)
               
               END DO
@@ -149,7 +149,7 @@ SUBROUTINE PP_Driver
            
               DO ibox = 1, nbr_boxes
                  IF ( MOD(i,ncluster_freq) /= 0 ) THEN
-                    CALL Find_Clusters(ibox)
+                    CALL Find_Clusters(ibox,1)
                  END IF
               
                  CALL Calculate_Excluded_Volume(ibox)
@@ -167,7 +167,7 @@ SUBROUTINE PP_Driver
            
               DO ibox = 1, nbr_boxes
                  IF ( MOD(i,ncluster_freq) /= 0 ) THEN
-                    CALL Find_Clusters(ibox)
+                    CALL Find_Clusters(ibox,1)
                  END IF
               
                  CALL Calculate_Degree_Association(ibox)

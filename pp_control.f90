@@ -103,9 +103,6 @@ SUBROUTINE PP_Control
   ! Determine the criteria and cutoff value for clustering
   CALL Get_Clustering_Info
 
-  ! Determine the criteria and cutoff value for clustering
-  CALL Get_Oligomer_Cutoff_Info
-
   ! Perform excluded volume calculation
   CALL Get_Excluded_Volume_Info
 
