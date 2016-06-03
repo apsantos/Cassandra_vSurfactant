@@ -713,7 +713,7 @@ CONTAINS
 
           CALL Get_Dihedral_Angle(idihed,molecule,species,phi)
 
-          cosine = COS(phi)
+          cosine = COS(phi - PI)
           cosine2 = cosine * cosine
           cosine4 = cosine2 * cosine2
           edihed =  a0 + (a1 * cosine) + (a2 * cosine2) + (a3 * cosine2 * cosine) + &
