@@ -175,6 +175,8 @@ SUBROUTINE Read_GRO(this_mc_step)
     molecule_list(:,:)%cfc_lambda = int_none
     atom_list(:,:,:)%exist = .FALSE.
 
+
+    line_nbr = 1
     ! write(*,*) this_mc_step
     ! READ NDX FILE before anything
     IF ( this_mc_step == -1 ) THEN
@@ -210,6 +212,9 @@ SUBROUTINE Read_GRO(this_mc_step)
                         ndx_type( String_To_Int( line_array(i_ndx) ) ) = idx
                     END DO
                 END IF
+
+                line_nbr = line_nbr + 1
+
             END DO
             CLOSE(unit=gro_ndx_unit(ibox))
             IF (idx < nspecies ) THEN
@@ -221,6 +226,7 @@ SUBROUTINE Read_GRO(this_mc_step)
         RETURN
     END IF
     
+    line_nbr = 0
     ! Read configuration
     DO ibox = 1, nbr_boxes
 
@@ -229,6 +235,8 @@ SUBROUTINE Read_GRO(this_mc_step)
 
        READ(gro_config_unit(ibox), *) ! read header
        CALL Parse_String(gro_config_unit(ibox),line_nbr,1,nbr_entries,line_array,ierr)
+
+       line_nbr = line_nbr + 1
        
        n_lines = String_To_Int(line_array(1))
        IF (n_lines < 0) THEN
@@ -250,8 +258,14 @@ SUBROUTINE Read_GRO(this_mc_step)
              CYCLE
           END IF
 
-          CALL Parse_String(gro_config_unit(ibox),line_nbr,6,nbr_entries,line_array,ierr)
- 
+          CALL Read_String(gro_config_unit(ibox),line_string,ierr)
+          line_array(1) = TRIM(line_string(1:10))
+          line_array(2) = TRIM(line_string(11:15))
+          line_array(3) = TRIM(line_string(16:20))
+          line_array(4) = TRIM(line_string(21:28))
+          line_array(5) = TRIM(line_string(29:36))
+          line_array(6) = TRIM(line_string(37:42))
+            
           is = ndx_type( i_line )
 
           IF ( ia == natoms(is)+1 ) THEN
@@ -289,7 +303,7 @@ SUBROUTINE Read_GRO(this_mc_step)
           END IF
 
           this_im = locate(im,is)
-          
+
           nonbond_list(ia,is)%element = line_array(2)
     
           atom_list(ia,this_im,is)%rxp = String_To_Double(line_array(4)) * 10.0_DP
@@ -299,8 +313,11 @@ SUBROUTINE Read_GRO(this_mc_step)
           atom_list(ia,this_im,is)%exist = .TRUE.
           ia = ia + 1
 
+          line_nbr = line_nbr + 1
+
        END DO
        CALL Parse_String(gro_config_unit(ibox),line_nbr,3,nbr_entries,line_array,ierr)
+       line_nbr = line_nbr + 1
        IF (box_list(ibox)%length(1,1) /= String_To_Double(line_array(1))*10.0 .OR. &
            box_list(ibox)%length(2,2) /= String_To_Double(line_array(2))*10.0 .OR. &
            box_list(ibox)%length(3,3) /= String_To_Double(line_array(3))*10.0 ) THEN
@@ -422,11 +439,13 @@ SUBROUTINE Read_XYZ(this_mc_step)
     molecule_list(:,:)%cfc_lambda = int_none
     atom_list(:,:,:)%exist = .FALSE.
     
+    line_nbr = 1
     DO ibox = 1, nbr_boxes
 
        INQUIRE(file=xyz_config_file(ibox),opened=lopen)
        IF (.not. lopen) OPEN(unit=xyz_config_unit(ibox), file=xyz_config_file(ibox))
        CALL Parse_String(xyz_config_unit(ibox),line_nbr,1,nbr_entries,line_array,ierr)
+       line_nbr = line_nbr + 1
        
        n_lines = String_To_Int(line_array(1))
        IF (n_lines < 0) THEN
@@ -439,6 +458,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
        END IF
 
        CALL Parse_String(xyz_config_unit(ibox),line_nbr,0,nbr_entries,line_array,ierr)
+       line_nbr = line_nbr + 1
 
        DO i_line = 1, n_lines 
 
@@ -484,6 +504,8 @@ SUBROUTINE Read_XYZ(this_mc_step)
           atom_list(ia,this_im,is)%rzp = String_To_Double(line_array(4))
           
           atom_list(ia,this_im,is)%exist = .TRUE.
+
+          line_nbr = line_nbr + 1
 
        END DO
 
