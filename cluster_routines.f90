@@ -277,7 +277,7 @@ CONTAINS
     CALL Find_Clusters(this_box,2)
 
     ! IF cluster translate added a molecule, so move is rejected
-    IF ( old_clusmax /= cluster%clusmax ) THEN 
+    IF ( iclus_N /= cluster%N(iclus) ) THEN 
         accept = .FALSE.
 
         cluster%clusmax = old_clusmax
@@ -489,7 +489,7 @@ CONTAINS
     !*********************************************************************************
 
     INTEGER, INTENT(IN) :: this_box, count_or_move
-    INTEGER :: imol, jmol, iatom, i, im, jm
+    INTEGER :: imol, jmol, iatom, i, im, jm, ic
     INTEGER :: is, js, is_clus, js_clus, start, N
     LOGICAL, ALLOCATABLE, DIMENSION(:) :: neigh_list
 
@@ -547,13 +547,14 @@ CONTAINS
     IF ( cluster%criteria(count_or_move, int_micelle) == .TRUE. ) CALL Micelle_Association(this_box, count_or_move)
 
     !write(*,*) 'c/m', count_or_move
-    !write(*,*) 'N', cluster%N(1:50)
+    !write(*,*) 'N', cluster%N(1:200)
     !write(*,*) 'clabel', cluster%clabel
     cluster%n_oligomers = 0
     cluster%n_clusters = 0
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
         IF ( cluster%criteria(count_or_move, int_micelle) == .TRUE.) THEN
+            ! IF micelle type then skip those that are associated
             IF ( is_clus /= cluster%micelle_species) CYCLE
         END IF
 
@@ -562,28 +563,33 @@ CONTAINS
             ! Make sure that the molecule exists in the simulation
             IF( .NOT. molecule_list(im,is_clus)%live ) CYCLE 
 
-            ! IF micelle type then some will not be in 'clustered'
-            IF (cluster%criteria(count_or_move, int_micelle) == .TRUE.) THEN
-                IF (cluster%clabel(im, is_clus) == 0) CYCLE
-            END IF
-
+            ! update the clabels so that they point to the correct cluster not the (-) or it
             DO WHILE ( cluster%N(cluster%clabel(im, is_clus)) < 0 )
                 cluster%clabel(im, is_clus) = -cluster%N( cluster%clabel(im, is_clus) )
             END DO
-    
-            N = cluster%N( cluster%clabel(im, is_clus) )
-            IF (N > 0) THEN
-                cluster%M( N ) = cluster%M( N ) + 1
-                IF (N <= cluster%M_olig(is_clus)) THEN
-                    cluster%n_oligomers = cluster%n_oligomers + 1
+
+        END DO
+
+        ic = 1
+        DO WHILE ( cluster%N(ic) /= 0 )
+
+            IF (cluster%N(ic) > 0) THEN
+                ! Tally the aggregation number distribution
+                cluster%M( cluster%N(ic) ) = cluster%M( cluster%N(ic) ) + 1
+
+                ! Tally up the Nmols of oligomers and clustered
+                IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
+                    cluster%n_oligomers = cluster%n_oligomers + cluster%N(ic)
                 ELSE
-                    cluster%n_clusters = cluster%n_clusters + 1
+                    cluster%n_clusters = cluster%n_clusters + cluster%N(ic)
                 END IF
             END IF
+
+            ic = ic + 1
         END DO
     END DO
-    !write(*,*) 'N', cluster%N(1:50)
-    !write(*,*) 'clabel', cluster%clabel
+    !write(*,*) 'N', cluster%N(1:200)
+    !write(*,*) 'clabel', cluster%clabel(1:500, 1)
     !write(*,*) 'M', cluster%M
     !write(*,*) 'olig, clus', cluster%n_oligomers, cluster%n_clusters
 
