@@ -108,7 +108,6 @@ SUBROUTINE PP_Driver
      next_rdf_write(this_box) = .true.
 
      IF (i < n_equilsteps) CYCLE
-     IF (MOD(20,i)) write(*,*) 'step', i
 
      CALL Accumulate(this_box)
      

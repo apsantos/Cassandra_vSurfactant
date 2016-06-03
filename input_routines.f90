@@ -5092,7 +5092,7 @@ SUBROUTINE Get_Start_Type
                  line_nbr = line_nbr + 1
                  gro_config_unit(i) = 117 + i
                  gro_ndx_unit(i) = 717 + i
-                 CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+                 CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
                  ! Make sure that the characters of the string are alphanumeric with
                  ! a possibility of a . (dot). The first character must be an alphabet
                  CALL Check_String(line_array(1),ierr)
