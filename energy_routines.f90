@@ -713,7 +713,7 @@ CONTAINS
 
           CALL Get_Dihedral_Angle(idihed,molecule,species,phi)
 
-          cosine = COS(phi)
+          cosine = COS(phi - PI)
           cosine2 = cosine * cosine
           cosine4 = cosine2 * cosine2
           edihed =  a0 + (a1 * cosine) + (a2 * cosine2) + (a3 * cosine2 * cosine) + &
@@ -1618,9 +1618,10 @@ CONTAINS
        VDW_calculation: IF (get_vdw) THEN
 
 !WCA calculation
-       IF(vdw_param3_table(itype,jtype) /= 0 ) THEN !.AND. is /= js & 
-        !.OR. vdw_param3_table(itype,jtype) /= 0 .AND. is == js .AND. &
-        !im /= jm) THEN
+       !IF(vdw_param3_table(itype,jtype) /= 0 ) THEN 
+       IF(vdw_param3_table(itype,jtype) /= 0 .AND. is /= js & 
+        .OR. vdw_param3_table(itype,jtype) /= 0 .AND. is == js .AND. &
+        im /= jm) THEN
 
           sig = vdw_param2_table(itype,jtype)
 
