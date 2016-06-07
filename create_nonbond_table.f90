@@ -325,7 +325,8 @@ SUBROUTINE Read_Nonbond_Table
 
     REAL(DP) :: sigma_ss, eps_ss, rho_s, delta_s, eps_sf
     !custom mixing rules
-    INTEGER :: ierr,line_nbr,nbr_entries, is_1, is_2, ia_1, ia_2, itype_custom, jtype_custom, i_line, n_params, cur_line
+    INTEGER :: ierr,line_nbr,nbr_entries
+    INTEGER :: is_1, is_2, ia_1, ia_2, itype_custom, jtype_custom, i_line, n_params, cur_line
     CHARACTER(120) :: line_string, line_array(20)
     CHARACTER(120) :: temp_name
     INTEGER :: temp_type_list(30), temp_type, ncheck

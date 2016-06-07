@@ -6251,7 +6251,7 @@ SUBROUTINE Get_Oligomer_Cutoff_Info
      END IF
 
      IF(line_string(1:17) == '# Oligomer_Cutoff') THEN
-        IF ( ANY(cluster%n_species_type == 0) ) THEN
+        IF ( .not. ANY(cluster%n_species_type /= 0) ) THEN
             err_msg = ''
             err_msg(1) = 'Cannot compute oligomer cutoff without clustering information'
             CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
