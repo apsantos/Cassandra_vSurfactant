@@ -1001,8 +1001,7 @@ CONTAINS
 
     ! Local variables
     
-    REAL(DP) :: const_val
-    INTEGER :: i, ia, im, ic_mol, is
+    INTEGER :: i, ia, im, ic_mol, is, im_locate
 
     REAL(DP) :: hdotr_new
 
@@ -1014,7 +1013,6 @@ CONTAINS
     ! get the location of im 
 
     v_recip_difference = 0.0_DP
-    const_val = 1.0_DP/(2.0_DP * alpha_ewald(this_box) * alpha_ewald(this_box))
 
     !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)
     cos_sum_old(1:nvecs(this_box),this_box) = cos_sum(1:nvecs(this_box),this_box)
@@ -1045,6 +1043,7 @@ CONTAINS
              IF (im == 0) CYCLE
 
              is = clus_is(ic_mol)
+             im_locate = SUM(nmolecules(1:is-1)) + im
 
              cos_sum_im = 0.0_DP
              sin_sum_im = 0.0_DP
@@ -1064,12 +1063,12 @@ CONTAINS
    
              END DO
    
-             cos_sum(i,this_box) = cos_sum(i,this_box) + cos_sum_im - cos_mol(i,im)
-             sin_sum(i,this_box) = sin_sum(i,this_box) + sin_sum_im - sin_mol(i,im)
+             cos_sum(i,this_box) = cos_sum(i,this_box) + cos_sum_im - cos_mol(i,im_locate)
+             sin_sum(i,this_box) = sin_sum(i,this_box) + sin_sum_im - sin_mol(i,im_locate)
    
              ! set the molecules cos and sin terms to the one calculated here
-             cos_mol(i,im) = cos_sum_im
-             sin_mol(i,im) = sin_sum_im
+             cos_mol(i,im_locate) = cos_sum_im
+             sin_mol(i,im_locate) = sin_sum_im
 
           END DO clusMolLoop
 
