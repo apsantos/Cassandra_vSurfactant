@@ -579,6 +579,7 @@ MODULE Type_Definitions
  TYPE DegreeAssociation_Class
     ! degree of ion association variables
     INTEGER  :: n_assoc, assoc_species, clus_species
+    INTEGER, DIMENSION(:), ALLOCATABLE :: n_assoc_clus
     INTEGER, DIMENSION(:), ALLOCATABLE  :: atype
     REAL(DP) :: cutoff_sq
     CHARACTER(6), DIMENSION(:), ALLOCATABLE :: aname

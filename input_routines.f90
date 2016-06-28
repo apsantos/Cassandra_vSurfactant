@@ -5507,7 +5507,7 @@ SUBROUTINE Get_Frequency_Info
 
   INTEGER :: ierr, line_nbr, nbr_entries, ibox
   CHARACTER(120) :: line_string, line_array(20),movie_header_file, &
-                     movie_xyz_file, cluster_file
+                     movie_xyz_file
 
   REWIND(inputunit)
 
@@ -5520,6 +5520,7 @@ SUBROUTINE Get_Frequency_Info
   ncluster_freq = 0
   nexvol_freq = 0
   nalpha_freq = 0
+  nalphaclus_freq = 0
 
   DO
      line_nbr = line_nbr + 1
@@ -5614,6 +5615,13 @@ SUBROUTINE Get_Frequency_Info
               
                  WRITE(logunit,*) 
                  WRITE(logunit,'(A,T50,I8,A)') 'The Degree of ion association to cluster will be calculated/written at every', nalpha_freq, ' MC steps.'
+
+              ELSE IF (line_array(1) == 'Nclusdegreefreq') THEN
+
+                 nalphaclus_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The Degree of ion association to cluster as a function of clusters will be calculated/written at every', nalphaclus_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Ncoordfreq') THEN
               
@@ -6429,8 +6437,15 @@ SUBROUTINE Get_Degree_Association_Info
 
         END DO
 
+        IF (nalphaclus_freq > 0) THEN
+            ALLOCATE( alpha%n_assoc_clus(nmolecules(alpha%assoc_species) ) )
+            alpha%n_assoc_clus = 0
+        END IF
+
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
-        IF (nalpha_freq /= 0 .AND. SUM(alpha%atype(:)) == 0 .OR. nalpha_freq == 0 .AND. SUM(alpha%atype(:)) /= 0) THEN
+        IF (nalpha_freq /= 0 .AND. SUM(alpha%atype(:)) == 0 &
+       .OR. nalpha_freq == 0 .AND. SUM(alpha%atype(:)) /= 0 &
+       .OR. nalphaclus_freq == 0 .AND. SUM(alpha%atype(:)) /= 0) THEN
             err_msg = ''
             err_msg(1) = '# Degree_Association info not given in input, but Nalphafreq specified.'
             CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')

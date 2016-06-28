@@ -518,6 +518,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
           IF (check_nmol .LT. n_lines) THEN
              err_msg = ""
              err_msg(1) = "More molecules in XYZ, than possible from nmolecules in the input file."
+             err_msg(1) = "Or too many mcsteps in the input file."
              CALL Clean_Abort(err_msg,'Read_XYZ')
           ENDIF
        ENDIF

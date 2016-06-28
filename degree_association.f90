@@ -57,7 +57,6 @@ CONTAINS
         cm = locate(i, alpha%clus_species)
         IF( .NOT. molecule_list(cm, alpha%clus_species)%live ) CYCLE
 
-        ! IF the molecule is not in a cluster of the specified size
         IF (cluster%N( cluster%clabel(cm, alpha%clus_species) ) <= cluster%M_olig(alpha%clus_species)) CYCLE
 
         DO j = 1, nmolecules(alpha%assoc_species)
@@ -79,6 +78,12 @@ CONTAINS
             
             IF (rijsq < alpha%cutoff_sq) THEN
                 alpha%n_assoc = alpha%n_assoc + 1
+                
+                IF (nalphaclus_freq > 0) THEN
+                    alpha%n_assoc_clus(cluster%N( cluster%clabel(cm, alpha%clus_species) )) = & 
+                                    alpha%n_assoc_clus(cluster%N( cluster%clabel(cm, alpha%clus_species) )) + 1
+                END IF
+
                 EXIT
             END IF
 

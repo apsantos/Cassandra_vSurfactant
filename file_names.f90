@@ -174,6 +174,7 @@ INTEGER :: movie_xyz_unit = 160
 INTEGER :: lattice_file_unit = 170
 CHARACTER(FILENAME_LEN) :: lattice_file
 
+! Cluster distribution file
 INTEGER :: cluster_file_unit = 919
 CHARACTER(FILENAME_LEN) :: cluster_file
 

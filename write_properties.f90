@@ -505,7 +505,7 @@ SUBROUTINE Write_Cluster(this_box)
   !
   ! CALLED BY
   !
-  !        gcmc_driver
+  !        pp_driver
   !
   !************************************************************************************
 
@@ -523,13 +523,25 @@ SUBROUTINE Write_Cluster(this_box)
   box_unit = cluster_file_unit + this_box
   OPEN(unit=cluster_file_unit+this_box, file=cluster_file)
 
-  WRITE(box_unit,*) '#   M    pop'
+  WRITE(box_unit,'(A)', ADVANCE='NO') '#   M    pop'
+  IF (nalphaclus_freq > 0) THEN
+     WRITE(box_unit,'(A)', ADVANCE='NO') '   bound-counterions'
+  END IF
+  WRITE(box_unit,'(/)', ADVANCE='NO')
   
   DO iM = 1, SIZE(cluster%M)
      IF (cluster%M(iM) > 0) THEN
-        WRITE(box_unit,'(I6, I10)') iM, cluster%M(iM)
+        WRITE(box_unit,'(I6, I10)', ADVANCE='NO') iM, cluster%M(iM)
+
+        IF (nalphaclus_freq > 0) THEN
+            WRITE(box_unit,'(I10)', ADVANCE='NO') alpha%n_assoc_clus(iM)
+        END IF
+        
+        WRITE(box_unit,'(/)', ADVANCE='NO')
+
      END IF
   END DO
   CLOSE(unit=cluster_file_unit+this_box)
 
 END SUBROUTINE Write_Cluster
+

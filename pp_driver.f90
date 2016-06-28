@@ -171,6 +171,7 @@ SUBROUTINE PP_Driver
                  END IF
               
                  CALL Calculate_Degree_Association(ibox)
+                 CALL Write_Cluster(ibox)
               
               !CALL cpu_time(now_time)
               !print '("alpha Time = ",f6.3," seconds.")',now_time-time_start
