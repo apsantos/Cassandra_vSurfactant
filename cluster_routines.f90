@@ -1001,7 +1001,8 @@ CONTAINS
 
     ! Local variables
     
-    INTEGER :: i, ia, im, ic_mol, is, im_locate
+    INTEGER :: i, ia, im, ic_mol, is, this_locate
+    INTEGER, ALLOCATABLE :: sum_nmolec(:)
 
     REAL(DP) :: hdotr_new
 
@@ -1009,6 +1010,15 @@ CONTAINS
 
     ! storage stuff
 
+    ALLOCATE(sum_nmolec(nspecies))
+
+    sum_nmolec(1) = 0
+
+    DO is = 2, nspecies
+
+       sum_nmolec(is) = SUM(nmolecules(1:is-1))
+
+    END DO
 
     ! get the location of im 
 
@@ -1043,7 +1053,8 @@ CONTAINS
              IF (im == 0) CYCLE
 
              is = clus_is(ic_mol)
-             im_locate = SUM(nmolecules(1:is-1)) + im
+
+             this_locate = locate(im,is) + sum_nmolec(is)
 
              cos_sum_im = 0.0_DP
              sin_sum_im = 0.0_DP
@@ -1063,12 +1074,12 @@ CONTAINS
    
              END DO
    
-             cos_sum(i,this_box) = cos_sum(i,this_box) + cos_sum_im - cos_mol(i,im_locate)
-             sin_sum(i,this_box) = sin_sum(i,this_box) + sin_sum_im - sin_mol(i,im_locate)
+             cos_sum(i,this_box) = cos_sum(i,this_box) + cos_sum_im - cos_mol(i,this_locate)
+             sin_sum(i,this_box) = sin_sum(i,this_box) + sin_sum_im - sin_mol(i,this_locate)
    
              ! set the molecules cos and sin terms to the one calculated here
-             cos_mol(i,im_locate) = cos_sum_im
-             sin_mol(i,im_locate) = sin_sum_im
+             cos_mol(i,this_locate) = cos_sum_im
+             sin_mol(i,this_locate) = sin_sum_im
 
           END DO clusMolLoop
 
