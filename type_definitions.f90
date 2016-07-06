@@ -586,4 +586,11 @@ MODULE Type_Definitions
 
  END TYPE DegreeAssociation_Class
 
+ TYPE DipoleMoment_Class
+    ! dipole moment variables
+    REAL(DP) :: sim_step
+    INTEGER, DIMENSION(:), ALLOCATABLE :: t_skip
+
+ END TYPE DipoleMoment_Class
+
 END MODULE Type_Definitions

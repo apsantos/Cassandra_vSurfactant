@@ -5521,6 +5521,7 @@ SUBROUTINE Get_Frequency_Info
   nexvol_freq = 0
   nalpha_freq = 0
   nalphaclus_freq = 0
+  ndipole_freq = 0
 
   DO
      line_nbr = line_nbr + 1
@@ -5622,6 +5623,13 @@ SUBROUTINE Get_Frequency_Info
               
                  WRITE(logunit,*) 
                  WRITE(logunit,'(A,T50,I8,A)') 'The Degree of ion association to cluster as a function of clusters will be calculated/written at every', nalphaclus_freq, ' MC steps.'
+
+              ELSE IF (line_array(1) == 'Ndipolefreq') THEN
+
+                 ndipole_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The dipole moment will be calculated/written at every', ndipole_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Ncoordfreq') THEN
               
@@ -6445,7 +6453,7 @@ SUBROUTINE Get_Degree_Association_Info
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
         IF (nalpha_freq /= 0 .AND. SUM(alpha%atype(:)) == 0 &
        .OR. nalpha_freq == 0 .AND. SUM(alpha%atype(:)) /= 0 &
-       .OR. nalphaclus_freq == 0 .AND. SUM(alpha%atype(:)) /= 0) THEN
+       .OR. nalphaclus_freq /= 0 .AND. SUM(alpha%atype(:)) == 0) THEN
             err_msg = ''
             err_msg(1) = '# Degree_Association info not given in input, but Nalphafreq specified.'
             CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
@@ -6607,6 +6615,92 @@ SUBROUTINE Get_Excluded_Volume_Info
   END DO
 
 END SUBROUTINE Get_Excluded_Volume_Info
+
+SUBROUTINE Get_Dipole_Moment_Info
+  !***************************************************************************************************
+  ! 
+  ! Gets information about the exclude volume calculation
+  ! Reads and gets the COM of the monomer in the file given
+  ! 
+  !***************************************************************************************************
+
+  !USE Dipole_Moment
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is
+  CHARACTER(120) :: line_string, line_array(20) !filename
+
+  REWIND(inputunit)
+  
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Dipole Moment calculation information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+     END IF
+
+     IF(line_string(1:17) == '# Dipole_Moment') THEN
+        IF ( .not. ANY(has_charge(:) == .TRUE.) ) THEN
+            err_msg = ''
+            err_msg(1) = 'Cannot compute dipole moment without any charge'
+            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+        END IF
+
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= 1 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must give the simulation timestep'
+            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+        END IF
+        dipole%sim_step = String_To_Double(line_array(1))
+        ALLOCATE( dipole%t_skip(nspecies) )
+        dipole%t_skip = 0
+
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= nspecies ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must have the no. steps to skip for MSD for each species (NONE is an option).'
+            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+        END IF
+
+        DO is = 1, nspecies
+            IF (line_array(is) == 'NONE') THEN
+                dipole%t_skip(is) = -1
+            ELSE
+                dipole%t_skip(is) = String_To_Int(line_array(is))
+            END IF
+        END DO
+
+        ALLOCATE(ntime(tsmax), STAT = ierr(4))
+        ALLOCATE(time0(t0max), STAT = ierr(6))
+        ALLOCATE(x0(n_tot,t0max),y0(n_tot,t0max),z0(n_tot,t0max), STAT = ierr(9))
+        ALLOCATE(r2t(n_types,tsmax),x2t(n_types,tsmax),y2t(n_types,tsmax),z2t(n_types,tsmax), STAT = ierr(10))
+        ALLOCATE(colx(n_types,tsmax),coly(n_types,tsmax),colz(n_types,tsmax),colr(n_types,tsmax), STAT = ierr(12))
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+        IF (ndipole_freq /= 0 .AND. SUM(dipole%t_skip) == 0) THEN
+            err_msg = ''
+            err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
+            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+        ELSE IF (ndipole_freq == 0 .AND. SUM(dipole%t_skip) /= 0) THEN
+            err_msg = ''
+            err_msg(1) = '# Dipole_Moment info given in input, but Ndipolefreq not specified.'
+            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+        END IF
+
+        EXIT
+     END IF
+  END DO
+
+END SUBROUTINE Get_Dipole_Moment_Info
 
 SUBROUTINE Copy_Inputfile
 
