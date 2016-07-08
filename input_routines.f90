@@ -6295,9 +6295,10 @@ EnLoop: DO ientry = 1, n_entries
             END IF ClusCheck
 
         END DO EnLoop
-
+ 
         DO is = 1, nspecies
-            IF (ANY(cluster%min_distance_sq(c_or_m, is,:,:,:) > 0.000001)) THEN
+            IF ( ANY(cluster%min_distance_sq(c_or_m, is,:,:,:) > 0.000001) .OR. &
+                 ANY(cluster%r3_sq(c_or_m, is,:) > 0.000001) ) THEN
                 cluster%n_species_type(c_or_m) = cluster%n_species_type(c_or_m) + 1
                 imax_nmol = imax_nmol + nmolecules(is)
             END IF
@@ -6305,19 +6306,20 @@ EnLoop: DO ientry = 1, n_entries
         max_nmol = MAX(max_nmol, imax_nmol)
 
         END DO CMloop
-        IF ( ANY(cluster%criteria(:,int_skh) == .FALSE.)) DEALLOCATE(cluster%r1_sq, cluster%r2_sq, cluster%r3_sq)
 
         ALLOCATE(cluster%species_type(2, MAXVAL(cluster%n_species_type)))
         cluster%species_type = 0
         DO c_or_m = 1, 2
             i = 1
             DO is = 1, nspecies
-                IF (ANY(cluster%min_distance_sq(c_or_m,is,:,:,:) > 0.000001)) THEN
+                IF ( ANY(cluster%min_distance_sq(c_or_m,is,:,:,:) > 0.000001) .OR. &
+                     ANY(cluster%r3_sq(c_or_m, is,:) > 0.000001) ) THEN
                     cluster%species_type(c_or_m, i) = is
                     i = i + 1
                 END IF
             END DO
         END DO
+        IF ( .not. ANY(cluster%criteria(:,int_skh) == .TRUE.)) DEALLOCATE(cluster%r1_sq, cluster%r2_sq, cluster%r3_sq)
 
 
         ALLOCATE( cluster%M(max_nmol), cluster%N(max_nmol) )
@@ -6379,7 +6381,8 @@ SUBROUTINE Get_Degree_Association_Info
      END IF
 
      IF(line_string(1:20) == '# Degree_Association') THEN
-        IF ( cluster%n_species_type(1) == 0 ) THEN
+        !IF ( cluster%n_species_type(1) == 0 ) THEN
+        IF ( .not. ANY(cluster%criteria(1,:) == .TRUE.) ) THEN
             err_msg = ''
             err_msg(1) = 'Cannot compute degree ion association without clustering information'
             CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
@@ -6494,7 +6497,7 @@ SUBROUTINE Get_Oligomer_Cutoff_Info
      END IF
  
      IF(line_string(1:17) == '# Oligomer_Cutoff') THEN
-        IF ( .not. ANY(cluster%n_species_type /= 0) ) THEN
+        IF ( .not. ANY(cluster%criteria(1,:) == .TRUE.) ) THEN
             err_msg = ''
             err_msg(1) = 'Cannot compute oligomer cutoff without clustering information'
             CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
@@ -6558,7 +6561,7 @@ SUBROUTINE Get_Excluded_Volume_Info
      END IF
 
      IF(line_string(1:17) == '# Excluded_Volume') THEN
-        IF ( cluster%n_species_type(1) == 0 ) THEN
+        IF ( .not. ANY(cluster%criteria(1,:) == .TRUE.) ) THEN
             err_msg = ''
             err_msg(1) = 'Cannot compute excluded volume without clustering information'
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
@@ -6679,22 +6682,22 @@ SUBROUTINE Get_Dipole_Moment_Info
             END IF
         END DO
 
-        ALLOCATE(ntime(tsmax), STAT = ierr(4))
-        ALLOCATE(time0(t0max), STAT = ierr(6))
-        ALLOCATE(x0(n_tot,t0max),y0(n_tot,t0max),z0(n_tot,t0max), STAT = ierr(9))
-        ALLOCATE(r2t(n_types,tsmax),x2t(n_types,tsmax),y2t(n_types,tsmax),z2t(n_types,tsmax), STAT = ierr(10))
-        ALLOCATE(colx(n_types,tsmax),coly(n_types,tsmax),colz(n_types,tsmax),colr(n_types,tsmax), STAT = ierr(12))
+        !ALLOCATE(ntime(tsmax), STAT = ierr(4))
+        !ALLOCATE(time0(t0max), STAT = ierr(6))
+        !ALLOCATE(x0(n_tot,t0max),y0(n_tot,t0max),z0(n_tot,t0max), STAT = ierr(9))
+        !ALLOCATE(r2t(n_types,tsmax),x2t(n_types,tsmax),y2t(n_types,tsmax),z2t(n_types,tsmax), STAT = ierr(10))
+        !ALLOCATE(colx(n_types,tsmax),coly(n_types,tsmax),colz(n_types,tsmax),colr(n_types,tsmax), STAT = ierr(12))
 
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
-        IF (ndipole_freq /= 0 .AND. SUM(dipole%t_skip) == 0) THEN
-            err_msg = ''
-            err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
-            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
-        ELSE IF (ndipole_freq == 0 .AND. SUM(dipole%t_skip) /= 0) THEN
-            err_msg = ''
-            err_msg(1) = '# Dipole_Moment info given in input, but Ndipolefreq not specified.'
-            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
-        END IF
+!        IF (ndipole_freq /= 0 .AND. SUM(dipole%t_skip) == 0) THEN
+!            err_msg = ''
+!            err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
+!            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+!        ELSE IF (ndipole_freq == 0 .AND. SUM(dipole%t_skip) /= 0) THEN
+!            err_msg = ''
+!            err_msg(1) = '# Dipole_Moment info given in input, but Ndipolefreq not specified.'
+!            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+!        END IF
 
         EXIT
      END IF
