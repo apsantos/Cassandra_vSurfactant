@@ -586,6 +586,13 @@ MODULE Type_Definitions
 
  END TYPE DegreeAssociation_Class
 
+ TYPE EndToEnd_Class
+    ! dipole moment variables
+    LOGICAL,  DIMENSION(:), ALLOCATABLE :: species
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: distance
+
+ END TYPE EndToEnd_Class
+
  TYPE DipoleMoment_Class
     ! dipole moment variables
     REAL(DP) :: sim_step

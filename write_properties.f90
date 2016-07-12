@@ -517,7 +517,7 @@ SUBROUTINE Write_Cluster(this_box)
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: this_box
-  INTEGER :: iM, box_unit
+  INTEGER :: iM, box_unit, is
 
   cluster_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.clu'
   box_unit = cluster_file_unit + this_box
@@ -527,6 +527,14 @@ SUBROUTINE Write_Cluster(this_box)
   IF (nalphaclus_freq > 0) THEN
      WRITE(box_unit,'(A)', ADVANCE='NO') '   bound-counterions'
   END IF
+  IF (nendclus_freq > 0) THEN
+     WRITE(box_unit,'(A)', ADVANCE='NO') '   End-to-end distance (A) for species:'
+     DO is = 1, nspecies
+        IF (.not. end2end%species(is) ) CYCLE
+        WRITE(box_unit,'(I10)', ADVANCE='NO') is
+     END DO
+  END IF
+        
   WRITE(box_unit,'(/)', ADVANCE='NO')
   
   DO iM = 1, SIZE(cluster%M)
@@ -535,6 +543,13 @@ SUBROUTINE Write_Cluster(this_box)
 
         IF (nalphaclus_freq > 0) THEN
             WRITE(box_unit,'(I10)', ADVANCE='NO') alpha%n_assoc_clus(iM)
+        END IF
+        
+        IF (nendclus_freq > 0) THEN
+            DO is = 1, nspecies
+                IF (.not. end2end%species(is) ) CYCLE
+                WRITE(box_unit,'(E12.5)', ADVANCE='NO') end2end%distance(iM, is) / cluster%M(iM)
+            END DO
         END IF
         
         WRITE(box_unit,'(/)', ADVANCE='NO')

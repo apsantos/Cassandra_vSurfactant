@@ -5505,7 +5505,7 @@ END SUBROUTINE Get_Seed_Info
 SUBROUTINE Get_Frequency_Info
   ! This subroutine obtains frequency for writing to various files
 
-  INTEGER :: ierr, line_nbr, nbr_entries, ibox
+  INTEGER :: ierr, line_nbr, nbr_entries, ibox, is
   CHARACTER(120) :: line_string, line_array(20),movie_header_file, &
                      movie_xyz_file
 
@@ -5521,6 +5521,7 @@ SUBROUTINE Get_Frequency_Info
   nexvol_freq = 0
   nalpha_freq = 0
   nalphaclus_freq = 0
+  nendclus_freq = 0
   ndipole_freq = 0
 
   DO
@@ -5623,6 +5624,24 @@ SUBROUTINE Get_Frequency_Info
               
                  WRITE(logunit,*) 
                  WRITE(logunit,'(A,T50,I8,A)') 'The Degree of ion association to cluster as a function of clusters will be calculated/written at every', nalphaclus_freq, ' MC steps.'
+
+              ELSE IF (line_array(1) == 'Nendtoendfreq') THEN
+
+                 nendclus_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The end-to-end distance as a function of clusters will be calculated/written at every', nalphaclus_freq, ' MC steps.'
+
+                 ALLOCATE( end2end%distance(MAXVAL(nmolecules), nspecies) )
+                 ALLOCATE( end2end%species(nspecies) )
+
+                 end2end%distance = 0.0_DP
+                 end2end%species = .FALSE.
+
+                 DO is = 1, nspecies
+                    IF (natoms(is) < 3) CYCLE
+                    end2end%species(is) = .TRUE.
+                 END DO
 
               ELSE IF (line_array(1) == 'Ndipolefreq') THEN
 
