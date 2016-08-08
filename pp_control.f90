@@ -109,6 +109,9 @@ SUBROUTINE PP_Control
   ! Get Degree of ion Association info
   CALL Get_Degree_Association_Info
 
+  ! Get mean-squared displacement info
+  CALL Get_MSD_Info
+
   ! Get dipole moment info
   CALL Get_Dipole_Moment_Info
 

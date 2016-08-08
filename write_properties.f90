@@ -499,6 +499,53 @@ SUBROUTINE Write_Coords(this_box)
 
 END SUBROUTINE Write_Coords
 
+SUBROUTINE Write_MSD(this_box)
+  !************************************************************************************
+  ! The subroutine writes the cluster vists in the simulation box
+  !
+  ! CALLED BY
+  !
+  !        pp_driver
+  !
+  !************************************************************************************
+
+  USE Run_Variables
+  USE File_Names
+  USE Transport_Properties
+  USE IO_Utilities
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: this_box
+  INTEGER :: it, box_unit, is
+  DOUBLE PRECISION :: dstep, norm
+
+  DO is = 1, nspecies
+     IF (.not. msd%species(is)) CYCLE
+
+     msd_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.msd'
+     box_unit = msd_file_unit + this_box
+     OPEN(unit=msd_file_unit+this_box, file=msd_file)
+   
+     WRITE(box_unit,'(A)') '#  time(ps)    msd(A^2) -     x           y           z'
+           
+     dstep = msd%sim_step * msd%sim_freq
+
+     DO it = 1, msd%ntel
+        norm = DBLE(nmolecules(is))*DBLE(msd%ntime(it))
+        WRITE(box_unit,'(5E12.5)') DBLE(it-1) * dstep, &
+                                   msd%r2t(is, it) / norm, &
+                                   msd%x2t(is, it) / norm, &
+                                   msd%y2t(is, it) / norm, &
+                                   msd%z2t(is, it) / norm
+   
+     END DO
+
+     CLOSE(unit=msd_file_unit+this_box)
+  END DO
+
+END SUBROUTINE Write_MSD
+
 SUBROUTINE Write_Cluster(this_box)
   !************************************************************************************
   ! The subroutine writes the cluster vists in the simulation box

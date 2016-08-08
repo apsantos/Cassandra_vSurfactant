@@ -5522,6 +5522,7 @@ SUBROUTINE Get_Frequency_Info
   nalpha_freq = 0
   nalphaclus_freq = 0
   nendclus_freq = 0
+  nmsd_freq = 0
   ndipole_freq = 0
 
   DO
@@ -5642,6 +5643,13 @@ SUBROUTINE Get_Frequency_Info
                     IF (natoms(is) < 3) CYCLE
                     end2end%species(is) = .TRUE.
                  END DO
+
+              ELSE IF (line_array(1) == 'Nmsdfreq') THEN
+
+                 nmsd_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The msd will be calculated/written at every', ndipole_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Ndipolefreq') THEN
 
@@ -6473,12 +6481,20 @@ SUBROUTINE Get_Degree_Association_Info
         END IF
 
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
-        IF (nalpha_freq /= 0 .AND. SUM(alpha%atype(:)) == 0 &
-       .OR. nalpha_freq == 0 .AND. SUM(alpha%atype(:)) /= 0 &
-       .OR. nalphaclus_freq /= 0 .AND. SUM(alpha%atype(:)) == 0) THEN
-            err_msg = ''
-            err_msg(1) = '# Degree_Association info not given in input, but Nalphafreq specified.'
-            CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+        IF (nalpha_freq /= 0) THEN
+            IF (SUM(alpha%atype(:)) == 0 ) THEN
+                err_msg = ''
+                err_msg(1) = '# Degree_Association info not given in input, but Nalphafreq specified.'
+                CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+            END IF
+        ELSE 
+            IF (ALLOCATED(alpha%atype)) THEN
+                IF (SUM(alpha%atype(:)) /= 0 ) THEN
+                    err_msg = ''
+                    err_msg(1) = '# Degree_Association info given in input, but Nalphafreq is set to 0.'
+                    CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
+                END IF
+            END IF
         END IF
 
         EXIT
@@ -6637,6 +6653,115 @@ SUBROUTINE Get_Excluded_Volume_Info
   END DO
 
 END SUBROUTINE Get_Excluded_Volume_Info
+
+SUBROUTINE Get_MSD_Info
+  !***************************************************************************************************
+  ! 
+  ! Gets information about the mean-squared deviation calculation
+  ! 
+  !***************************************************************************************************
+
+  !USE Transport_Properties
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is
+  CHARACTER(120) :: line_string, line_array(20) !filename
+
+  REWIND(inputunit)
+  
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Mean-squared Displacement calculation information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_MSD_Info')
+     END IF
+
+     IF(line_string(1:27) == '# Mean_Squared_Displacement') THEN
+        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= 2 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must give the simulation timestep, and position frequency'
+            CALL Clean_Abort(err_msg,'Get_MSD_Info')
+        END IF
+        msd%sim_step = String_To_Double(line_array(1))
+        msd%sim_freq = String_To_Int(line_array(2))
+        ALLOCATE( msd%species(nspecies) )
+        msd%species = .FALSE.
+
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        msd%t_origin = String_To_Int(line_array(1))
+        IF (nbr_entries /= 1 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Only give 1 origin step.'
+            CALL Clean_Abort(err_msg,'Get_MSD_Info')
+        END IF
+
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= nspecies ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must have the no. steps to skip for MSD for each species (NONE is an option).'
+            CALL Clean_Abort(err_msg,'Get_MSD_Info')
+        END IF
+
+        DO is = 1, nspecies
+            IF (line_array(is) == 'TRUE' .or. line_array(is) == 'true') THEN
+                msd%species(is) = .TRUE.
+            END IF
+        END DO
+
+        msd%t0max = 1000000
+
+        ALLOCATE(msd%time0(msd%t0max))
+    
+        msd%time0(:) = 0
+    
+        ALLOCATE(msd%x0(MAXVAL(nmolecules(:)), nspecies, msd%t0max))
+        ALLOCATE(msd%y0(MAXVAL(nmolecules(:)), nspecies, msd%t0max))
+        ALLOCATE(msd%z0(MAXVAL(nmolecules(:)), nspecies, msd%t0max))
+    
+        msd%x0(:,:,:) = 0.0d0
+        msd%y0(:,:,:) = 0.0d0
+        msd%z0(:,:,:) = 0.0d0
+    
+        ALLOCATE(msd%r2t(nspecies, msd%t0max))
+        ALLOCATE(msd%x2t(nspecies, msd%t0max))
+        ALLOCATE(msd%y2t(nspecies, msd%t0max))
+        ALLOCATE(msd%z2t(nspecies, msd%t0max))
+    
+        msd%r2t(:,:) = 0.0d0
+        msd%x2t(:,:) = 0.0d0
+        msd%y2t(:,:) = 0.0d0
+        msd%z2t(:,:) = 0.0d0
+
+        ALLOCATE(msd%ntime(msd%t0max))
+
+        msd%ntime = 0
+        msd%ntel = 0
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+!        IF (ndipole_freq /= 0 .AND. SUM(dipole%t_skip) == 0) THEN
+!            err_msg = ''
+!            err_msg(1) = '# Mean_Squared_Displacement info not given in input, but Ndipolefreq specified.'
+!            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+!        ELSE IF (ndipole_freq == 0 .AND. SUM(dipole%t_skip) /= 0) THEN
+!            err_msg = ''
+!            err_msg(1) = '# Dipole_Moment info given in input, but Ndipolefreq not specified.'
+!            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+!        END IF
+
+        EXIT
+     END IF
+  END DO
+
+END SUBROUTINE Get_MSD_Info
 
 SUBROUTINE Get_Dipole_Moment_Info
   !***************************************************************************************************

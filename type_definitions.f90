@@ -593,6 +593,28 @@ MODULE Type_Definitions
 
  END TYPE EndToEnd_Class
 
+ TYPE MSD_Class
+    ! msd variables
+    ! simulation time step (ps)
+    REAL(DP) :: sim_step
+    ! simulation position output frequency 
+    INTEGER :: sim_freq
+    INTEGER, DIMENSION(:), ALLOCATABLE :: time0, ntime
+    ! time origin
+    INTEGER :: t0                                                                  
+    ! corrected time origin; makes sure time origin number is not greater than msd%t0max
+    INTEGER :: tt0                                                                 
+    LOGICAL, DIMENSION(:), ALLOCATABLE :: species
+    ! counter for the sample branch --> "actual time"
+    INTEGER :: ntel
+    ! time origin frequency
+    INTEGER :: t_origin
+    INTEGER :: t0max
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: x0, y0, z0
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: r2t, x2t, y2t, z2t
+
+ END TYPE MSD_Class
+
  TYPE DipoleMoment_Class
     ! dipole moment variables
     REAL(DP) :: sim_step

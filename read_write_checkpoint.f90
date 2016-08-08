@@ -264,7 +264,7 @@ SUBROUTINE Read_GRO(this_mc_step)
           line_array(3) = TRIM(line_string(16:20))
           line_array(4) = TRIM(line_string(21:28))
           line_array(5) = TRIM(line_string(29:36))
-          line_array(6) = TRIM(line_string(37:42))
+          line_array(6) = TRIM(line_string(37:44))
             
           is = ndx_type( i_line )
 

@@ -41,6 +41,7 @@ SUBROUTINE PP_Driver
   USE Excluded_Volume
   USE Degree_Association
   USE End_To_End
+  USE Transport_Properties
 
   IMPLICIT NONE
 
@@ -181,6 +182,22 @@ SUBROUTINE PP_Driver
            END IF
         END IF
         
+        IF ( nmsd_freq /= 0 ) THEN
+           IF ( MOD(i,nmsd_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
+           
+              DO ibox = 1, nbr_boxes
+              
+                 CALL Calculate_MSD(ibox)
+                 CALL Write_MSD(ibox)
+              
+              !CALL cpu_time(now_time)
+              !print '("alpha Time = ",f6.3," seconds.")',now_time-time_start
+              END DO
+           
+           END IF
+        END IF
+
         IF ( nendclus_freq /= 0 ) THEN
            IF ( MOD(i,nendclus_freq) == 0 ) THEN
               !CALL cpu_time(time_start)
