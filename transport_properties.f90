@@ -39,7 +39,7 @@ CONTAINS
 
     !*********************************************************************************
     !
-    ! Calculate the Degree of ion Association
+    ! Calculate the Mean-squared Displacement
     !
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
@@ -53,69 +53,150 @@ CONTAINS
     INTEGER :: delta_t                                                             
     
     !!! UPDATE ACTUAL TIME FOR FRAME !!!
-    msd%ntel = msd%ntel + 1            
+    trans%ntel = trans%ntel + 1            
  
     !!! START NEW TIME ORIGIN IF APPROPRIATE NUMBER OF TIMESTEPS HAVE PASSED !!!
-    !IF ((msd%ntel .EQ. 1) .OR. (MOD(msd%ntel, msd%t_origin) .EQ. 0)) THEN
-    IF (mod(msd%ntel-1, msd%t_origin) .EQ. 0) THEN
+    !IF ((trans%ntel .EQ. 1) .OR. (MOD(trans%ntel, trans%t_origin) .EQ. 0)) THEN
+    IF (mod(trans%ntel-1, trans%t_origin) .EQ. 0) THEN
  
         !!! COUNT NUMBER OF TIME ORIGINS !!! 
-        msd%t0 = msd%t0 + 1
+        trans%t0 = trans%t0 + 1
   
-        !!! STORE ONLY msd%t0max TIME ORIGINS, COUNTER RESARTS IF EXCEEDED !!!
-        msd%tt0 = MOD(msd%t0 - 1, msd%t0max) + 1
+        !!! STORE ONLY trans%t0max TIME ORIGINS, COUNTER RESARTS IF EXCEEDED !!!
+        trans%tt0 = MOD(trans%t0 - 1, trans%t0max) + 1
   
         !!! RECORD STARTING TIME FOR EACH TIME ORIGIN !!!
-        msd%time0(msd%tt0) = msd%ntel
+        trans%time0(trans%tt0) = trans%ntel
         DO is = 1, nspecies
-            IF (.not. msd%species(is)) CYCLE
+            IF (.not. trans%msd_species(is)) CYCLE
 
             DO i = 1, nmolecules(is)
                 im = locate(i, is)
                 IF( .NOT. molecule_list(im, is)%live ) CYCLE
 
-                msd%x0(im, is, msd%tt0) = molecule_list(im, is)%xcom
-                msd%y0(im, is, msd%tt0) = molecule_list(im, is)%ycom
-                msd%z0(im, is, msd%tt0) = molecule_list(im, is)%zcom
+                trans%rx0(im, is, trans%tt0) = molecule_list(im, is)%xcom
+                trans%ry0(im, is, trans%tt0) = molecule_list(im, is)%ycom
+                trans%rz0(im, is, trans%tt0) = molecule_list(im, is)%zcom
             END DO
         END DO
  
     END IF
  
     !!! STOP WHEN MAX NUMBER OF TIME ORIGINS IS REACHED !!!
-    Tloop: DO tau = 1, MIN(msd%t0, msd%t0max)
+    Tloop: DO tau = 1, MIN(trans%t0, trans%t0max)
     
         !!! TIME STEP WITHIN TIME ORIGINS !!! 
-        delta_t = msd%ntel - msd%time0(tau) + 1
+        delta_t = trans%ntel - trans%time0(tau) + 1
         !!! STOP WHEN FINAL TIMESTEP IS REACHED!!!
         !IF (delta_t .GT. n_mcsteps) CYCLE
   
-        msd%ntime(delta_t) = msd%ntime(delta_t) + 1
+        trans%ntime(delta_t) = trans%ntime(delta_t) + 1
         !!! LOOP OVER ALL ATOMS !!!
         Sloop: DO is = 1, nspecies
-            IF (.not. msd%species(is)) CYCLE
+            IF (.not. trans%msd_species(is)) CYCLE
 
             Mloop: DO i = 1, nmolecules(is)
                 im = locate(i, is)
                 IF( .NOT. molecule_list(im, is)%live ) CYCLE
                     
                 !!! UPDATE MSDS !!!
-                drx = molecule_list(im, is)%xcom - msd%x0(im, is, tau)
-                dry = molecule_list(im, is)%ycom - msd%y0(im, is, tau)
-                drz = molecule_list(im, is)%zcom - msd%z0(im, is, tau)
+                drx = molecule_list(im, is)%xcom - trans%rx0(im, is, tau)
+                dry = molecule_list(im, is)%ycom - trans%ry0(im, is, tau)
+                drz = molecule_list(im, is)%zcom - trans%rz0(im, is, tau)
  
                 ! this needs to be from unwrapped trajcetories
                 !CALL Minimum_Image_Separation(1, drxp, dryp, drzp, drx, dry, drz)
              
-                msd%x2t(is,delta_t) = msd%x2t(is,delta_t) + (drx * drx)
-                msd%y2t(is,delta_t) = msd%y2t(is,delta_t) + (dry * dry)
-                msd%z2t(is,delta_t) = msd%z2t(is,delta_t) + (drz * drz)
-                msd%r2t(is,delta_t) = msd%r2t(is,delta_t) + ((drx * drx) + (dry * dry) + (drz * drz))
+                trans%x_msd(is,delta_t) = trans%x_msd(is,delta_t) + (drx * drx)
+                trans%y_msd(is,delta_t) = trans%y_msd(is,delta_t) + (dry * dry)
+                trans%z_msd(is,delta_t) = trans%z_msd(is,delta_t) + (drz * drz)
+                !trans%msd(is,delta_t) = trans%msd(is,delta_t) + ((drx * drx) + (dry * dry) + (drz * drz))
  
             END DO Mloop
         END DO Sloop
     END DO Tloop
      
   END SUBROUTINE Calculate_MSD
+
+  SUBROUTINE Calculate_VACF(this_box)
+
+    !*********************************************************************************
+    !
+    ! Calculate the Velocity Autocorrelation function
+    !
+    ! 2/19/15  : Andrew P. Santos
+    !*********************************************************************************
+
+    INTEGER, INTENT(IN) :: this_box
+    INTEGER :: is, i, im, tau
+    REAL(DP) :: drx,  dry,  drz
+
+    ! difference in "actual time" and time origin
+    INTEGER :: delta_t                                                             
+    
+    !!! UPDATE ACTUAL TIME FOR FRAME !!!
+    trans%ntel = trans%ntel + 1            
+ 
+    !!! START NEW TIME ORIGIN IF APPROPRIATE NUMBER OF TIMESTEPS HAVE PASSED !!!
+    !IF ((trans%ntel .EQ. 1) .OR. (MOD(trans%ntel, trans%t_origin) .EQ. 0)) THEN
+    IF (mod(trans%ntel-1, trans%t_origin) .EQ. 0) THEN
+ 
+        !!! COUNT NUMBER OF TIME ORIGINS !!! 
+        trans%t0 = trans%t0 + 1
+  
+        !!! STORE ONLY trans%t0max TIME ORIGINS, COUNTER RESARTS IF EXCEEDED !!!
+        trans%tt0 = MOD(trans%t0 - 1, trans%t0max) + 1
+  
+        !!! RECORD STARTING TIME FOR EACH TIME ORIGIN !!!
+        trans%time0(trans%tt0) = trans%ntel
+        DO is = 1, nspecies
+            IF (.not. trans%vacf_species(is)) CYCLE
+
+            DO i = 1, nmolecules(is)
+                im = locate(i, is)
+                IF( .NOT. molecule_list(im, is)%live ) CYCLE
+
+                trans%vx0(im, is, trans%tt0) = molecule_list(im, is)%vxcom
+                trans%vy0(im, is, trans%tt0) = molecule_list(im, is)%vycom
+                trans%vz0(im, is, trans%tt0) = molecule_list(im, is)%vzcom
+            END DO
+        END DO
+ 
+    END IF
+ 
+    !!! STOP WHEN MAX NUMBER OF TIME ORIGINS IS REACHED !!!
+    Tloop: DO tau = 1, MIN(trans%t0, trans%t0max)
+    
+        !!! TIME STEP WITHIN TIME ORIGINS !!! 
+        delta_t = trans%ntel - trans%time0(tau) + 1
+        !!! STOP WHEN FINAL TIMESTEP IS REACHED!!!
+        !IF (delta_t .GT. n_mcsteps) CYCLE
+  
+        trans%ntime(delta_t) = trans%ntime(delta_t) + 1
+        !!! LOOP OVER ALL ATOMS !!!
+        Sloop: DO is = 1, nspecies
+            IF (.not. trans%vacf_species(is)) CYCLE
+
+            Mloop: DO i = 1, nmolecules(is)
+                im = locate(i, is)
+                IF( .NOT. molecule_list(im, is)%live ) CYCLE
+                    
+                !!! UPDATE MSDS !!!
+                ! this needs to be from unwrapped trajcetories
+                !CALL Minimum_Image_Separation(1, drxp, dryp, drzp, drx, dry, drz)
+             
+                trans%x_vacf(is,delta_t) = trans%x_vacf(is,delta_t) + (molecule_list(im, is)%vxcom * trans%vx0(im, is, tau))
+                trans%y_vacf(is,delta_t) = trans%y_vacf(is,delta_t) + (molecule_list(im, is)%vycom * trans%vy0(im, is, tau))
+                trans%z_vacf(is,delta_t) = trans%z_vacf(is,delta_t) + (molecule_list(im, is)%vzcom * trans%vz0(im, is, tau))
+                trans%vacf(is,delta_t) = trans%vacf(is,delta_t) + &
+                                         (molecule_list(im, is)%vxcom * trans%vx0(im, is, tau)) + &
+                                         (molecule_list(im, is)%vycom * trans%vy0(im, is, tau)) + &
+                                         (molecule_list(im, is)%vzcom * trans%vz0(im, is, tau)) 
+ 
+            END DO Mloop
+        END DO Sloop
+    END DO Tloop
+     
+  END SUBROUTINE Calculate_VACF
 
 END MODULE Transport_Properties

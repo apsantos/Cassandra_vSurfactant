@@ -155,6 +155,7 @@ MODULE Type_Definitions
 
      REAL(DP) :: max_dcom, max_dcom_old
     
+     REAL(DP) :: vxcom, vycom, vzcom
 
 
   END TYPE Molecule_Class
@@ -201,6 +202,7 @@ MODULE Type_Definitions
      ! atom_list has dimensions (natoms, nmolecules, nspecies)
      
      REAL(DP) :: rxp, ryp, rzp
+     REAL(DP) :: vxp, vyp, vzp
      REAL(DP) :: rxp_nls, ryp_nls, rzp_nls  ! The starting positions for the neighbor list
      REAL(DP) :: rxp_old, ryp_old, rzp_old
      LOGICAL :: exist
@@ -593,7 +595,7 @@ MODULE Type_Definitions
 
  END TYPE EndToEnd_Class
 
- TYPE MSD_Class
+ TYPE trans_Class
     ! msd variables
     ! simulation time step (ps)
     REAL(DP) :: sim_step
@@ -604,22 +606,25 @@ MODULE Type_Definitions
     INTEGER :: t0                                                                  
     ! corrected time origin; makes sure time origin number is not greater than msd%t0max
     INTEGER :: tt0                                                                 
-    LOGICAL, DIMENSION(:), ALLOCATABLE :: species
     ! counter for the sample branch --> "actual time"
     INTEGER :: ntel
     ! time origin frequency
     INTEGER :: t_origin
     INTEGER :: t0max
-    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: x0, y0, z0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: r2t, x2t, y2t, z2t
 
- END TYPE MSD_Class
+    LOGICAL, DIMENSION(:), ALLOCATABLE :: msd_species
+    LOGICAL, DIMENSION(:), ALLOCATABLE :: vacf_species
+    LOGICAL, DIMENSION(:), ALLOCATABLE :: dipole_species
 
- TYPE DipoleMoment_Class
-    ! dipole moment variables
-    REAL(DP) :: sim_step
-    INTEGER, DIMENSION(:), ALLOCATABLE :: t_skip
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: rx0, ry0, rz0
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: msd, x_msd, y_msd, z_msd
 
- END TYPE DipoleMoment_Class
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vx0, vy0, vz0
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vacf, x_vacf, y_vacf, z_vacf
+
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: x_M0, y_M0, z_M0
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: M, x_M, y_M, z_M
+
+ END TYPE trans_Class
 
 END MODULE Type_Definitions

@@ -265,6 +265,12 @@ SUBROUTINE Read_GRO(this_mc_step)
           line_array(4) = TRIM(line_string(21:28))
           line_array(5) = TRIM(line_string(29:36))
           line_array(6) = TRIM(line_string(37:44))
+
+          IF (nvacf_freq /= 0) THEN
+             line_array(7) = TRIM(line_string(45:52))
+             line_array(8) = TRIM(line_string(53:60))
+             line_array(9) = TRIM(line_string(61:68))
+          END IF
             
           is = ndx_type( i_line )
 
@@ -310,6 +316,13 @@ SUBROUTINE Read_GRO(this_mc_step)
           atom_list(ia,this_im,is)%ryp = String_To_Double(line_array(5)) * 10.0_DP
           atom_list(ia,this_im,is)%rzp = String_To_Double(line_array(6)) * 10.0_DP
           
+          IF (nvacf_freq /= 0) THEN
+             atom_list(ia,this_im,is)%vxp = String_To_Double(line_array(7)) * 10.0_DP
+             atom_list(ia,this_im,is)%vyp = String_To_Double(line_array(8)) * 10.0_DP
+             atom_list(ia,this_im,is)%vzp = String_To_Double(line_array(9)) * 10.0_DP
+
+          END IF
+
           atom_list(ia,this_im,is)%exist = .TRUE.
           ia = ia + 1
 
@@ -364,7 +377,7 @@ SUBROUTINE Read_GRO(this_mc_step)
           ! Now let us ensure that the molecular COM is inside the central simulation box
           !
           CALL Get_COM(this_im,is)
-          
+
           xcom_old = molecule_list(this_im,is)%xcom
           ycom_old = molecule_list(this_im,is)%ycom
           zcom_old = molecule_list(this_im,is)%zcom

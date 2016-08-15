@@ -521,7 +521,7 @@ SUBROUTINE Write_MSD(this_box)
   DOUBLE PRECISION :: dstep, norm
 
   DO is = 1, nspecies
-     IF (.not. msd%species(is)) CYCLE
+     IF (.not. trans%msd_species(is)) CYCLE
 
      msd_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.msd'
      box_unit = msd_file_unit + this_box
@@ -529,15 +529,16 @@ SUBROUTINE Write_MSD(this_box)
    
      WRITE(box_unit,'(A)') '#  time(ps)    msd(A^2) -     x           y           z'
            
-     dstep = msd%sim_step * msd%sim_freq
+     dstep = trans%sim_step * trans%sim_freq
 
-     DO it = 1, msd%ntel
-        norm = DBLE(nmolecules(is))*DBLE(msd%ntime(it))
+     DO it = 1, trans%ntel
+        norm = DBLE(nmolecules(is))*DBLE(trans%ntime(it))
         WRITE(box_unit,'(5E12.5)') DBLE(it-1) * dstep, &
-                                   msd%r2t(is, it) / norm, &
-                                   msd%x2t(is, it) / norm, &
-                                   msd%y2t(is, it) / norm, &
-                                   msd%z2t(is, it) / norm
+                                   (trans%x_msd(is, it) + trans%y_msd(is, it) + trans%z_msd(is, it)) / norm, &
+                                   trans%x_msd(is, it) / norm, &
+                                   trans%y_msd(is, it) / norm, &
+                                   trans%z_msd(is, it) / norm
+                                   !trans%msd(is, it) / norm, &
    
      END DO
 
@@ -545,6 +546,54 @@ SUBROUTINE Write_MSD(this_box)
   END DO
 
 END SUBROUTINE Write_MSD
+
+SUBROUTINE Write_VACF(this_box)
+  !************************************************************************************
+  ! The subroutine writes the cluster vists in the simulation box
+  !
+  ! CALLED BY
+  !
+  !        pp_driver
+  !
+  !************************************************************************************
+
+  USE Run_Variables
+  USE File_Names
+  USE Transport_Properties
+  USE IO_Utilities
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: this_box
+  INTEGER :: it, box_unit, is
+  DOUBLE PRECISION :: dstep, norm
+
+  DO is = 1, nspecies
+     IF (.not. trans%vacf_species(is)) CYCLE
+
+     vacf_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.vacf'
+     box_unit = vacf_file_unit + this_box
+     OPEN(unit=vacf_file_unit+this_box, file=vacf_file)
+   
+     WRITE(box_unit,'(A)') '#  time(ps)    vacf(A/ps) -     x           y           z'
+           
+     dstep = trans%sim_step * trans%sim_freq
+
+     DO it = 1, trans%ntel
+        norm = DBLE(nmolecules(is))*DBLE(trans%ntime(it))
+        WRITE(box_unit,'(5E14.5)') DBLE(it-1) * dstep, &
+                                   trans%vacf(is, it) / norm, &
+                                   trans%x_vacf(is, it) / norm, &
+                                   trans%y_vacf(is, it) / norm, &
+                                   trans%z_vacf(is, it) / norm
+                                   !trans%vacf(is, it) / norm, &
+   
+     END DO
+
+     CLOSE(unit=vacf_file_unit+this_box)
+  END DO
+
+END SUBROUTINE Write_VACF
 
 SUBROUTINE Write_Cluster(this_box)
   !************************************************************************************

@@ -5523,6 +5523,7 @@ SUBROUTINE Get_Frequency_Info
   nalphaclus_freq = 0
   nendclus_freq = 0
   nmsd_freq = 0
+  nvacf_freq = 0
   ndipole_freq = 0
 
   DO
@@ -5649,7 +5650,14 @@ SUBROUTINE Get_Frequency_Info
                  nmsd_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The msd will be calculated/written at every', ndipole_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The msd will be calculated/written at every', nmsd_freq, ' MC steps.'
+
+              ELSE IF (line_array(1) == 'Nvacffreq') THEN
+
+                 nvacf_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The vacf will be calculated/written at every', nvacf_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Ndipolefreq') THEN
 
@@ -6654,6 +6662,33 @@ SUBROUTINE Get_Excluded_Volume_Info
 
 END SUBROUTINE Get_Excluded_Volume_Info
 
+SUBROUTINE Get_Trans_Info
+
+  IF (nmsd_freq /= 0 .or. nvacf_freq /= 0 .or. ndipole_freq /= 0) THEN
+
+    trans%t0max = 1000000
+    trans%sim_step = -1
+    trans%sim_freq = -1
+    trans%t_origin = -1
+
+    ALLOCATE(trans%time0(trans%t0max))
+    trans%time0(:) = 0
+
+    ALLOCATE(trans%ntime(trans%t0max))
+    trans%ntime = 0
+
+    trans%ntel = 0
+
+    IF (nmsd_freq /= 0) CALL Get_MSD_Info
+
+    IF (nvacf_freq /= 0) CALL Get_VACF_Info
+
+    IF (ndipole_freq /= 0) CALL Get_Dipole_Moment_Info
+
+  ENDIF
+
+END SUBROUTINE Get_Trans_Info
+
 SUBROUTINE Get_MSD_Info
   !***************************************************************************************************
   ! 
@@ -6691,18 +6726,46 @@ SUBROUTINE Get_MSD_Info
             err_msg(1) = 'Must give the simulation timestep, and position frequency'
             CALL Clean_Abort(err_msg,'Get_MSD_Info')
         END IF
-        msd%sim_step = String_To_Double(line_array(1))
-        msd%sim_freq = String_To_Int(line_array(2))
-        ALLOCATE( msd%species(nspecies) )
-        msd%species = .FALSE.
+
+        IF (trans%sim_step /= -1) THEN
+            IF (trans%sim_step /= String_To_Int(line_array(1))) THEN
+                err_msg = ''
+                err_msg(1) = 'simulation step was specified as something different elsewhere.'
+                CALL Clean_Abort(err_msg,'Get_MSD_Info')
+            END IF
+        ELSE
+            trans%sim_step = String_To_Double(line_array(1))
+        END IF
+
+        IF (trans%sim_step /= -1) THEN
+            IF (trans%sim_freq /= String_To_Int(line_array(2))) THEN
+                err_msg = ''
+                err_msg(1) = 'simulation frequency was specified as something different elsewhere.'
+                CALL Clean_Abort(err_msg,'Get_MSD_Info')
+            END IF
+        ELSE
+            trans%sim_freq = String_To_Int(line_array(2))
+        END IF
 
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-        msd%t_origin = String_To_Int(line_array(1))
         IF (nbr_entries /= 1 ) THEN
             err_msg = ''
             err_msg(1) = 'Only give 1 origin step.'
             CALL Clean_Abort(err_msg,'Get_MSD_Info')
         END IF
+
+        IF (trans%t_origin /= -1) THEN
+            IF (trans%t_origin /= String_To_Int(line_array(1))) THEN
+                err_msg = ''
+                err_msg(1) = 'origin step was specified as something different elsewhere.'
+                CALL Clean_Abort(err_msg,'Get_MSD_Info')
+            END IF
+        ELSE
+            trans%t_origin = String_To_Int(line_array(1))
+        END IF
+
+        ALLOCATE( trans%msd_species(nspecies) )
+        trans%msd_species = .FALSE.
 
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= nspecies ) THEN
@@ -6713,65 +6776,183 @@ SUBROUTINE Get_MSD_Info
 
         DO is = 1, nspecies
             IF (line_array(is) == 'TRUE' .or. line_array(is) == 'true') THEN
-                msd%species(is) = .TRUE.
+                trans%msd_species(is) = .TRUE.
             END IF
         END DO
 
-        msd%t0max = 1000000
-
-        ALLOCATE(msd%time0(msd%t0max))
+        ALLOCATE(trans%rx0(MAXVAL(nmolecules(:)), nspecies, trans%t0max))
+        ALLOCATE(trans%ry0(MAXVAL(nmolecules(:)), nspecies, trans%t0max))
+        ALLOCATE(trans%rz0(MAXVAL(nmolecules(:)), nspecies, trans%t0max))
     
-        msd%time0(:) = 0
+        trans%rx0(:,:,:) = 0.0d0
+        trans%ry0(:,:,:) = 0.0d0
+        trans%rz0(:,:,:) = 0.0d0
     
-        ALLOCATE(msd%x0(MAXVAL(nmolecules(:)), nspecies, msd%t0max))
-        ALLOCATE(msd%y0(MAXVAL(nmolecules(:)), nspecies, msd%t0max))
-        ALLOCATE(msd%z0(MAXVAL(nmolecules(:)), nspecies, msd%t0max))
+        ALLOCATE(trans%msd(nspecies, trans%t0max))
+        ALLOCATE(trans%x_msd(nspecies, trans%t0max))
+        ALLOCATE(trans%y_msd(nspecies, trans%t0max))
+        ALLOCATE(trans%z_msd(nspecies, trans%t0max))
     
-        msd%x0(:,:,:) = 0.0d0
-        msd%y0(:,:,:) = 0.0d0
-        msd%z0(:,:,:) = 0.0d0
-    
-        ALLOCATE(msd%r2t(nspecies, msd%t0max))
-        ALLOCATE(msd%x2t(nspecies, msd%t0max))
-        ALLOCATE(msd%y2t(nspecies, msd%t0max))
-        ALLOCATE(msd%z2t(nspecies, msd%t0max))
-    
-        msd%r2t(:,:) = 0.0d0
-        msd%x2t(:,:) = 0.0d0
-        msd%y2t(:,:) = 0.0d0
-        msd%z2t(:,:) = 0.0d0
-
-        ALLOCATE(msd%ntime(msd%t0max))
-
-        msd%ntime = 0
-        msd%ntel = 0
+        trans%msd(:,:) = 0.0d0
+        trans%x_msd(:,:) = 0.0d0
+        trans%y_msd(:,:) = 0.0d0
+        trans%z_msd(:,:) = 0.0d0
 
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
-!        IF (ndipole_freq /= 0 .AND. SUM(dipole%t_skip) == 0) THEN
-!            err_msg = ''
-!            err_msg(1) = '# Mean_Squared_Displacement info not given in input, but Ndipolefreq specified.'
-!            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
-!        ELSE IF (ndipole_freq == 0 .AND. SUM(dipole%t_skip) /= 0) THEN
-!            err_msg = ''
-!            err_msg(1) = '# Dipole_Moment info given in input, but Ndipolefreq not specified.'
-!            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
-!        END IF
-
         EXIT
      END IF
   END DO
 
+  IF (nmsd_freq /= 0) THEN
+     IF (.not. ALLOCATED(trans%msd_species)) THEN
+        err_msg = ''
+        err_msg(1) = '# Mean_Squared_Displacement info not given in input, but Nmsdfreq specified.'
+        CALL Clean_Abort(err_msg,'Get_MSD_Info')
+     ELSE IF (.not. ANY(trans%msd_species == .TRUE.)) THEN
+        err_msg = ''
+        err_msg(1) = '# Mean_Squared_Displacement info not given in input, but Nmsdfreq specified.'
+        CALL Clean_Abort(err_msg,'Get_MSD_Info')
+     END IF
+  END IF
+
 END SUBROUTINE Get_MSD_Info
+
+SUBROUTINE Get_VACF_Info
+  !***************************************************************************************************
+  ! 
+  ! Gets information about the velocity auto-correlation function calculation
+  ! 
+  !***************************************************************************************************
+
+  !USE Transport_Properties
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is
+  CHARACTER(120) :: line_string, line_array(20) !filename
+
+  REWIND(inputunit)
+  
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Mean-squared Displacement calculation information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_VACF_Info')
+     END IF
+
+     IF(line_string(1:26) == '# Velocity_Autocorrelation') THEN
+        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= 2 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must give the simulation timestep, and position frequency'
+            CALL Clean_Abort(err_msg,'Get_VACF_Info')
+        END IF
+
+        IF (trans%sim_step /= -1) THEN
+            IF (trans%sim_step /= String_To_Int(line_array(1))) THEN
+                err_msg = ''
+                err_msg(1) = 'simulation step was specified as something different elsewhere.'
+                CALL Clean_Abort(err_msg,'Get_VACF_Info')
+            END IF
+        ELSE
+            trans%sim_step = String_To_Double(line_array(1))
+        END IF
+
+        IF (trans%sim_freq /= -1) THEN
+            IF (trans%sim_freq /= String_To_Int(line_array(2))) THEN
+                err_msg = ''
+                err_msg(1) = 'simulation frequency was specified as something different elsewhere.'
+                CALL Clean_Abort(err_msg,'Get_VACF_Info')
+            END IF
+        ELSE
+            trans%sim_freq = String_To_Int(line_array(2))
+        END IF
+
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= 1 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Only give 1 origin step.'
+            CALL Clean_Abort(err_msg,'Get_VACF_Info')
+        END IF
+
+        IF (trans%t_origin /= -1) THEN
+            IF (trans%t_origin /= String_To_Int(line_array(1))) THEN
+                err_msg = ''
+                err_msg(1) = 'origin step was specified as something different elsewhere.'
+                CALL Clean_Abort(err_msg,'Get_VACF_Info')
+            END IF
+        ELSE
+            trans%t_origin = String_To_Int(line_array(1))
+        END IF
+
+        ALLOCATE( trans%vacf_species(nspecies) )
+        trans%vacf_species = .FALSE.
+
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= nspecies ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must have the no. steps to skip for VACF for each species (NONE is an option).'
+            CALL Clean_Abort(err_msg,'Get_VACF_Info')
+        END IF
+
+        DO is = 1, nspecies
+            IF (line_array(is) == 'TRUE' .or. line_array(is) == 'true') THEN
+                trans%vacf_species(is) = .TRUE.
+            END IF
+        END DO
+
+        ALLOCATE(trans%vx0(MAXVAL(nmolecules(:)), nspecies, trans%t0max))
+        ALLOCATE(trans%vy0(MAXVAL(nmolecules(:)), nspecies, trans%t0max))
+        ALLOCATE(trans%vz0(MAXVAL(nmolecules(:)), nspecies, trans%t0max))
+    
+        trans%vx0(:,:,:) = 0.0d0
+        trans%vy0(:,:,:) = 0.0d0
+        trans%vz0(:,:,:) = 0.0d0
+    
+        ALLOCATE(trans%vacf(nspecies, trans%t0max))
+        ALLOCATE(trans%x_vacf(nspecies, trans%t0max))
+        ALLOCATE(trans%y_vacf(nspecies, trans%t0max))
+        ALLOCATE(trans%z_vacf(nspecies, trans%t0max))
+    
+        trans%vacf(:,:) = 0.0d0
+        trans%x_vacf(:,:) = 0.0d0
+        trans%y_vacf(:,:) = 0.0d0
+        trans%z_vacf(:,:) = 0.0d0
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+        EXIT
+     END IF
+  END DO
+
+  IF (nvacf_freq /= 0) THEN
+     IF (.not. ALLOCATED(trans%vacf_species)) THEN
+        err_msg = ''
+        err_msg(1) = '# Velocity_Autocorrelation info not given in input, but Nvacffreq specified.'
+        CALL Clean_Abort(err_msg,'Get_Velocity_Autocorrelation_Info')
+     ELSE IF (.not. ANY(trans%vacf_species == .TRUE.)) THEN
+        err_msg = ''
+        err_msg(1) = '# Velocity_Autocorrelation info not given in input, but Nvacffreq specified.'
+        CALL Clean_Abort(err_msg,'Get_Velocity_Autocorrelation_Info')
+     END IF
+  END IF
+
+END SUBROUTINE Get_VACF_Info
 
 SUBROUTINE Get_Dipole_Moment_Info
   !***************************************************************************************************
   ! 
-  ! Gets information about the exclude volume calculation
-  ! Reads and gets the COM of the monomer in the file given
+  ! Dipole moment information
   ! 
   !***************************************************************************************************
 
-  !USE Dipole_Moment
+  !USE Transport_Properties
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
   CHARACTER(120) :: line_string, line_array(20) !filename
@@ -6794,58 +6975,101 @@ SUBROUTINE Get_Dipole_Moment_Info
         CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
      END IF
 
-     IF(line_string(1:17) == '# Dipole_Moment') THEN
-        IF ( .not. ANY(has_charge(:) == .TRUE.) ) THEN
+     IF(line_string(1:15) == '# Dipole_Moment') THEN
+        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= 2 ) THEN
             err_msg = ''
-            err_msg(1) = 'Cannot compute dipole moment without any charge'
+            err_msg(1) = 'Must give the simulation timestep, and position frequency'
             CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+        END IF
+
+        IF (trans%sim_step /= -1) THEN
+            IF (trans%sim_step /= String_To_Int(line_array(1))) THEN
+                err_msg = ''
+                err_msg(1) = 'simulation step was specified as something different elsewhere.'
+                CALL Clean_Abort(err_msg,'Get_MSD_Info')
+            END IF
+        ELSE
+            trans%sim_step = String_To_Double(line_array(1))
+        END IF
+
+        IF (trans%sim_step /= -1) THEN
+            IF (trans%sim_freq /= String_To_Int(line_array(2))) THEN
+                err_msg = ''
+                err_msg(1) = 'simulation frequency was specified as something different elsewhere.'
+                CALL Clean_Abort(err_msg,'Get_MSD_Info')
+            END IF
+        ELSE
+            trans%sim_freq = String_To_Int(line_array(2))
         END IF
 
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 1 ) THEN
             err_msg = ''
-            err_msg(1) = 'Must give the simulation timestep'
-            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+            err_msg(1) = 'Only give 1 origin step.'
+            CALL Clean_Abort(err_msg,'Get_MSD_Info')
         END IF
-        dipole%sim_step = String_To_Double(line_array(1))
-        ALLOCATE( dipole%t_skip(nspecies) )
-        dipole%t_skip = 0
+
+        IF (trans%t_origin /= -1) THEN
+            IF (trans%t_origin /= String_To_Int(line_array(1))) THEN
+                err_msg = ''
+                err_msg(1) = 'origin step was specified as something different elsewhere.'
+                CALL Clean_Abort(err_msg,'Get_MSD_Info')
+            END IF
+        ELSE
+            trans%t_origin = String_To_Int(line_array(1))
+        END IF
+
+        ALLOCATE( trans%dipole_species(nspecies) )
+        trans%dipole_species = .FALSE.
 
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= nspecies ) THEN
             err_msg = ''
-            err_msg(1) = 'Must have the no. steps to skip for MSD for each species (NONE is an option).'
+            err_msg(1) = 'Must have the no. steps to skip for Dipole Moment for each species (NONE is an option).'
             CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
         END IF
 
         DO is = 1, nspecies
-            IF (line_array(is) == 'NONE') THEN
-                dipole%t_skip(is) = -1
-            ELSE
-                dipole%t_skip(is) = String_To_Int(line_array(is))
+            IF (line_array(is) == 'TRUE' .or. line_array(is) == 'true') THEN
+                trans%dipole_species(is) = .TRUE.
             END IF
         END DO
 
-        !ALLOCATE(ntime(tsmax), STAT = ierr(4))
-        !ALLOCATE(time0(t0max), STAT = ierr(6))
-        !ALLOCATE(x0(n_tot,t0max),y0(n_tot,t0max),z0(n_tot,t0max), STAT = ierr(9))
-        !ALLOCATE(r2t(n_types,tsmax),x2t(n_types,tsmax),y2t(n_types,tsmax),z2t(n_types,tsmax), STAT = ierr(10))
-        !ALLOCATE(colx(n_types,tsmax),coly(n_types,tsmax),colz(n_types,tsmax),colr(n_types,tsmax), STAT = ierr(12))
+        ALLOCATE(trans%x_M0(MAXVAL(nmolecules(:)), nspecies, trans%t0max))
+        ALLOCATE(trans%y_M0(MAXVAL(nmolecules(:)), nspecies, trans%t0max))
+        ALLOCATE(trans%z_M0(MAXVAL(nmolecules(:)), nspecies, trans%t0max))
+    
+        trans%x_M0(:,:,:) = 0.0d0
+        trans%y_M0(:,:,:) = 0.0d0
+        trans%z_M0(:,:,:) = 0.0d0
+    
+        ALLOCATE(trans%M(nspecies, trans%t0max))
+        ALLOCATE(trans%x_M(nspecies, trans%t0max))
+        ALLOCATE(trans%y_M(nspecies, trans%t0max))
+        ALLOCATE(trans%z_M(nspecies, trans%t0max))
+    
+        trans%M(:,:) = 0.0d0
+        trans%x_M(:,:) = 0.0d0
+        trans%y_M(:,:) = 0.0d0
+        trans%z_M(:,:) = 0.0d0
 
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
-!        IF (ndipole_freq /= 0 .AND. SUM(dipole%t_skip) == 0) THEN
-!            err_msg = ''
-!            err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
-!            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
-!        ELSE IF (ndipole_freq == 0 .AND. SUM(dipole%t_skip) /= 0) THEN
-!            err_msg = ''
-!            err_msg(1) = '# Dipole_Moment info given in input, but Ndipolefreq not specified.'
-!            CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
-!        END IF
-
         EXIT
      END IF
   END DO
+
+  IF (ndipole_freq /= 0) THEN
+     IF (.not. ALLOCATED(trans%dipole_species)) THEN
+        err_msg = ''
+        err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
+        CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+     ELSE IF(.not. ANY(trans%dipole_species == .TRUE.)) THEN
+        err_msg = ''
+        err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
+        CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+     END IF
+  END IF
 
 END SUBROUTINE Get_Dipole_Moment_Info
 

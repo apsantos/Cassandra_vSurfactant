@@ -182,4 +182,12 @@ CHARACTER(FILENAME_LEN) :: cluster_file
 INTEGER :: msd_file_unit = 609
 CHARACTER(FILENAME_LEN) :: msd_file
 
+! Mean-squared deviation file
+INTEGER :: vacf_file_unit = 610
+CHARACTER(FILENAME_LEN) :: vacf_file
+
+! Mean-squared deviation file
+INTEGER :: dipole_file_unit = 611
+CHARACTER(FILENAME_LEN) :: dipole_file
+
 END MODULE File_Names
