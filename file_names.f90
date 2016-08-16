@@ -183,11 +183,27 @@ INTEGER :: msd_file_unit = 609
 CHARACTER(FILENAME_LEN) :: msd_file
 
 ! Mean-squared deviation file
-INTEGER :: vacf_file_unit = 610
+INTEGER :: vacf_file_unit = 619
 CHARACTER(FILENAME_LEN) :: vacf_file
 
 ! Mean-squared deviation file
-INTEGER :: dipole_file_unit = 611
+INTEGER :: dipole_file_unit = 629
 CHARACTER(FILENAME_LEN) :: dipole_file
+
+! Bond histogram file
+INTEGER :: bond_file_unit = 700
+CHARACTER(FILENAME_LEN) :: bond_file
+
+! Angle histogram file
+INTEGER :: angle_file_unit = 710
+CHARACTER(FILENAME_LEN) :: angle_file
+
+! Dihedral  histogram file
+INTEGER :: dihedral_file_unit = 720
+CHARACTER(FILENAME_LEN) :: dihedral_file
+
+! Atom distribution histogram file
+INTEGER :: a_dist_file_unit = 730
+CHARACTER(FILENAME_LEN) :: a_dist_file
 
 END MODULE File_Names

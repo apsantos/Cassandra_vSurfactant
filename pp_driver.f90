@@ -40,7 +40,7 @@ SUBROUTINE PP_Driver
   USE Cluster_Routines
   USE Excluded_Volume
   USE Degree_Association
-  USE End_To_End
+  USE Measure_Molecules
   USE Transport_Properties
 
   IMPLICIT NONE
@@ -225,6 +225,70 @@ SUBROUTINE PP_Driver
               
                  CALL Calculate_End_To_End_Distance(ibox)
                  CALL Write_Cluster(ibox)
+              
+              !CALL cpu_time(now_time)
+              !print '("alpha Time = ",f6.3," seconds.")',now_time-time_start
+              END DO
+           
+           END IF
+        END IF
+        
+        IF ( nbond_freq /= 0 ) THEN
+           IF ( MOD(i,nbond_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
+           
+              DO ibox = 1, nbr_boxes
+
+                 CALL Calculate_Bond_his(ibox)
+                 CALL Write_Bond(ibox)
+              
+              !CALL cpu_time(now_time)
+              !print '("alpha Time = ",f6.3," seconds.")',now_time-time_start
+              END DO
+           
+           END IF
+        END IF
+        
+        IF ( nangle_freq /= 0 ) THEN
+           IF ( MOD(i,nangle_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
+           
+              DO ibox = 1, nbr_boxes
+
+                 CALL Calculate_Angle_his(ibox)
+                 CALL Write_Angle(ibox)
+              
+              !CALL cpu_time(now_time)
+              !print '("alpha Time = ",f6.3," seconds.")',now_time-time_start
+              END DO
+           
+           END IF
+        END IF
+        
+        IF ( ndihedral_freq /= 0 ) THEN
+           IF ( MOD(i,ndihedral_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
+           
+              DO ibox = 1, nbr_boxes
+
+                 CALL Calculate_Dihedral_his(ibox)
+                 CALL Write_Dihedral(ibox)
+              
+              !CALL cpu_time(now_time)
+              !print '("alpha Time = ",f6.3," seconds.")',now_time-time_start
+              END DO
+           
+           END IF
+        END IF
+        
+        IF ( natomdist_freq /= 0 ) THEN
+           IF ( MOD(i,natomdist_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
+           
+              DO ibox = 1, nbr_boxes
+
+                 CALL Calculate_Atom_Distribution(ibox)
+                 CALL Write_Atom_Distribution(ibox)
               
               !CALL cpu_time(now_time)
               !print '("alpha Time = ",f6.3," seconds.")',now_time-time_start

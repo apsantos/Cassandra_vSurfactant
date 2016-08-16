@@ -588,12 +588,36 @@ MODULE Type_Definitions
 
  END TYPE DegreeAssociation_Class
 
- TYPE EndToEnd_Class
-    ! dipole moment variables
-    LOGICAL,  DIMENSION(:), ALLOCATABLE :: species
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: distance
+ TYPE Measure_Molecules_Class
+    LOGICAL,  DIMENSION(:), ALLOCATABLE :: end2end_spec
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE :: end2end
+    LOGICAL,  DIMENSION(:,:), ALLOCATABLE :: bond_spec
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: bond
+    INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: bond_his
+    INTEGER                                :: nbondcall
+    REAL(DP)                                :: bondpre = 3.0 * 1000 / 8.0
+    REAL(DP)                                :: bondadd = 1000.0 / 8.0
+    INTEGER                                 :: nb_bins = 1000
+    REAL(DP), DIMENSION(:), ALLOCATABLE     :: l0ave
+    LOGICAL,  DIMENSION(:,:), ALLOCATABLE :: angle_spec
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: angle
+    INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: angle_his
+    INTEGER                                :: nanglecall
+    INTEGER                                 :: na_bins = 1000
+    LOGICAL,  DIMENSION(:,:), ALLOCATABLE :: dihedral_spec
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: dihedral
+    INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: dihedral_his
+    INTEGER                                :: ndihedralcall
+    INTEGER                                 :: nd_bins = 1000
+    INTEGER,  DIMENSION(:,:), ALLOCATABLE :: a_dist_pairs
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: a_dist
+    INTEGER, DIMENSION(:,:), ALLOCATABLE :: a_dist_his
+    INTEGER                                 :: nad_bins = 1000
+    INTEGER                                 :: natom_dists 
+    REAL(DP)                                 :: a_dist_max
+    INTEGER                                :: nadistcall
 
- END TYPE EndToEnd_Class
+ END TYPE Measure_Molecules_Class
 
  TYPE trans_Class
     ! msd variables

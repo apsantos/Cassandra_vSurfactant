@@ -5522,6 +5522,10 @@ SUBROUTINE Get_Frequency_Info
   nalpha_freq = 0
   nalphaclus_freq = 0
   nendclus_freq = 0
+  nbond_freq = 0
+  nangle_freq = 0
+  ndihedral_freq = 0
+  natomdist_freq = 0
   nmsd_freq = 0
   nvacf_freq = 0
   ndipole_freq = 0
@@ -5632,18 +5636,46 @@ SUBROUTINE Get_Frequency_Info
                  nendclus_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The end-to-end distance as a function of clusters will be calculated/written at every', nalphaclus_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The end-to-end distance as a function of clusters will be calculated/written at every', nendclus_freq, ' MC steps.'
 
-                 ALLOCATE( end2end%distance(MAXVAL(nmolecules), nspecies) )
-                 ALLOCATE( end2end%species(nspecies) )
+                 ALLOCATE( measure_mol%end2end(MAXVAL(nmolecules), nspecies) )
+                 ALLOCATE( measure_mol%end2end_spec(nspecies) )
 
-                 end2end%distance = 0.0_DP
-                 end2end%species = .FALSE.
+                 measure_mol%end2end = 0.0_DP
+                 measure_mol%end2end_spec = .FALSE.
 
                  DO is = 1, nspecies
                     IF (natoms(is) < 3) CYCLE
-                    end2end%species(is) = .TRUE.
+                    measure_mol%end2end_spec(is) = .TRUE.
                  END DO
+
+              ELSE IF (line_array(1) == 'Nbondfreq') THEN
+
+                 nbond_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The bond distribution and time-average will be calculated/written at every', nbond_freq, ' MC steps.'
+
+              ELSE IF (line_array(1) == 'Nanglefreq') THEN
+
+                 nangle_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The angle distribution and time-average will be calculated/written at every', nangle_freq, ' MC steps.'
+
+              ELSE IF (line_array(1) == 'Ndihedralfreq') THEN
+
+                 ndihedral_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The dihedral distribution and time-average will be calculated/written at every', ndihedral_freq, ' MC steps.'
+
+              ELSE IF (line_array(1) == 'Natomdistfreq') THEN
+
+                 natomdist_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The inter/intra atomic distance distribution and time-average will be calculated/written at every', natomdist_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nmsdfreq') THEN
 
@@ -6570,7 +6602,247 @@ SUBROUTINE Get_Oligomer_Cutoff_Info
  
  END SUBROUTINE Get_Oligomer_Cutoff_Info
   
-SUBROUTINE Get_Excluded_Volume_Info
+SUBROUTINE Get_Bond_Histogram_Info
+  !***************************************************************************************************
+  ! 
+  !***************************************************************************************************
+
+  USE Measure_Molecules
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is, ib, cnt
+  CHARACTER(120) :: line_string, line_array(20) !filename
+
+  REWIND(inputunit)
+
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Bond Histogram information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Bond_Histogram_Info')
+     END IF
+ 
+     IF(line_string(1:16) == '# Bond_Histogram') THEN
+        ALLOCATE( measure_mol%bond_spec(MAXVAL(nbonds), nspecies) )
+        ALLOCATE( measure_mol%l0ave( nspecies ) )
+        measure_mol%bond_spec = .FALSE.
+
+        measure_mol%l0ave = 0
+        DO is = 1, nspecies
+            CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+            IF (line_array(1) == 'NONE' .or. line_array(1) == '0') CYCLE
+
+            cnt = 0
+            DO ib = 1, nbr_entries
+                measure_mol%bond_spec(String_To_Int(line_array(ib)), is) = .TRUE.
+                measure_mol%l0ave(is) = measure_mol%l0ave(is) + bond_list(ib, is)%bond_param(1)
+                cnt = cnt + 1
+            END DO
+            measure_mol%l0ave(is) = measure_mol%l0ave(is) / cnt
+        END DO
+
+        ALLOCATE( measure_mol%bond(MAXVAL(nbonds), MAXVAL(nmolecules), nspecies) )
+        ALLOCATE( measure_mol%bond_his(measure_mol%nb_bins, MAXVAL(nbonds), nspecies) )
+
+        measure_mol%bond = 0.0_DP
+        measure_mol%bond_his = 0
+
+        EXIT
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+
+        EXIT
+     END IF
+   END DO
+ 
+ END SUBROUTINE Get_Bond_Histogram_Info
+
+ SUBROUTINE Get_Angle_Histogram_Info
+  !***************************************************************************************************
+  ! 
+  !***************************************************************************************************
+
+  USE Measure_Molecules
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is, ia
+  CHARACTER(120) :: line_string, line_array(20) !filename
+
+  REWIND(inputunit)
+
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Angles Histogram information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Angle_Histogram_Info')
+     END IF
+ 
+     IF(line_string(1:17) == '# Angle_Histogram') THEN
+        ALLOCATE( measure_mol%angle_spec(MAXVAL(nangles), nspecies) )
+        measure_mol%angle_spec = .FALSE.
+
+        DO is = 1, nspecies
+            CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+            IF (line_array(1) == 'NONE') CYCLE
+
+            DO ia = 1, nbr_entries
+                measure_mol%angle_spec(String_To_Int(line_array(ia)), is) = .TRUE.
+            END DO
+        END DO
+
+        ALLOCATE( measure_mol%angle(MAXVAL(nangles), MAXVAL(nmolecules), nspecies) )
+        ALLOCATE( measure_mol%angle_his(measure_mol%na_bins, MAXVAL(nangles), nspecies) )
+
+        measure_mol%angle = 0.0_DP
+        measure_mol%angle_his = 0
+
+        EXIT
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+
+        EXIT
+     END IF
+   END DO
+ 
+ END SUBROUTINE Get_Angle_Histogram_Info
+
+ SUBROUTINE Get_Dihedral_Histogram_Info
+  !***************************************************************************************************
+  ! 
+  !***************************************************************************************************
+
+  USE Measure_Molecules
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is, id
+  CHARACTER(120) :: line_string, line_array(20) !filename
+
+  REWIND(inputunit)
+
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Dihedral Histogram information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Dihedral_Histogram_Info')
+     END IF
+ 
+     IF(line_string(1:20) == '# Dihedral_Histogram') THEN
+        ALLOCATE( measure_mol%dihedral_spec(MAXVAL(ndihedrals), nspecies) )
+        measure_mol%dihedral_spec = .FALSE.
+
+        DO is = 1, nspecies
+            CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+            IF (line_array(1) == 'NONE') CYCLE
+
+            DO id = 1, nbr_entries
+                measure_mol%dihedral_spec(String_To_Int(line_array(id)), is) = .TRUE.
+            END DO
+        END DO
+
+        ALLOCATE( measure_mol%dihedral(MAXVAL(ndihedrals), MAXVAL(nmolecules), nspecies) )
+        ALLOCATE( measure_mol%dihedral_his(measure_mol%nd_bins, MAXVAL(ndihedrals), nspecies) )
+
+        measure_mol%dihedral = 0.0_DP
+        measure_mol%dihedral_his = 0
+
+        EXIT
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+
+        EXIT
+     END IF
+   END DO
+ 
+ END SUBROUTINE Get_Dihedral_Histogram_Info
+  
+ SUBROUTINE Get_Atom_Distance_Histogram_Info
+  !***************************************************************************************************
+  ! 
+  !***************************************************************************************************
+
+  USE Measure_Molecules
+
+  INTEGER :: ierr, line_nbr, nbr_entries, iap
+  CHARACTER(120) :: line_string, line_array(20) !filename
+
+  REWIND(inputunit)
+
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Atom Distance Histogram information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Atom_Distance_Histogram_Info')
+     END IF
+ 
+     IF(line_string(1:25) == '# Atom_Distance_Histogram') THEN
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        measure_mol%natom_dists = String_To_Int(line_array(1))
+        measure_mol%a_dist_max = (box_list(1)%hlength(1,1)**2.0 + box_list(1)%hlength(2,2)**2.0 + box_list(1)%hlength(3,3)**2.0)**(1.0/2.0)
+
+        IF (measure_mol%natom_dists .GT. 0) THEN
+            ALLOCATE( measure_mol%a_dist_pairs(measure_mol%natom_dists, 4) )
+            measure_mol%a_dist_pairs = 0
+    
+            DO iap = 1, measure_mol%natom_dists
+                CALL Parse_String(inputunit,line_nbr,4,nbr_entries,line_array,ierr)
+                ! is ia js ja
+                measure_mol%a_dist_pairs(iap, 1) = String_To_Int(line_array(1))
+                measure_mol%a_dist_pairs(iap, 2) = String_To_Int(line_array(2))
+                measure_mol%a_dist_pairs(iap, 3) = String_To_Int(line_array(3))
+                measure_mol%a_dist_pairs(iap, 4) = String_To_Int(line_array(4))
+            END DO
+    
+            ALLOCATE( measure_mol%a_dist(measure_mol%natom_dists, MAXVAL(nmolecules), nspecies))
+            ALLOCATE( measure_mol%a_dist_his(measure_mol%nad_bins, measure_mol%natom_dists))
+    
+            measure_mol%a_dist = 0.0_DP
+            measure_mol%a_dist_his = 0
+        END IF
+
+        EXIT
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+
+        EXIT
+     END IF
+   END DO
+ 
+ END SUBROUTINE Get_Atom_Distance_Histogram_Info
+  
+ SUBROUTINE Get_Excluded_Volume_Info
   !***************************************************************************************************
   ! 
   ! Gets information about the exclude volume calculation

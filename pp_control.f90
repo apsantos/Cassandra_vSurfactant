@@ -116,6 +116,11 @@ SUBROUTINE PP_Control
   ! Get dipole moment info
   CALL Get_Dipole_Moment_Info
 
+  CALL Get_Bond_Histogram_Info
+  CALL Get_Angle_Histogram_Info
+  CALL Get_Dihedral_Histogram_Info
+  CALL Get_Atom_Distance_Histogram_Info
+
   CALL Average_Info
   ! Properties to be output
   CALL Get_Property_Info

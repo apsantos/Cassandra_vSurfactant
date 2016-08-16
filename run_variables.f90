@@ -475,7 +475,8 @@ USE Type_Definitions
   !*********************************************************************************************************
   ! Information on the output of data
 
-  INTEGER :: nthermo_freq, ncoord_freq, ncluster_freq, nexvol_freq, nalpha_freq, nalphaclus_freq, nendclus_freq, nmsd_freq, nvacf_freq, ndipole_freq, n_mcsteps, n_equilsteps, this_mcstep
+  INTEGER :: nthermo_freq, ncoord_freq, n_mcsteps, n_equilsteps, this_mcstep
+  INTEGER :: ncluster_freq, nexvol_freq, nalpha_freq, nalphaclus_freq, nendclus_freq, nmsd_freq, nvacf_freq, ndipole_freq, nbond_freq, nangle_freq, ndihedral_freq, natomdist_freq, natomenergy_freq
  
   INTEGER,DIMENSION(:),ALLOCATABLE :: nbr_prop_files
 
@@ -592,8 +593,7 @@ LOGICAL :: store_sum
   ! Information on Degree Association calculation
   TYPE(DegreeAssociation_Class), TARGET :: alpha
 
-  ! Information on Degree Association calculation
-  TYPE(EndToEnd_Class), TARGET :: end2end
+  TYPE(Measure_Molecules_Class), TARGET :: measure_mol
 
   TYPE(trans_Class), TARGET :: trans
   

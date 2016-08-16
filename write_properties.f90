@@ -626,7 +626,7 @@ SUBROUTINE Write_Cluster(this_box)
   IF (nendclus_freq > 0) THEN
      WRITE(box_unit,'(A)', ADVANCE='NO') '   End-to-end distance (A) for species:'
      DO is = 1, nspecies
-        IF (.not. end2end%species(is) ) CYCLE
+        IF (.not. measure_mol%end2end_spec(is) ) CYCLE
         WRITE(box_unit,'(I10)', ADVANCE='NO') is
      END DO
   END IF
@@ -643,8 +643,8 @@ SUBROUTINE Write_Cluster(this_box)
         
         IF (nendclus_freq > 0) THEN
             DO is = 1, nspecies
-                IF (.not. end2end%species(is) ) CYCLE
-                WRITE(box_unit,'(E12.5)', ADVANCE='NO') end2end%distance(iM, is) / cluster%M(iM)
+                IF (.not. measure_mol%end2end_spec(is) ) CYCLE
+                WRITE(box_unit,'(E12.5)', ADVANCE='NO') measure_mol%end2end(iM, is) / cluster%M(iM)
             END DO
         END IF
         
@@ -655,4 +655,315 @@ SUBROUTINE Write_Cluster(this_box)
   CLOSE(unit=cluster_file_unit+this_box)
 
 END SUBROUTINE Write_Cluster
+
+SUBROUTINE Write_Bond(this_box)
+  !************************************************************************************
+  ! The subroutine writes the cluster vists in the simulation box
+  !
+  ! CALLED BY
+  !
+  !        pp_driver
+  !
+  !************************************************************************************
+
+  USE Run_Variables
+  USE File_Names
+  USE IO_Utilities
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: this_box
+  INTEGER :: box_unit, is, i, im, ib, ib_bin
+  CHARACTER(5) :: Tatom
+  REAL(DP)  :: length, bin_width
+
+  DO is = 1, nspecies
+     IF( .NOT. ANY(measure_mol%bond_spec(:,is) )) CYCLE
+     bond_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.bond'
+     box_unit = bond_file_unit + this_box
+     OPEN(unit=bond_file_unit+this_box, file=bond_file)
+
+     WRITE(box_unit,'(A)', ADVANCE='NO') '# species molecule bond:'
+     DO ib = 1, nbonds(is)
+        IF (.not. measure_mol%bond_spec(ib, is) ) CYCLE
+        write (Tatom, '(I5)') bond_list(ib,is)%atom2
+        WRITE(box_unit,'(I5,A,A)', ADVANCE='NO') bond_list(ib,is)%atom1, '-', adjustl(Tatom)
+     END DO
+        
+     WRITE(box_unit,'(/)', ADVANCE='NO')
+  
+     DO i = 1, nmolecules(is)
+        im = locate(i, is)
+        IF( .NOT. molecule_list(im, is)%live ) CYCLE
+        IF( .NOT. ANY(measure_mol%bond_spec(:,is) )) CYCLE
+
+        WRITE(box_unit,'(I3, I6)', ADVANCE='NO') is, im
+
+        DO ib = 1, nbonds(is)
+           IF (.not. measure_mol%bond_spec(ib, is) ) CYCLE
+           WRITE(box_unit,'(A,E11.3)', ADVANCE='NO') ' ', measure_mol%bond(ib, im, is) / FLOAT(measure_mol%nbondcall)
+        END DO
+        WRITE(box_unit,'(/)', ADVANCE='NO')
+     END DO
+     CLOSE(unit=bond_file_unit+this_box)
+
+     bond_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.bond_his'
+     box_unit = bond_file_unit + this_box
+     OPEN(unit=bond_file_unit+this_box, file=bond_file)
+
+     WRITE(box_unit,'(A)', ADVANCE='NO') '# bond length  bond:'
+     DO ib = 1, nbonds(is)
+        IF (.not. measure_mol%bond_spec(ib, is) ) CYCLE
+        write (Tatom, '(I5)') bond_list(ib,is)%atom2
+        WRITE(box_unit,'(I5,A,A)', ADVANCE='NO') bond_list(ib,is)%atom1, '-', adjustl(Tatom)
+     END DO
+        
+     WRITE(box_unit,'(/)', ADVANCE='NO')
+  
+     bin_width = (8.0/3.0) * measure_mol%l0ave(is) / FLOAT(measure_mol%nb_bins)
+     DO ib_bin = 1, measure_mol%nb_bins
+
+        length = (measure_mol%l0ave(is)/3.0) + (ib_bin * bin_width)
+        WRITE(box_unit,'(E11.3)', ADVANCE='NO') length
+        DO ib = 1, nbonds(is)
+           IF (.not. measure_mol%bond_spec(ib, is) ) CYCLE
+           WRITE(box_unit,'(I10)', ADVANCE='NO') measure_mol%bond_his(ib_bin, ib, is) 
+        END DO
+        WRITE(box_unit,'(/)', ADVANCE='NO')
+     END DO
+     CLOSE(unit=bond_file_unit+this_box)
+  END DO
+
+
+END SUBROUTINE Write_Bond
+
+SUBROUTINE Write_Angle(this_box)
+  !************************************************************************************
+  ! The subroutine writes the cluster vists in the simulation box
+  !
+  ! CALLED BY
+  !
+  !        pp_driver
+  !
+  !************************************************************************************
+
+  USE Run_Variables
+  USE File_Names
+  USE IO_Utilities
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: this_box
+  INTEGER :: box_unit, is, i, im, ia, ia_bin
+  CHARACTER(5) :: Tatom
+  REAL(DP)  :: bin_width
+
+  DO is = 1, nspecies
+     IF( .NOT. ANY(measure_mol%angle_spec(:,is) )) CYCLE
+     angle_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.angle'
+     box_unit = angle_file_unit + this_box
+     OPEN(unit=angle_file_unit+this_box, file=angle_file)
+
+     WRITE(box_unit,'(A)', ADVANCE='NO') '# species molecule angle:'
+     DO ia = 1, nangles(is)
+        IF (.not. measure_mol%angle_spec(ia, is) ) CYCLE
+        write (Tatom, '(I5)') angle_list(ia,is)%atom3
+        WRITE(box_unit,'(I5,A,I5,A,A)', ADVANCE='NO') angle_list(ia,is)%atom1, '-', angle_list(ia,is)%atom2, '-', adjustl(Tatom)
+     END DO
+        
+     WRITE(box_unit,'(/)', ADVANCE='NO')
+  
+     DO i = 1, nmolecules(is)
+        im = locate(i, is)
+        IF( .NOT. molecule_list(im, is)%live ) CYCLE
+        IF( .NOT. ANY(measure_mol%angle_spec(:,is) )) CYCLE
+
+        WRITE(box_unit,'(I3, I6)', ADVANCE='NO') is, im
+
+        DO ia = 1, nangles(is)
+           IF (.not. measure_mol%angle_spec(ia, is) ) CYCLE
+           WRITE(box_unit,'(A,E11.4)', ADVANCE='NO') ' ', measure_mol%angle(ia, im, is) / FLOAT(measure_mol%nanglecall)
+        END DO
+        WRITE(box_unit,'(/)', ADVANCE='NO')
+     END DO
+     CLOSE(unit=angle_file_unit+this_box)
+
+     angle_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.angle_his'
+     box_unit = angle_file_unit + this_box
+     OPEN(unit=angle_file_unit+this_box, file=angle_file)
+
+     WRITE(box_unit,'(A)', ADVANCE='NO') '# angle length  angle:'
+     DO ia = 1, nangles(is)
+        IF (.not. measure_mol%angle_spec(ia, is) ) CYCLE
+        write (Tatom, '(I5)') angle_list(ia,is)%atom3
+        WRITE(box_unit,'(I5,A,I5,A,A)', ADVANCE='NO') angle_list(ia,is)%atom1, '-', angle_list(ia,is)%atom2, '-', adjustl(Tatom)
+     END DO
+        
+     WRITE(box_unit,'(/)', ADVANCE='NO')
+  
+     bin_width = twoPI / FLOAT(measure_mol%na_bins)
+     DO ia_bin = 1, measure_mol%na_bins
+
+        WRITE(box_unit,'(E11.3)', ADVANCE='NO') (ia_bin * bin_width)
+        DO ia = 1, nangles(is)
+           IF (.not. measure_mol%angle_spec(ia, is) ) CYCLE
+           WRITE(box_unit,'(I10)', ADVANCE='NO') measure_mol%angle_his(ia_bin, ia, is) 
+        END DO
+        WRITE(box_unit,'(/)', ADVANCE='NO')
+     END DO
+     CLOSE(unit=angle_file_unit+this_box)
+  END DO
+
+
+END SUBROUTINE Write_Angle
+
+SUBROUTINE Write_Dihedral(this_box)
+  !************************************************************************************
+  ! The subroutine writes the cluster vists in the simulation box
+  !
+  ! CALLED BY
+  !
+  !        pp_driver
+  !
+  !************************************************************************************
+
+  USE Run_Variables
+  USE File_Names
+  USE IO_Utilities
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: this_box
+  INTEGER :: box_unit, is, i, im, id, id_bin
+  CHARACTER(5) :: Tatom
+  REAL(DP)  :: length, bin_width
+
+  DO is = 1, nspecies
+     IF( .NOT. ANY(measure_mol%dihedral_spec(:,is) )) CYCLE
+     dihedral_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.dihedral'
+     box_unit = dihedral_file_unit + this_box
+     OPEN(unit=dihedral_file_unit+this_box, file=dihedral_file)
+
+     WRITE(box_unit,'(A)', ADVANCE='NO') '# species molecule dihedral:'
+     DO id = 1, ndihedrals(is)
+        IF (.not. measure_mol%dihedral_spec(id, is) ) CYCLE
+        write (Tatom, '(I5)') dihedral_list(id,is)%atom4
+        WRITE(box_unit,'(I5,A,I5,A,I5,A,A)', ADVANCE='NO') dihedral_list(id,is)%atom1, '-', dihedral_list(id,is)%atom2, '-', dihedral_list(id,is)%atom3, '-', adjustl(Tatom)
+     END DO
+        
+     WRITE(box_unit,'(/)', ADVANCE='NO')
+  
+     DO i = 1, nmolecules(is)
+        im = locate(i, is)
+        IF( .NOT. molecule_list(im, is)%live ) CYCLE
+        IF( .NOT. ANY(measure_mol%dihedral_spec(:,is) )) CYCLE
+
+        WRITE(box_unit,'(I3, I6)', ADVANCE='NO') is, im
+
+        DO id = 1, ndihedrals(is)
+           IF (.not. measure_mol%dihedral_spec(id, is) ) CYCLE
+           WRITE(box_unit,'(A,E11.3)', ADVANCE='NO') ' ', measure_mol%dihedral(id, im, is) / FLOAT(measure_mol%ndihedralcall)
+        END DO
+        WRITE(box_unit,'(/)', ADVANCE='NO')
+     END DO
+     CLOSE(unit=dihedral_file_unit+this_box)
+
+     dihedral_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.dihedral_his'
+     box_unit = dihedral_file_unit + this_box
+     OPEN(unit=dihedral_file_unit+this_box, file=dihedral_file)
+
+     WRITE(box_unit,'(A)', ADVANCE='NO') '# dihedral length  dihedral:'
+     DO id = 1, ndihedrals(is)
+        IF (.not. measure_mol%dihedral_spec(id, is) ) CYCLE
+        write (Tatom, '(I5)') dihedral_list(id,is)%atom4
+        WRITE(box_unit,'(I5,A,I5,A,I5,A,A)', ADVANCE='NO') dihedral_list(id,is)%atom1, '-', dihedral_list(id,is)%atom2, '-', dihedral_list(id,is)%atom3, '-', adjustl(Tatom)
+     END DO
+        
+     WRITE(box_unit,'(/)', ADVANCE='NO')
+  
+     bin_width = twoPI / FLOAT(measure_mol%nd_bins)
+     DO id_bin = 1, measure_mol%nd_bins
+
+        WRITE(box_unit,'(E11.3)', ADVANCE='NO') (id_bin * bin_width) - PI
+        DO id = 1, ndihedrals(is)
+           IF (.not. measure_mol%dihedral_spec(id, is) ) CYCLE
+           WRITE(box_unit,'(I10)', ADVANCE='NO') measure_mol%dihedral_his(id_bin, id, is) 
+        END DO
+        WRITE(box_unit,'(/)', ADVANCE='NO')
+     END DO
+     CLOSE(unit=dihedral_file_unit+this_box)
+  END DO
+
+
+END SUBROUTINE Write_Dihedral
+
+SUBROUTINE Write_Atom_Distribution(this_box)
+  !************************************************************************************
+  ! The subroutine writes the cluster vists in the simulation box
+  !
+  ! CALLED BY
+  !
+  !        pp_driver
+  !
+  !************************************************************************************
+
+  USE Run_Variables
+  USE File_Names
+  USE IO_Utilities
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: this_box
+  INTEGER :: box_unit
+  INTEGER :: iap, is, ia, js, ja, i, im, j, jm, iap_bin
+  CHARACTER(5) :: Tatom
+  REAL(DP)  :: length, bin_width
+
+  a_dist_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.atomdist'
+  box_unit = a_dist_file_unit + this_box
+  OPEN(unit=a_dist_file_unit+this_box, file=a_dist_file)
+
+  WRITE(box_unit,'(A)') '# is im ia js jm ja distance'
+  
+  DO iap = 1, measure_mol%natom_dists
+      is = measure_mol%a_dist_pairs(iap, 1)
+      ia = measure_mol%a_dist_pairs(iap, 2)
+      js = measure_mol%a_dist_pairs(iap, 3)
+      ja = measure_mol%a_dist_pairs(iap, 4)
+
+      DO i = 1, nmolecules(is)
+          im = locate(i, is)
+          IF( .NOT. molecule_list(im, is)%live ) CYCLE
+          DO j = 1, nmolecules(js)
+              jm = locate(j, js)
+              IF( .NOT. molecule_list(jm, js)%live ) CYCLE
+              WRITE(box_unit,'(I3, I6, I3, I3, I6, I3, E11.3)') is, im, ia, js, jm, ja, measure_mol%a_dist(iap, im, is) / FLOAT(measure_mol%nadistcall)
+          END DO
+     END DO
+  END DO
+  CLOSE(unit=a_dist_file_unit+this_box)
+
+  a_dist_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.atomdist_his'
+  box_unit = a_dist_file_unit + this_box
+  OPEN(unit=a_dist_file_unit+this_box, file=a_dist_file)
+
+  WRITE(box_unit,'(A)', ADVANCE='NO') '# distance atom pair:'
+  DO iap = 1, measure_mol%natom_dists
+     WRITE(box_unit,'(I5)', ADVANCE='NO') iap
+  END DO
+     
+  WRITE(box_unit,'(/)', ADVANCE='NO')
+  
+  bin_width =  measure_mol%a_dist_max / FLOAT(measure_mol%nad_bins)
+  DO iap_bin = 1, measure_mol%nad_bins
+
+     WRITE(box_unit,'(E11.4)', ADVANCE='NO') (iap_bin * bin_width)
+     DO iap = 1, measure_mol%natom_dists
+        WRITE(box_unit,'(I10)', ADVANCE='NO') measure_mol%a_dist_his(iap_bin, iap) 
+     END DO
+     WRITE(box_unit,'(/)', ADVANCE='NO')
+  END DO
+  CLOSE(unit=a_dist_file_unit+this_box)
+
+END SUBROUTINE Write_Atom_Distribution
 
