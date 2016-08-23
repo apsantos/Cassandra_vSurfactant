@@ -61,6 +61,7 @@ MODULE File_Names
   !   12/10/13 : Beta Release
   !
   !**********************************************************************
+USE xtc_interface
 
 INTEGER, PARAMETER :: FILENAME_LEN = 120
 
@@ -136,11 +137,17 @@ CHARACTER(FILENAME_LEN),DIMENSION(:,:,:), ALLOCATABLE :: prop_output
 INTEGER,DIMENSION(:),ALLOCATABLE :: xyz_config_unit
 CHARACTER(FILENAME_LEN),DIMENSION(:),ALLOCATABLE :: xyz_config_file
 
+! index file 
+INTEGER :: ndx_unit
+CHARACTER(FILENAME_LEN) :: ndx_file
+
 ! Variables associated with gro configuration file
-INTEGER,DIMENSION(:),ALLOCATABLE :: gro_config_unit
-CHARACTER(FILENAME_LEN),DIMENSION(:),ALLOCATABLE :: gro_config_file
-INTEGER,DIMENSION(:),ALLOCATABLE :: gro_ndx_unit
-CHARACTER(FILENAME_LEN),DIMENSION(:),ALLOCATABLE :: gro_ndx_file
+INTEGER :: gro_config_unit
+CHARACTER(FILENAME_LEN) :: gro_config_file
+
+! Variables associated with xtc configuration file
+type(xdrfile), pointer :: xtc_config_unit
+CHARACTER(FILENAME_LEN) :: xtc_config_file
 
 ! Variables associated with old configuration file
 INTEGER :: old_config_unit = 120

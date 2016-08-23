@@ -92,7 +92,12 @@ SUBROUTINE PP_Driver
         IF (i > 1) THEN
            CALL Read_GRO(i)
         ENDIF
-        INQUIRE(file=gro_config_file(this_box),opened=lopen)
+        INQUIRE(file=gro_config_file,opened=lopen)
+     ELSEIF (start_type == 'read_xtc' ) THEN
+        IF (i > 1) THEN
+           CALL Read_XTC(i)
+        ENDIF
+        lopen = .true.
      ENDIF
  
      IF (.not. lopen) THEN

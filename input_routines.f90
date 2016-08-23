@@ -4938,7 +4938,9 @@ SUBROUTINE Get_Start_Type
   ! 'checkpoint'  --- read from a crash file
   ! 'xyz'  --- read from an xyz file
 
-  INTEGER :: ierr, line_nbr, nbr_entries, i,j, ibox
+    use, intrinsic :: iso_c_binding, only: C_NULL_CHAR
+
+  INTEGER :: ierr, line_nbr, nbr_entries, i,j, ibox, tot_natoms, is
   CHARACTER(120) :: line_string, line_array(20)
   CHARACTER(1) :: first_character
   CHARACTER(4) :: symbol
@@ -5102,13 +5104,13 @@ SUBROUTINE Get_Start_Type
            ELSE IF (line_array(1) == 'read_gro') THEN
               ! in this case we will read in the information of coordinates from
               ! an output gro file with multiple timesteps for processing
-              ALLOCATE(gro_config_file(nbr_boxes))
-              ALLOCATE(gro_ndx_file(nbr_boxes))
-              ALLOCATE(gro_config_unit(nbr_boxes))
-              ALLOCATE(gro_ndx_unit(nbr_boxes))
               IF (int_sim_type /= sim_pp) THEN
                  err_msg = ""
                  err_msg(1) = 'Cannot read gro unless simulation type is "PP"'
+                 CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+              ELSE IF ( nbr_boxes /= 1) THEN
+                 err_msg = ""
+                 err_msg(1) = 'Can only have 1 box when processing gromacs data'
                  CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
               END IF 
 
@@ -5116,28 +5118,96 @@ SUBROUTINE Get_Start_Type
 
               WRITE(logunit,*)
               WRITE(logunit,*) 'Configurations will be read from gro files'
-              DO i = 1,nbr_boxes
-                 line_nbr = line_nbr + 1
-                 gro_config_unit(i) = 117 + i
-                 gro_ndx_unit(i) = 717 + i
-                 CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
-                 ! Make sure that the characters of the string are alphanumeric with
-                 ! a possibility of a . (dot). The first character must be an alphabet
-                 CALL Check_String(line_array(1),ierr)
-                 IF (ierr /= 0 ) THEN
-                    err_msg = ""
-                    err_msg(1) = 'An error in the input line ' // TRIM(Int_to_String(line_nbr)) &
-                         // ' of input file.'
-                    CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
-                 END IF
+              line_nbr = line_nbr + 1
+              gro_config_unit = 117 
+              ndx_unit = 717 
+              CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+              ! Make sure that the characters of the string are alphanumeric with
+              ! a possibility of a . (dot). The first character must be an alphabet
+              CALL Check_String(line_array(1),ierr)
+              IF (ierr /= 0 ) THEN
+                 err_msg = ""
+                 err_msg(1) = 'An error in the input line ' // TRIM(Int_to_String(line_nbr)) &
+                      // ' of input file.'
+                 CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+              END IF
 
-                 WRITE(logunit,*)
-                 WRITE(logunit,'(A,T40,I3,A,T50)')'Starting configuration for box ', i, ' is'
-                 WRITE(logunit,*) ADJUSTL(line_array(1))
-                 gro_config_file(i) = TRIM(ADJUSTL(line_array(1)))
-                 gro_ndx_file(i) = TRIM(ADJUSTL(line_array(2)))
-                 
+              WRITE(logunit,*)
+              WRITE(logunit,'(A,T40,I3,A,T50)')'Starting configuration is'
+              WRITE(logunit,*) ADJUSTL(line_array(1))
+              WRITE(logunit,'(A,T40,I3,A,T50)')'Atom index is'
+              WRITE(logunit,*) ADJUSTL(line_array(2))
+
+              gro_config_file = TRIM(ADJUSTL(line_array(1)))
+              ndx_file = TRIM(ADJUSTL(line_array(2)))
+
+              tot_natoms = 0
+              DO is = 1, nspecies
+                 tot_natoms = tot_natoms + (nmolecules(is) * natoms(is))
               END DO
+              ALLOCATE( ia_atoms(tot_natoms))
+              ALLOCATE( im_atoms(tot_natoms))
+              ALLOCATE( is_atoms(tot_natoms))
+              ia_atoms = 0
+              im_atoms = 0
+              is_atoms = 0
+                 
+              EXIT inputLOOP
+           ELSE IF (line_array(1) == 'read_xtc') THEN
+              ! in this case we will read in the information of coordinates from
+              ! an binary output xtc file with multiple timesteps for processing
+              IF (int_sim_type /= sim_pp) THEN
+                 err_msg = ""
+                 err_msg(1) = 'Cannot read xtc unless simulation type is "PP"'
+                 CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+              ELSE IF ( nbr_boxes /= 1) THEN
+                 err_msg = ""
+                 err_msg(1) = 'Can only have 1 box when processing gromacs data'
+                 CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+              END IF 
+
+              start_type = 'read_xtc'
+
+              WRITE(logunit,*)
+              WRITE(logunit,*) 'Configurations will be read from xtc files'
+              line_nbr = line_nbr + 1
+              ndx_unit = 717
+              gro_config_unit = 227 
+              CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
+              ! Make sure that the characters of the string are alphanumeric with
+              ! a possibility of a . (dot). The first character must be an alphabet
+              CALL Check_String(line_array(1),ierr)
+              IF (ierr /= 0 ) THEN
+                 err_msg = ""
+                 err_msg(1) = 'An error in the input line ' // TRIM(Int_to_String(line_nbr)) &
+                      // ' of input file.'
+                 CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+              END IF
+
+              WRITE(logunit,*)
+              WRITE(logunit,'(A,T40,I3,A,T50)')'Starting configuration is'
+              WRITE(logunit,*) ADJUSTL(line_array(1))
+              WRITE(logunit,'(A,T40,I3,A,T50)')'Atom index is'
+              WRITE(logunit,*) ADJUSTL(line_array(2))
+              WRITE(logunit,'(A,T40,I3,A,T50)')'Trajectory is'
+              WRITE(logunit,*) ADJUSTL(line_array(3))
+
+              gro_config_file = TRIM(ADJUSTL(line_array(1)))
+              ndx_file = TRIM(ADJUSTL(line_array(2)))
+              xtc_config_file = TRIM(ADJUSTL(line_array(3)))//C_NULL_CHAR
+              !xtc_config_file = line_array(3)
+                 
+              tot_natoms = 0
+              DO is = 1, nspecies
+                 tot_natoms = tot_natoms + (nmolecules(is) * natoms(is))
+              END DO
+              ALLOCATE( ia_atoms(tot_natoms))
+              ALLOCATE( im_atoms(tot_natoms))
+              ALLOCATE( is_atoms(tot_natoms))
+              ia_atoms = 0
+              im_atoms = 0
+              is_atoms = 0
+
               EXIT inputLOOP
            ELSE IF (line_array(1) == 'read_old') THEN
               ! in this case we will read in the information of coordinates for
@@ -6810,7 +6880,7 @@ SUBROUTINE Get_Bond_Histogram_Info
      IF(line_string(1:25) == '# Atom_Distance_Histogram') THEN
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         measure_mol%natom_dists = String_To_Int(line_array(1))
-        measure_mol%a_dist_max = (box_list(1)%hlength(1,1)**2.0 + box_list(1)%hlength(2,2)**2.0 + box_list(1)%hlength(3,3)**2.0)**(1.0/2.0)
+        measure_mol%a_dist_max_sq = box_list(1)%hlength(1,1)**2.0 + box_list(1)%hlength(2,2)**2.0 + box_list(1)%hlength(3,3)**2.0
 
         IF (measure_mol%natom_dists .GT. 0) THEN
             ALLOCATE( measure_mol%a_dist_pairs(measure_mol%natom_dists, 4) )
@@ -6825,10 +6895,10 @@ SUBROUTINE Get_Bond_Histogram_Info
                 measure_mol%a_dist_pairs(iap, 4) = String_To_Int(line_array(4))
             END DO
     
-            ALLOCATE( measure_mol%a_dist(measure_mol%natom_dists, MAXVAL(nmolecules), nspecies))
+            ALLOCATE( measure_mol%a_dist_sq(measure_mol%natom_dists, MAXVAL(nmolecules), nspecies))
             ALLOCATE( measure_mol%a_dist_his(measure_mol%nad_bins, measure_mol%natom_dists))
     
-            measure_mol%a_dist = 0.0_DP
+            measure_mol%a_dist_sq = 0.0_DP
             measure_mol%a_dist_his = 0
         END IF
 

@@ -596,6 +596,11 @@ LOGICAL :: store_sum
   TYPE(Measure_Molecules_Class), TARGET :: measure_mol
 
   TYPE(trans_Class), TARGET :: trans
+
+  INTEGER, DIMENSION(:), ALLOCATABLE :: ia_atoms
+  INTEGER, DIMENSION(:), ALLOCATABLE :: im_atoms
+  INTEGER, DIMENSION(:), ALLOCATABLE :: is_atoms
+  INTEGER :: xtc_natoms, gro_natoms
   
 END MODULE Run_Variables
 

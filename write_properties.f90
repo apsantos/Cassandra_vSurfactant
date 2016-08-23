@@ -703,7 +703,7 @@ SUBROUTINE Write_Bond(this_box)
            IF (.not. measure_mol%bond_spec(ib, is) ) CYCLE
            WRITE(box_unit,'(A,E11.3)', ADVANCE='NO') ' ', measure_mol%bond(ib, im, is) / FLOAT(measure_mol%nbondcall)
         END DO
-        WRITE(box_unit,'(/)', ADVANCE='NO')
+        IF (i < nmolecules(is)) WRITE(box_unit,'(/)', ADVANCE='NO')
      END DO
      CLOSE(unit=bond_file_unit+this_box)
 
@@ -718,18 +718,16 @@ SUBROUTINE Write_Bond(this_box)
         WRITE(box_unit,'(I5,A,A)', ADVANCE='NO') bond_list(ib,is)%atom1, '-', adjustl(Tatom)
      END DO
         
-     WRITE(box_unit,'(/)', ADVANCE='NO')
-  
      bin_width = (8.0/3.0) * measure_mol%l0ave(is) / FLOAT(measure_mol%nb_bins)
      DO ib_bin = 1, measure_mol%nb_bins
 
+        WRITE(box_unit,'(/)', ADVANCE='NO')
         length = (measure_mol%l0ave(is)/3.0) + (ib_bin * bin_width)
         WRITE(box_unit,'(E11.3)', ADVANCE='NO') length
         DO ib = 1, nbonds(is)
            IF (.not. measure_mol%bond_spec(ib, is) ) CYCLE
            WRITE(box_unit,'(I10)', ADVANCE='NO') measure_mol%bond_his(ib_bin, ib, is) 
         END DO
-        WRITE(box_unit,'(/)', ADVANCE='NO')
      END DO
      CLOSE(unit=bond_file_unit+this_box)
   END DO
@@ -784,7 +782,7 @@ SUBROUTINE Write_Angle(this_box)
            IF (.not. measure_mol%angle_spec(ia, is) ) CYCLE
            WRITE(box_unit,'(A,E11.4)', ADVANCE='NO') ' ', measure_mol%angle(ia, im, is) / FLOAT(measure_mol%nanglecall)
         END DO
-        WRITE(box_unit,'(/)', ADVANCE='NO')
+        IF (i < nmolecules(is)) WRITE(box_unit,'(/)', ADVANCE='NO')
      END DO
      CLOSE(unit=angle_file_unit+this_box)
 
@@ -799,17 +797,15 @@ SUBROUTINE Write_Angle(this_box)
         WRITE(box_unit,'(I5,A,I5,A,A)', ADVANCE='NO') angle_list(ia,is)%atom1, '-', angle_list(ia,is)%atom2, '-', adjustl(Tatom)
      END DO
         
-     WRITE(box_unit,'(/)', ADVANCE='NO')
-  
      bin_width = twoPI / FLOAT(measure_mol%na_bins)
      DO ia_bin = 1, measure_mol%na_bins
 
+        WRITE(box_unit,'(/)', ADVANCE='NO')
         WRITE(box_unit,'(E11.3)', ADVANCE='NO') (ia_bin * bin_width)
         DO ia = 1, nangles(is)
            IF (.not. measure_mol%angle_spec(ia, is) ) CYCLE
            WRITE(box_unit,'(I10)', ADVANCE='NO') measure_mol%angle_his(ia_bin, ia, is) 
         END DO
-        WRITE(box_unit,'(/)', ADVANCE='NO')
      END DO
      CLOSE(unit=angle_file_unit+this_box)
   END DO
@@ -864,7 +860,7 @@ SUBROUTINE Write_Dihedral(this_box)
            IF (.not. measure_mol%dihedral_spec(id, is) ) CYCLE
            WRITE(box_unit,'(A,E11.3)', ADVANCE='NO') ' ', measure_mol%dihedral(id, im, is) / FLOAT(measure_mol%ndihedralcall)
         END DO
-        WRITE(box_unit,'(/)', ADVANCE='NO')
+        IF (i < nmolecules(is)) WRITE(box_unit,'(/)', ADVANCE='NO')
      END DO
      CLOSE(unit=dihedral_file_unit+this_box)
 
@@ -879,17 +875,15 @@ SUBROUTINE Write_Dihedral(this_box)
         WRITE(box_unit,'(I5,A,I5,A,I5,A,A)', ADVANCE='NO') dihedral_list(id,is)%atom1, '-', dihedral_list(id,is)%atom2, '-', dihedral_list(id,is)%atom3, '-', adjustl(Tatom)
      END DO
         
-     WRITE(box_unit,'(/)', ADVANCE='NO')
-  
      bin_width = twoPI / FLOAT(measure_mol%nd_bins)
      DO id_bin = 1, measure_mol%nd_bins
 
+        WRITE(box_unit,'(/)', ADVANCE='NO')
         WRITE(box_unit,'(E11.3)', ADVANCE='NO') (id_bin * bin_width) - PI
         DO id = 1, ndihedrals(is)
            IF (.not. measure_mol%dihedral_spec(id, is) ) CYCLE
            WRITE(box_unit,'(I10)', ADVANCE='NO') measure_mol%dihedral_his(id_bin, id, is) 
         END DO
-        WRITE(box_unit,'(/)', ADVANCE='NO')
      END DO
      CLOSE(unit=dihedral_file_unit+this_box)
   END DO
@@ -923,21 +917,27 @@ SUBROUTINE Write_Atom_Distribution(this_box)
   box_unit = a_dist_file_unit + this_box
   OPEN(unit=a_dist_file_unit+this_box, file=a_dist_file)
 
-  WRITE(box_unit,'(A)') '# is im ia js jm ja distance'
-  
+  WRITE(box_unit,'(A)') '# atom-pair-type ia ja:'
   DO iap = 1, measure_mol%natom_dists
-      is = measure_mol%a_dist_pairs(iap, 1)
       ia = measure_mol%a_dist_pairs(iap, 2)
-      js = measure_mol%a_dist_pairs(iap, 3)
       ja = measure_mol%a_dist_pairs(iap, 4)
-
+      WRITE(box_unit,'(A,3I3)') '# ', iap, ia, ja
+  END DO
+  WRITE(box_unit,'(A)', ADVANCE='NO') '# is im js jm distance'
+  
+  DO is = 1, nspecies
+      IF ( .NOT. ANY(measure_mol%a_dist_pairs(:, 1) == is) ) CYCLE
       DO i = 1, nmolecules(is)
           im = locate(i, is)
+        IF (.TRUE.) THEN
+            print*, im, cluster%N(cluster%clabel(im, is))
+        END IF 
           IF( .NOT. molecule_list(im, is)%live ) CYCLE
-          DO j = 1, nmolecules(js)
-              jm = locate(j, js)
-              IF( .NOT. molecule_list(jm, js)%live ) CYCLE
-              WRITE(box_unit,'(I3, I6, I3, I3, I6, I3, E11.3)') is, im, ia, js, jm, ja, measure_mol%a_dist(iap, im, is) / FLOAT(measure_mol%nadistcall)
+          WRITE(box_unit,'(/)', ADVANCE='NO')
+          WRITE(box_unit,'(I3, I6)', ADVANCE='NO') is, im 
+          DO iap = 1, measure_mol%natom_dists
+              WRITE(box_unit,'(E13.5)', ADVANCE='NO') ( measure_mol%a_dist_sq(iap, im, is) )**(0.5) / FLOAT(measure_mol%nadistcall)
+              !WRITE(box_unit,'(E11.3)', ADVANCE='NO') ( measure_mol%a_dist_sq(iap, im, is) )**(0.5) / FLOAT(measure_mol%nadistcall * nmolecules(is))
           END DO
      END DO
   END DO
@@ -952,16 +952,15 @@ SUBROUTINE Write_Atom_Distribution(this_box)
      WRITE(box_unit,'(I5)', ADVANCE='NO') iap
   END DO
      
-  WRITE(box_unit,'(/)', ADVANCE='NO')
   
-  bin_width =  measure_mol%a_dist_max / FLOAT(measure_mol%nad_bins)
+  bin_width =  measure_mol%a_dist_max_sq / FLOAT(measure_mol%nad_bins)
   DO iap_bin = 1, measure_mol%nad_bins
 
+     WRITE(box_unit,'(/)', ADVANCE='NO')
      WRITE(box_unit,'(E11.4)', ADVANCE='NO') (iap_bin * bin_width)
      DO iap = 1, measure_mol%natom_dists
-        WRITE(box_unit,'(I10)', ADVANCE='NO') measure_mol%a_dist_his(iap_bin, iap) 
+        WRITE(box_unit,'(I10)', ADVANCE='NO') measure_mol%a_dist_his(iap_bin, iap)
      END DO
-     WRITE(box_unit,'(/)', ADVANCE='NO')
   END DO
   CLOSE(unit=a_dist_file_unit+this_box)
 

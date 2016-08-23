@@ -192,7 +192,7 @@ CONTAINS
 
     INTEGER, INTENT(IN) :: this_box
     INTEGER :: iap, is, ia, js, ja, i, im, j, jm, iap_bin
-    REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
+    REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp, min_dist_sq
 
     measure_mol%nadistcall = measure_mol%nadistcall + 1
     DO iap = 1, measure_mol%natom_dists
@@ -204,9 +204,11 @@ CONTAINS
         DO i = 1, nmolecules(is)
             im = locate(i, is)
             IF( .NOT. molecule_list(im, is)%live ) CYCLE
+            min_dist_sq = 1000000.0
             DO j = 1, nmolecules(js)
                 jm = locate(j, js)
                 IF( .NOT. molecule_list(jm, js)%live ) CYCLE
+                IF( is == js .AND. im == jm ) CYCLE
 
                 ! Get the positions of the COM of the two molecule species
                 rxijp = atom_list(ia, im, is)%rxp - atom_list(ja, jm, js)%rxp
@@ -217,13 +219,14 @@ CONTAINS
                 CALL Minimum_Image_Separation(1, rxijp, ryijp, rzijp, rxij, ryij, rzij)
                 rijsq = (rxij*rxij) + (ryij*ryij) + (rzij*rzij)
     
-                measure_mol%a_dist(iap, im, is) = measure_mol%a_dist(iap, im, is) + rijsq
+                IF (rijsq < min_dist_sq) min_dist_sq = rijsq
                 ! calculate histogram bin number
-                iap_bin = FLOOR( (rijsq / measure_mol%a_dist_max) * measure_mol%nad_bins) + 1
+                iap_bin = FLOOR( ((rijsq)**(0.5) / measure_mol%a_dist_max_sq) * measure_mol%nad_bins) + 1
                 iap_bin = MIN(iap_bin, measure_mol%nad_bins)
                 measure_mol%a_dist_his(iap_bin, iap) = measure_mol%a_dist_his(iap_bin, iap) + 1
 
             END DO
+            measure_mol%a_dist_sq(iap, im, is) = measure_mol%a_dist_sq(iap, im, is) + min_dist_sq 
         END DO
     END DO
                     

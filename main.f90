@@ -281,6 +281,11 @@ PROGRAM Main
      CALL Read_GRO(-1)
      CALL Read_GRO(1)
 
+  ELSEIF (start_type == 'read_xtc') THEN
+     ! Read in xtc coordinates for post processing
+
+     CALL Read_XTC(-1)
+
   ELSEIF (start_type == 'read_old') THEN
      ! Read in old coordinates and restart a new simulation, 
      ! Note that the counters have already been set to zero by the call to

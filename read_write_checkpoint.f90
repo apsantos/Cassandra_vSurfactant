@@ -146,11 +146,204 @@ CONTAINS
   END SUBROUTINE Write_Checkpoint
 !**************************************************************************************************
 
+SUBROUTINE Read_NDX
+
+    INTEGER :: is, ia, i, j, m
+
+    CHARACTER(120) :: line_string, line_array(20), t_ndx_name
+    INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line, idx, i_ndx, totatoms, ps
+
+    line_nbr = 1
+    totatoms = 0
+    DO is = 1 , nspecies
+        totatoms = totatoms + nmolecules(is) * natoms(is)
+    ENDDO
+
+    ALLOCATE( ndx_type( totatoms ) )
+    idx = 0
+
+    OPEN(unit=ndx_unit, file=ndx_file)
+    DO 
+        CALL Parse_String(ndx_unit,line_nbr,0,nbr_entries,line_array,ierr)
+        IF (ierr /= 0) THEN
+            EXIT
+        END IF
+        ! skip empty lines
+        IF (nbr_entries == 0) CYCLE
+
+        IF (line_array(1) == '[' .AND. line_array(3) == ']') THEN
+            IF (line_array(2) /= 'System') THEN
+                idx = idx + 1
+            END IF
+            IF (idx > nspecies ) THEN
+                err_msg = ""
+                err_msg(1) = "*.ndx file should only have System and nspecies told."
+                CALL Clean_Abort(err_msg,'Read_NDX')
+            END IF
+
+        ELSE IF ( nbr_entries >= 1 ) THEN
+            DO i_ndx = 1, nbr_entries
+                ndx_type( String_To_Int( line_array(i_ndx) ) ) = idx
+            END DO
+        END IF
+
+        line_nbr = line_nbr + 1
+
+    END DO
+    CLOSE(unit=ndx_unit)
+    IF (idx < nspecies ) THEN
+        err_msg = ""
+        err_msg(1) = "*.ndx file should have all nspecies told."
+        CALL Clean_Abort(err_msg,'Read_NDX')
+    END IF
+
+    RETURN
+
+END SUBROUTINE Read_NDX
+
+SUBROUTINE Read_XTC(this_mc_step)
+
+    use, intrinsic :: iso_c_binding, only: C_PTR, c_f_pointer
+    use xtc_interface
+
+    INTEGER, INTENT(IN) :: this_mc_step
+
+    INTEGER :: i, ia, im, is, this_im, this_box, ierr, step, temp_n_equilsteps
+
+    REAL(DP) :: xcom_old, ycom_old, zcom_old
+    REAL(DP) :: xcom_new, ycom_new, zcom_new
+
+    LOGICAL :: lopen, ex
+
+    CHARACTER(1024) :: filename
+
+    real, allocatable :: pos(:,:)
+    real :: prec, time, box_trans(3,3), box(3,3)
+    type(C_PTR) :: xd_c
+
+    IF ( this_mc_step == -1 ) THEN 
+       CALL Read_NDX
+
+       temp_n_equilsteps = n_equilsteps
+       n_equilsteps = 1
+       CALL Read_GRO(1)
+       n_equilsteps = temp_n_equilsteps
+
+       filename = xtc_config_file
+
+       ! Open the file for reading. Convert C pointer to Fortran pointer.
+       INQUIRE(file=trim(filename),exist=ex)
+       IF (.not. ex) THEN 
+          err_msg = ""
+          err_msg(1) = "Could not find the xtc file."
+          CALL Clean_Abort(err_msg,'Read_XTC')
+       END IF
+       xd_c = xdrfile_open(filename,"r")
+       call c_f_pointer(xd_c,xtc_config_unit)
+
+       ierr = read_xtc_natoms(filename,xtc_natoms)
+       ! check xtc_natoms
+       IF ( xtc_natoms /= gro_natoms ) THEN
+          err_msg = ""
+          err_msg(1) = "Found different number of atoms in the xtc and gro files"
+          err_msg(2) = "xtc: "//Int_To_String(xtc_natoms)
+          err_msg(3) = "gro: "//Int_To_String(gro_natoms)
+          CALL Clean_Abort(err_msg,'Read_XTC')
+       END IF
+
+    END IF
+    
+    ! Read configuration
+
+    allocate(pos(3,xtc_natoms))
+
+    ierr = read_xtc_c(xtc_config_unit,xtc_natoms,step,time,box_trans,pos,prec)
+
+    IF ( 1 == this_mc_step) THEN
+        ! C is row-major, whereas Fortran is column major. Hence the following.
+        box = transpose(box_trans)
+        DO i = 1, 3
+           IF ( (1.0 / prec) < ( (box(i,i) * 10.0) - box_list(1)%length(i,i) ) ) THEN
+             err_msg = ""
+             err_msg(1) = "box dimension in inputfile and xtc do not agree, check units maybe."
+             CALL Clean_Abort(err_msg,'Read_XTC')
+           END IF
+        END DO
+
+    ELSEIF (this_mc_step < n_equilsteps) THEN
+        RETURN
+
+    ELSEIF (ierr /= 0 ) THEN
+        WRITE(logunit,'(A,i3)') 'Finished reading xtc file at step: ', step
+        RETURN
+    END IF
+    DO i = 1, xtc_natoms
+        ia = ia_atoms(i)
+        im = im_atoms(i)
+        is = is_atoms(i)
+
+        atom_list(ia,im,is)%rxp = pos(1,ia) * 10.0_DP
+        atom_list(ia,im,is)%ryp = pos(2,ia) * 10.0_DP
+        atom_list(ia,im,is)%rzp = pos(3,ia) * 10.0_DP
+    END DO
+
+    deallocate(pos)
+
+    CALL Get_Internal_Coords
+    
+    ! Calculate COM and distance of the atom farthest to the COM.
+    
+    DO is = 1, nspecies
+       DO im = 1, nmolecules(is)
+          this_im = locate(im,is)
+          IF( .NOT. molecule_list(this_im,is)%live) CYCLE
+          ! Now let us ensure that the molecular COM is inside the central simulation box
+          CALL Get_COM(this_im,is)
+
+          xcom_old = molecule_list(this_im,is)%xcom
+          ycom_old = molecule_list(this_im,is)%ycom
+          zcom_old = molecule_list(this_im,is)%zcom
+          
+          ! Apply PBC
+
+          this_box = molecule_list(this_im,is)%which_box
+
+          IF (l_cubic(this_box)) THEN
+             CALL Apply_PBC_Anint(this_box,xcom_old,ycom_old,zcom_old, &
+                  xcom_new, ycom_new, zcom_new)
+
+          ELSE
+             CALL Minimum_Image_Separation(this_box,xcom_old,ycom_old,zcom_old, &
+                  xcom_new, ycom_new, zcom_new)
+
+          END IF
+          
+          ! COM in the central simulation box
+          molecule_list(this_im,is)%xcom = xcom_new
+          molecule_list(this_im,is)%ycom = ycom_new
+          molecule_list(this_im,is)%zcom = zcom_new
+          
+          ! displace atomic coordinates
+          atom_list(1:natoms(is),this_im,is)%rxp = atom_list(1:natoms(is),this_im,is)%rxp + &
+               xcom_new - xcom_old
+          atom_list(1:natoms(is),this_im,is)%ryp = atom_list(1:natoms(is),this_im,is)%ryp + &
+               ycom_new - ycom_old
+          atom_list(1:natoms(is),this_im,is)%rzp = atom_list(1:natoms(is),this_im,is)%rzp + &
+               zcom_new - zcom_old
+          
+          CALL Compute_Max_Com_Distance(this_im,is)
+       END DO
+    END DO
+    
+    IF(int_vdw_sum_style(1) == vdw_cut_tail) CALL Compute_Beads(1)
+
+  END SUBROUTINE Read_XTC
+
 SUBROUTINE Read_GRO(this_mc_step)
 
    INTEGER, INTENT(IN) :: this_mc_step
 
-    INTEGER :: ibox, is, ii, jj, im, this_im, ia, nmolecules_is, this_box, mols_this, sp_nmoltotal(nspecies)
+    INTEGER :: is, ii, jj, im, this_im, ia, nmolecules_is, this_box, mols_this, sp_nmoltotal(nspecies)
     INTEGER :: this_species, nfrac_global, i, this_rxnum, j, m, alive
     INTEGER :: this_unit, i_lambda
     INTEGER :: check_nmol
@@ -158,10 +351,7 @@ SUBROUTINE Read_GRO(this_mc_step)
     REAL(DP) :: E_self, xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
 
-    LOGICAL :: f_checkpoint, f_read_old, overlap, cfc_defined
     LOGICAL :: lopen, new_frame
-
-    TYPE(Energy_Class) :: inrg
 
     CHARACTER(120) :: line_string, line_array(20), t_ndx_name
     INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line, idx, i_ndx, totatoms, ps
@@ -175,184 +365,135 @@ SUBROUTINE Read_GRO(this_mc_step)
     molecule_list(:,:)%cfc_lambda = int_none
     atom_list(:,:,:)%exist = .FALSE.
 
+    IF ( this_mc_step == -1 ) CALL Read_NDX
 
-    line_nbr = 1
-    ! write(*,*) this_mc_step
-    ! READ NDX FILE before anything
-    IF ( this_mc_step == -1 ) THEN
-        totatoms = 0
-        DO is = 1 , nspecies
-            totatoms = totatoms + nmolecules(is) * natoms(is)
-        ENDDO
-
-        ALLOCATE( ndx_type( totatoms ) )
-        idx = 0
-        DO ibox = 1, nbr_boxes
-            OPEN(unit=gro_ndx_unit(ibox), file=gro_ndx_file(ibox))
-            DO 
-                CALL Parse_String(gro_ndx_unit(ibox),line_nbr,0,nbr_entries,line_array,ierr)
-                IF (ierr /= 0) THEN
-                    EXIT
-                END IF
-                ! skip empty lines
-                IF (nbr_entries == 0) CYCLE
-
-                IF (line_array(1) == '[' .AND. line_array(3) == ']') THEN
-                    IF (line_array(2) /= 'System') THEN
-                        idx = idx + 1
-                    END IF
-                    IF (idx > nspecies ) THEN
-                        err_msg = ""
-                        err_msg(1) = "*.ndx file should only have System and nspecies told."
-                        CALL Clean_Abort(err_msg,'Read_GRO')
-                    END IF
-
-                ELSE IF ( nbr_entries >= 1 ) THEN
-                    DO i_ndx = 1, nbr_entries
-                        ndx_type( String_To_Int( line_array(i_ndx) ) ) = idx
-                    END DO
-                END IF
-
-                line_nbr = line_nbr + 1
-
-            END DO
-            CLOSE(unit=gro_ndx_unit(ibox))
-            IF (idx < nspecies ) THEN
-                err_msg = ""
-                err_msg(1) = "*.ndx file should have all nspecies told."
-                CALL Clean_Abort(err_msg,'Read_GRO')
-            END IF
-        END DO
-        RETURN
-    END IF
-    
     line_nbr = 0
     ! Read configuration
-    DO ibox = 1, nbr_boxes
 
-       INQUIRE(file=gro_config_file(ibox),opened=lopen)
-       IF (.not. lopen) OPEN(unit=gro_config_unit(ibox), file=gro_config_file(ibox))
+    INQUIRE(file=gro_config_file,opened=lopen)
+    IF (.not. lopen) OPEN(unit=gro_config_unit, file=gro_config_file)
 
-       READ(gro_config_unit(ibox), *) ! read header
-       CALL Parse_String(gro_config_unit(ibox),line_nbr,1,nbr_entries,line_array,ierr)
+    READ(gro_config_unit, *) ! read header
+    CALL Parse_String(gro_config_unit,line_nbr,1,nbr_entries,line_array,ierr)
 
-       line_nbr = line_nbr + 1
-       
-       n_lines = String_To_Int(line_array(1))
-       IF (n_lines < 0) THEN
-          CLOSE(unit=gro_config_unit(ibox))
-          IF (ibox == nbr_boxes) THEN
-             RETURN
-          ELSE
-             CYCLE
-          END IF
+    line_nbr = line_nbr + 1
+    
+    n_lines = String_To_Int(line_array(1))
+    IF (n_lines < 0) THEN
+       RETURN
+    END IF
+
+    im = 1
+    ia = 1
+    ps = ndx_type(1)
+    DO i_line = 1, n_lines 
+
+       IF (1 < this_mc_step .and. this_mc_step < n_equilsteps) THEN
+          READ(gro_config_unit, *) 
+          CYCLE
        END IF
 
-       im = 1
-       ia = 1
-       ps = ndx_type(1)
-       DO i_line = 1, n_lines 
+       CALL Read_String(gro_config_unit,line_string,ierr)
+       line_array(1) = TRIM(line_string(1:10))
+       line_array(2) = TRIM(line_string(11:15))
+       line_array(3) = TRIM(line_string(16:20))
+       line_array(4) = TRIM(line_string(21:28))
+       line_array(5) = TRIM(line_string(29:36))
+       line_array(6) = TRIM(line_string(37:44))
 
-          IF (1 < this_mc_step .and. this_mc_step < n_equilsteps) THEN
-             READ(gro_config_unit(ibox), *) 
-             CYCLE
-          END IF
+       IF (nvacf_freq /= 0) THEN
+          line_array(7) = TRIM(line_string(45:52))
+          line_array(8) = TRIM(line_string(53:60))
+          line_array(9) = TRIM(line_string(61:68))
+       END IF
+         
+       is = ndx_type( i_line )
 
-          CALL Read_String(gro_config_unit(ibox),line_string,ierr)
-          line_array(1) = TRIM(line_string(1:10))
-          line_array(2) = TRIM(line_string(11:15))
-          line_array(3) = TRIM(line_string(16:20))
-          line_array(4) = TRIM(line_string(21:28))
-          line_array(5) = TRIM(line_string(29:36))
-          line_array(6) = TRIM(line_string(37:44))
+       IF ( ia == natoms(is)+1 ) THEN
+          im = im + 1
+          ia = 1
+       ELSE IF ( is /= ps ) THEN
+          im = 1
+          ia = 1
+          ps = is
+       END IF
 
-          IF (nvacf_freq /= 0) THEN
-             line_array(7) = TRIM(line_string(45:52))
-             line_array(8) = TRIM(line_string(53:60))
-             line_array(9) = TRIM(line_string(61:68))
-          END IF
-            
-          is = ndx_type( i_line )
+       IF ( im > nmolecules(is) ) THEN
+          err_msg = ""
+          err_msg(1) = "Found more than "// TRIM(Int_To_String(nmolecules(is)))//" molecules in file:"
+          err_msg(2) = gro_config_file
+          err_msg(3) = " Check the *.ndx and gro files."
+          CALL Clean_Abort(err_msg,'Read_GRO')
+       END IF
 
-          IF ( ia == natoms(is)+1 ) THEN
-             im = im + 1
-             ia = 1
-          ELSE IF ( is /= ps ) THEN
-             im = 1
-             ia = 1
-             ps = is
-          END IF
+       IF (.not. molecule_list(im,is)%live) THEN
+           ! provide a linked number to this molecule
+           locate(im,is) = im 
+           this_im = locate(im,is)
+           sp_nmoltotal(is) = sp_nmoltotal(is) + 1
+           molecule_list(this_im,is)%live = .TRUE.
 
-          IF ( im > nmolecules(is) ) THEN
-             err_msg = ""
-             err_msg(1) = "Found more than "// TRIM(Int_To_String(nmolecules(is)))//" molecules in file:"
-             err_msg(2) = gro_config_file(ibox)
-             err_msg(3) = " Check the *.ndx and gro files."
-             CALL Clean_Abort(err_msg,'Read_GRO')
-          END IF
+           ! By default make all the molecules as integer molecules
+           molecule_list(this_im,is)%molecule_type = int_normal
+           molecule_list(this_im,is)%cfc_lambda = 1.0_DP
 
-          IF (.not. molecule_list(im,is)%live) THEN
-              ! provide a linked number to this molecule
-              locate(im,is) = im 
-              this_im = locate(im,is)
-              sp_nmoltotal(is) = sp_nmoltotal(is) + 1
-              molecule_list(this_im,is)%live = .TRUE.
+           ! assign the box to this molecule
+           molecule_list(this_im,is)%which_box = 1
+           nmols(is,1) = nmols(is,1) + 1
+             
+       END IF
 
-              ! By default make all the molecules as integer molecules
-              molecule_list(this_im,is)%molecule_type = int_normal
-              molecule_list(this_im,is)%cfc_lambda = 1.0_DP
+       this_im = locate(im,is)
 
-              ! assign the box to this molecule
-              molecule_list(this_im,is)%which_box = ibox
-              nmols(is,ibox) = nmols(is,ibox) + 1
-                
-          END IF
+       nonbond_list(ia,is)%element = line_array(2)
+ 
+       atom_list(ia,this_im,is)%rxp = String_To_Double(line_array(4)) * 10.0_DP
+       atom_list(ia,this_im,is)%ryp = String_To_Double(line_array(5)) * 10.0_DP
+       atom_list(ia,this_im,is)%rzp = String_To_Double(line_array(6)) * 10.0_DP
+       
+       IF (nvacf_freq /= 0) THEN
+          atom_list(ia,this_im,is)%vxp = String_To_Double(line_array(7)) * 10.0_DP
+          atom_list(ia,this_im,is)%vyp = String_To_Double(line_array(8)) * 10.0_DP
+          atom_list(ia,this_im,is)%vzp = String_To_Double(line_array(9)) * 10.0_DP
 
-          this_im = locate(im,is)
+       END IF
 
-          nonbond_list(ia,is)%element = line_array(2)
-    
-          atom_list(ia,this_im,is)%rxp = String_To_Double(line_array(4)) * 10.0_DP
-          atom_list(ia,this_im,is)%ryp = String_To_Double(line_array(5)) * 10.0_DP
-          atom_list(ia,this_im,is)%rzp = String_To_Double(line_array(6)) * 10.0_DP
-          
-          IF (nvacf_freq /= 0) THEN
-             atom_list(ia,this_im,is)%vxp = String_To_Double(line_array(7)) * 10.0_DP
-             atom_list(ia,this_im,is)%vyp = String_To_Double(line_array(8)) * 10.0_DP
-             atom_list(ia,this_im,is)%vzp = String_To_Double(line_array(9)) * 10.0_DP
+       atom_list(ia,this_im,is)%exist = .TRUE.
+       ia_atoms(i_line) = ia
+       im_atoms(i_line) = this_im
+       is_atoms(i_line) = is
 
-          END IF
+       ia = ia + 1
 
-          atom_list(ia,this_im,is)%exist = .TRUE.
-          ia = ia + 1
-
-          line_nbr = line_nbr + 1
-
-       END DO
-       CALL Parse_String(gro_config_unit(ibox),line_nbr,3,nbr_entries,line_array,ierr)
        line_nbr = line_nbr + 1
-       IF (box_list(ibox)%length(1,1) /= String_To_Double(line_array(1))*10.0 .OR. &
-           box_list(ibox)%length(2,2) /= String_To_Double(line_array(2))*10.0 .OR. &
-           box_list(ibox)%length(3,3) /= String_To_Double(line_array(3))*10.0 ) THEN
-             err_msg = ""
-             err_msg(1) = "Box size in input and gromacs config do not agree."
-             CALL Clean_Abort(err_msg,'Read_GRO')
-       ENDIF
-
-       IF (0 .eq. this_mc_step .or. this_mc_step .gt. n_equilsteps) THEN
-          check_nmol = 0
-          DO is = 1, nspecies
-             check_nmol = check_nmol + (nmols(is,ibox)*natoms(is))
-          END DO
-
-          IF (check_nmol .LT. n_lines) THEN
-             err_msg = ""
-             err_msg(1) = "More molecules in GRO, than possible from nmolecules in the input file."
-             CALL Clean_Abort(err_msg,'Read_GRO')
-          ENDIF
-       ENDIF
 
     END DO
+    gro_natoms = n_lines 
+
+    CALL Parse_String(gro_config_unit,line_nbr,3,nbr_entries,line_array,ierr)
+    line_nbr = line_nbr + 1
+
+    ! Check the box size
+    IF (box_list(1)%length(1,1) /= String_To_Double(line_array(1))*10.0 .OR. &
+        box_list(1)%length(2,2) /= String_To_Double(line_array(2))*10.0 .OR. &
+        box_list(1)%length(3,3) /= String_To_Double(line_array(3))*10.0 ) THEN
+          err_msg = ""
+          err_msg(1) = "Box size in input and gromacs config do not agree."
+          CALL Clean_Abort(err_msg,'Read_GRO')
+    ENDIF
+
+    IF (0 .eq. this_mc_step .or. this_mc_step .gt. n_equilsteps) THEN
+       check_nmol = 0
+       DO is = 1, nspecies
+          check_nmol = check_nmol + (nmols(is,1)*natoms(is))
+       END DO
+
+       IF (check_nmol .LT. n_lines) THEN
+          err_msg = ""
+          err_msg(1) = "More molecules in GRO, than possible from nmolecules in the input file."
+          CALL Clean_Abort(err_msg,'Read_GRO')
+       ENDIF
+    ENDIF
 
     DO is = 1, nspecies
        IF(sp_nmoltotal(is) .LT. nmolecules(is)) THEN
@@ -417,9 +558,7 @@ SUBROUTINE Read_GRO(this_mc_step)
        END DO
     END DO
     
-    DO ibox = 1, nbr_boxes
-       IF(int_vdw_sum_style(ibox) == vdw_cut_tail) CALL Compute_Beads(ibox)
-    END DO
+    IF(int_vdw_sum_style(1) == vdw_cut_tail) CALL Compute_Beads(1)
 
   END SUBROUTINE Read_GRO
 
@@ -435,10 +574,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
     REAL(DP) :: E_self, xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
 
-    LOGICAL :: f_checkpoint, f_read_old, overlap, cfc_defined
     LOGICAL :: lopen, new_frame
-
-    TYPE(Energy_Class) :: inrg
 
     CHARACTER(120) :: line_string, line_array(20)
     INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line

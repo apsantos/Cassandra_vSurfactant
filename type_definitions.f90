@@ -610,11 +610,11 @@ MODULE Type_Definitions
     INTEGER                                :: ndihedralcall
     INTEGER                                 :: nd_bins = 1000
     INTEGER,  DIMENSION(:,:), ALLOCATABLE :: a_dist_pairs
-    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: a_dist
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: a_dist_sq
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: a_dist_his
     INTEGER                                 :: nad_bins = 1000
     INTEGER                                 :: natom_dists 
-    REAL(DP)                                 :: a_dist_max
+    REAL(DP)                                 :: a_dist_max_sq
     INTEGER                                :: nadistcall
 
  END TYPE Measure_Molecules_Class
