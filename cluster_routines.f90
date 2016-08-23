@@ -570,24 +570,23 @@ CONTAINS
 
         END DO
 
-    END DO
+        ic = 1
+        DO WHILE ( cluster%N(ic) /= 0 )
 
-    ic = 1
-    DO WHILE ( cluster%N(ic) /= 0 )
+            IF (cluster%N(ic) > 0) THEN
+                ! Tally the aggregation number distribution
+                cluster%M( cluster%N(ic) ) = cluster%M( cluster%N(ic) ) + 1
 
-        IF (cluster%N(ic) > 0) THEN
-            ! Tally the aggregation number distribution
-            cluster%M( cluster%N(ic) ) = cluster%M( cluster%N(ic) ) + 1
-
-            ! Tally up the Nmols of oligomers and clustered
-            IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
-                cluster%n_oligomers = cluster%n_oligomers + cluster%N(ic)
-            ELSE
-                cluster%n_clusters = cluster%n_clusters + cluster%N(ic)
+                ! Tally up the Nmols of oligomers and clustered
+                IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
+                    cluster%n_oligomers = cluster%n_oligomers + cluster%N(ic)
+                ELSE
+                    cluster%n_clusters = cluster%n_clusters + cluster%N(ic)
+                END IF
             END IF
-        END IF
 
-        ic = ic + 1
+            ic = ic + 1
+        END DO
     END DO
     !write(*,*) 'N', cluster%N(1:200)
     !write(*,*) 'clabel', cluster%clabel(1:500, 1)
@@ -1002,8 +1001,8 @@ CONTAINS
 
     ! Local variables
     
-    REAL(DP) :: const_val
-    INTEGER :: i, ia, im, ic_mol, is
+    INTEGER :: i, ia, im, ic_mol, is, this_locate
+    INTEGER, ALLOCATABLE :: sum_nmolec(:)
 
     REAL(DP) :: hdotr_new
 
@@ -1011,11 +1010,19 @@ CONTAINS
 
     ! storage stuff
 
+    ALLOCATE(sum_nmolec(nspecies))
+
+    sum_nmolec(1) = 0
+
+    DO is = 2, nspecies
+
+       sum_nmolec(is) = SUM(nmolecules(1:is-1))
+
+    END DO
 
     ! get the location of im 
 
     v_recip_difference = 0.0_DP
-    const_val = 1.0_DP/(2.0_DP * alpha_ewald(this_box) * alpha_ewald(this_box))
 
     !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)
     cos_sum_old(1:nvecs(this_box),this_box) = cos_sum(1:nvecs(this_box),this_box)
@@ -1047,6 +1054,8 @@ CONTAINS
 
              is = clus_is(ic_mol)
 
+             this_locate = locate(im,is) + sum_nmolec(is)
+
              cos_sum_im = 0.0_DP
              sin_sum_im = 0.0_DP
 
@@ -1065,12 +1074,12 @@ CONTAINS
    
              END DO
    
-             cos_sum(i,this_box) = cos_sum(i,this_box) + cos_sum_im - cos_mol(i,im)
-             sin_sum(i,this_box) = sin_sum(i,this_box) + sin_sum_im - sin_mol(i,im)
+             cos_sum(i,this_box) = cos_sum(i,this_box) + cos_sum_im - cos_mol(i,this_locate)
+             sin_sum(i,this_box) = sin_sum(i,this_box) + sin_sum_im - sin_mol(i,this_locate)
    
              ! set the molecules cos and sin terms to the one calculated here
-             cos_mol(i,im) = cos_sum_im
-             sin_mol(i,im) = sin_sum_im
+             cos_mol(i,this_locate) = cos_sum_im
+             sin_mol(i,this_locate) = sin_sum_im
 
           END DO clusMolLoop
 
