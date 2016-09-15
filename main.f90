@@ -93,8 +93,8 @@ PROGRAM Main
   INTEGER :: alive, t_num
 
   INTEGER :: nyears, nmonths, ndays, nhours, nmin, nsec, nms
-  CHARACTER(120) :: version
-  CHARACTER(120) filename1
+  CHARACTER(240) :: version
+  CHARACTER(240) filename1
   CHARACTER(80) :: name
 
   LOGICAL :: overlap, cbmc_overlap, superbad, inside_ch
@@ -210,6 +210,8 @@ PROGRAM Main
      CALL MCF_Control
   ELSE IF (int_sim_type == sim_pp) THEN
      CALL PP_Control
+  ELSE IF (int_sim_type == sim_virial) THEN
+     CALL virialMC_Control
   ELSE
      err_msg = ""
      err_msg(1) = 'Sim_Type unknown'
@@ -572,6 +574,10 @@ PROGRAM Main
   ELSE IF (int_sim_type == sim_pp) THEN
 
      CALL PP_Driver
+
+  ELSE IF (int_sim_type == sim_virial) THEN
+
+     CALL virialMC_Driver
 
   END IF
 

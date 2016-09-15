@@ -80,8 +80,8 @@ SUBROUTINE Participation
 
   REAL(DP) :: x_this, y_this, z_this, this_l
 
-  CHARACTER(120) :: file_name, car_file, xyz_file
-  CHARACTER(120) :: line_string
+  CHARACTER(240) :: file_name, car_file, xyz_file
+  CHARACTER(240) :: line_string
 
   
 
@@ -1291,7 +1291,7 @@ CONTAINS
     INTEGER :: i, this_atom, j
     REAL(DP) :: x, y, z
     
-    CHARACTER(120) :: car_file, pdb_file, xyz_file
+    CHARACTER(240) :: car_file, pdb_file, xyz_file
     CHARACTER(30) :: this_symbol
 
     
