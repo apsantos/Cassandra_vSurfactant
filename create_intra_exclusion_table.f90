@@ -205,7 +205,7 @@ SUBROUTINE Read_Intra_Exclusion_Table
   INTEGER :: t_atoms
   INTEGER, ALLOCATABLE, DIMENSION(:,:) :: temp_type
 
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
   CHARACTER(6) :: temp_name
 !-----------------------------------------------------------------------------
     ! Open intra scalingfile and find the line where the data begins
