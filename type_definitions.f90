@@ -651,4 +651,14 @@ MODULE Type_Definitions
 
  END TYPE trans_Class
 
+ TYPE virial_Class
+    ! msd variables
+    ! simulation time step (ps)
+    INTEGER, DIMENSION(2) :: species, nconfs, nrotations
+    REAL(DP)              :: min_dist, dist_step, max_dist
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: effective, coefficient
+    ! simulation position output frequency 
+
+ END TYPE virial_Class
+
 END MODULE Type_Definitions

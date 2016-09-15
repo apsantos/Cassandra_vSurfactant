@@ -63,7 +63,7 @@ MODULE File_Names
   !**********************************************************************
 USE xtc_interface
 
-INTEGER, PARAMETER :: FILENAME_LEN = 120
+INTEGER, PARAMETER :: FILENAME_LEN = 240
 
 !Variables to hold unit number and filename for the input file
 INTEGER :: inputunit = 5

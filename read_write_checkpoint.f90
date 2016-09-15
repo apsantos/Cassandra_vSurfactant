@@ -150,7 +150,7 @@ SUBROUTINE Read_NDX
 
     INTEGER :: is, ia, i, j, m
 
-    CHARACTER(120) :: line_string, line_array(20), t_ndx_name
+    CHARACTER(240) :: line_string, line_array(80), t_ndx_name
     INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line, idx, i_ndx, totatoms, ps
 
     line_nbr = 1
@@ -273,18 +273,22 @@ SUBROUTINE Read_XTC(this_mc_step)
     ELSEIF (this_mc_step < n_equilsteps) THEN
         RETURN
 
-    ELSEIF (ierr /= 0 ) THEN
-        WRITE(logunit,'(A,i3)') 'Finished reading xtc file at step: ', step
-        RETURN
+    ELSEIF (ierr /= 0) THEN
+        WRITE(logunit,*) 'There are only ', this_mc_step, 'steps in xtc'
+        err_msg = ""
+        err_msg(1) = "Not as many steps in the xtc file."
+        CALL Clean_Abort(err_msg,'Read_XTC')
+
     END IF
+
     DO i = 1, xtc_natoms
         ia = ia_atoms(i)
         im = im_atoms(i)
         is = is_atoms(i)
 
-        atom_list(ia,im,is)%rxp = pos(1,ia) * 10.0_DP
-        atom_list(ia,im,is)%ryp = pos(2,ia) * 10.0_DP
-        atom_list(ia,im,is)%rzp = pos(3,ia) * 10.0_DP
+        atom_list(ia,im,is)%rxp = pos(1,i) * 10.0_DP
+        atom_list(ia,im,is)%ryp = pos(2,i) * 10.0_DP
+        atom_list(ia,im,is)%rzp = pos(3,i) * 10.0_DP
     END DO
 
     deallocate(pos)
@@ -353,7 +357,7 @@ SUBROUTINE Read_GRO(this_mc_step)
 
     LOGICAL :: lopen, new_frame
 
-    CHARACTER(120) :: line_string, line_array(20), t_ndx_name
+    CHARACTER(240) :: line_string, line_array(80), t_ndx_name
     INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line, idx, i_ndx, totatoms, ps
     
     ! Let us read all the counters and count the number of molecules of
@@ -576,7 +580,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
 
     LOGICAL :: lopen, new_frame
 
-    CHARACTER(120) :: line_string, line_array(20)
+    CHARACTER(240) :: line_string, line_array(80)
     INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line
     
     ! Let us read all the counters and count the number of molecules of

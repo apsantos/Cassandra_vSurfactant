@@ -18,6 +18,7 @@
 !   You should have received a copy of the GNU General Public License
 !   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !********************************************************************************
+
 SUBROUTINE Write_Properties(this_mc_step,this_box)
   ! The subroutine will write desired properties to the property files. It is
   ! called by respective drivers such as.
@@ -166,6 +167,14 @@ CONTAINS
     ELSE IF (prop_to_write(1:6) == 'Degree') THEN
 
        prop_unit(ii) = '(% associated)'
+
+    ELSE IF (prop_to_write(1:6) == 'Virial') THEN
+
+       prop_unit(ii) = '(kJ/mol)-Ext '
+
+    ELSE IF (prop_to_write(1:6) == 'Effect') THEN
+
+       prop_unit(ii) = '(kJ/mol)-Ext '
 
     END IF
     
@@ -401,6 +410,25 @@ CONTAINS
          ELSE
             write_buff(ii+1) = alpha%n_assoc / REAL(nmols(alpha%assoc_species, this_box), DP)
          END IF
+
+!      ELSE IF (prop_written == 'Virial_Coefficient') THEN
+!
+!         IF (block_average) THEN
+!            write_buff(ii+1) = virial%coefficient/REAL(nthermo_freq,DP)
+!         ELSE
+!            write_buff(ii+1) = virial%coefficient
+!         END IF
+!         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
+!
+!      ELSE IF (prop_written == 'Effective_Potential') THEN
+!
+!         IF (block_average) THEN
+!            write_buff(ii+1) = virial%effective/REAL(nthermo_freq,DP)
+!         ELSE
+!            write_buff(ii+1) = virial%effective
+!         END IF
+!         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
+
       END IF
       
       ! At the end increment property counter by 1

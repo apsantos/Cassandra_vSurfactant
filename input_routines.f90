@@ -65,7 +65,7 @@ SUBROUTINE Get_Runname
 !********************************************************************************
 
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   
 !********************************************************************************
@@ -122,7 +122,7 @@ SUBROUTINE Get_Nspecies
 !*************************************************************************************
 
   INTEGER :: ierr,line_nbr,nbr_entries, i
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 !*************************************************************************************
   REWIND(inputunit)
 
@@ -289,7 +289,7 @@ SUBROUTINE Get_Sim_Type
 ! ignored.
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
 !********************************************************************************
   REWIND(inputunit)
@@ -356,6 +356,8 @@ SUBROUTINE Get_Sim_Type
      int_sim_type = sim_frag
   ELSEIF(sim_type == 'NVT_MC_Ring_Fragment') THEN
      int_sim_type = sim_ring
+  ELSEIF(sim_type == 'virial_MC') THEN
+     int_sim_type = sim_virial
   ELSEIF(sim_type == 'PP') THEN
      int_sim_type = sim_pp
   ELSEIF(sim_type == 'MCF_Gen') THEN
@@ -381,7 +383,7 @@ SUBROUTINE Get_Pair_Style
 !                 need to be stored. 
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries, iassign, ibox, k
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REAL(DP), ALLOCATABLE :: ewald_tol(:)
 
@@ -726,7 +728,7 @@ SUBROUTINE Get_Dielectric_Permitivity
   USE Energy_Routines
 
   INTEGER :: ierr, line_nbr, nbr_entries, ibox
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
   CHARACTER(120) :: solvent, permitivity_method
 
 !********************************************************************************
@@ -809,7 +811,7 @@ SUBROUTINE Get_Mixing_Rules
 ! ignored. If no mixing rule is specified, Lorentz-Berthelot is used as default.
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
 !********************************************************************************
   REWIND(inputunit)
@@ -886,7 +888,7 @@ SUBROUTINE Get_Molecule_Info
 
   INTEGER :: ierr,line_nbr,nbr_entries, i, openstatus, is, max_index
   INTEGER :: mcf_index(5), dummy
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
 !********************************************************************************
 ! determine the type of molecule input and connectivity
@@ -1267,7 +1269,7 @@ SUBROUTINE Get_L_Coul_CBMC(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
 
@@ -1327,7 +1329,7 @@ SUBROUTINE Get_Species_Type(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, is_1
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
 
@@ -1391,7 +1393,7 @@ SUBROUTINE Get_Insertion_Style(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, is_1
-  CHARACTER(120) :: line_string, line_array(30)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
 
@@ -1474,7 +1476,7 @@ SUBROUTINE Get_Atom_Info(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, ia
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
 
@@ -1657,7 +1659,7 @@ SUBROUTINE Get_Bond_Info(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, ib
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
 
@@ -1794,7 +1796,7 @@ SUBROUTINE Get_Angle_Info(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, iang, nangles_linear
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
 
@@ -1969,7 +1971,7 @@ SUBROUTINE Get_Dihedral_Info(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, idihed
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
 
@@ -2255,7 +2257,7 @@ SUBROUTINE Get_Improper_Info(is)
 INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, iimprop
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
 
@@ -2427,7 +2429,7 @@ SUBROUTINE Get_Fragment_Anchor_Info(is)
 
   INTEGER :: i, line_nbr, ierr, min_entries, nbr_entries, ianchor
 
-  CHARACTER(120) :: line_String,line_array(20)
+  CHARACTER(240) :: line_String,line_array(80)
 
 
   line_nbr = 0
@@ -2529,7 +2531,7 @@ SUBROUTINE Get_Fragment_Info(is)
   INTEGER :: nanchors, iatoms, jatoms, ibonds, iatoms_bond
   INTEGER :: i_atom, j_atom, atom1, atom2
   INTEGER, ALLOCATABLE :: anchor_id(:)
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   line_nbr = 0
   ierr = 0
@@ -2739,7 +2741,7 @@ SUBROUTINE Get_Fragment_Connect_Info(is)
 
   INTEGER, INTENT(IN):: is
   INTEGER :: ierr, line_nbr, nbr_entries, ifrag, min_entries, i
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
   ierr = 0
@@ -2832,7 +2834,7 @@ SUBROUTINE Get_Fragment_Connectivity_Info(is)
   INTEGER :: ierr, line_nbr, ifrag, nbr_entries, j, ifrag_connect, frag1, frag2
   INTEGER, ALLOCATABLE :: temp_frag(:)
 
-  CHARACTER(120) :: line_string,line_array(20)
+  CHARACTER(240) :: line_string,line_array(80)
 
   ierr = 0
   line_nbr = 0
@@ -2988,7 +2990,7 @@ SUBROUTINE Get_Fragment_File_Info(is)
 
   INTEGER :: ierr, line_nbr, i, j, ifrag, nbr_entries, is
   REAL(DP) :: vdw_cutoff, coul_cutoff
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
   CHARACTER(4) :: ring_flag
   
   REWIND(inputunit)
@@ -3268,7 +3270,7 @@ END SUBROUTINE Get_Fragment_Coords
 SUBROUTINE Get_Intra_Scaling
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries, iimprop, is
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
   LOGICAL :: intrascaling_set, intrascaling_read
 
 !********************************************************************************
@@ -3412,7 +3414,7 @@ SUBROUTINE Get_Box_Info
   ! CUBIC, ORTHOGONAL, CELL_MATRIX
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries,ibox, is
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
 !********************************************************************************
   REWIND(inputunit)
@@ -3647,7 +3649,7 @@ SUBROUTINE Get_Temperature_Info
   IMPLICIT NONE
 
   INTEGER :: ierr, line_nbr, i, nbr_entries
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   ! Check to make sure that we have read in number of boxes if not then abort
 
@@ -3731,7 +3733,7 @@ SUBROUTINE Get_Pressure_Info
   ! that only different pressure can be specified.
 
   INTEGER :: ierr, line_nbr, nbr_entries, i
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(inputunit)
 
@@ -3810,7 +3812,7 @@ SUBROUTINE Get_Fugacity_Info
   IMPLICIT NONE
 
   INTEGER :: line_nbr, nbr_entries, ierr, i, spec_counter, j, is, js, i_ins
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(inputunit)
 
@@ -3978,7 +3980,7 @@ SUBROUTINE Get_Move_Probabilities
   INTEGER :: ierr, nbr_entries, line_nbr,i, j, ibox, is, vol_int
   INTEGER :: ks, js, n_pairs, pair_ins_species
   INTEGER ::  kbox, this_box
-  CHARACTER(120) :: line_string, line_array(30), line_string2
+  CHARACTER(240) :: line_string, line_array(80), line_string2
   CHARACTER(4) :: Symbol
 
   REAL(DP) :: total_mass, this_mass, prob_box_swap, sum_prob_species_ins_pair
@@ -4941,7 +4943,7 @@ SUBROUTINE Get_Start_Type
     use, intrinsic :: iso_c_binding, only: C_NULL_CHAR
 
   INTEGER :: ierr, line_nbr, nbr_entries, i,j, ibox, tot_natoms, is
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
   CHARACTER(1) :: first_character
   CHARACTER(4) :: symbol
 
@@ -5293,7 +5295,7 @@ USE Random_Generators
   IMPLICIT NONE
 
   INTEGER :: ierr, line_nbr, nbr_entries,i, ia 
-  CHARACTER(120) :: line_string,line_array(20)
+  CHARACTER(240) :: line_string,line_array(80)
   LOGICAL :: overlap
 
   ierr = 0
@@ -5385,7 +5387,7 @@ SUBROUTINE Get_CBMC_Info
   ! The subroutine reads in the information on the starting seed for the simulation
 
   INTEGER :: ierr, line_nbr, nbr_entries,ibox
-  CHARACTER(120) :: line_string,line_array(30)
+  CHARACTER(240) :: line_string,line_array(80)
 
   REWIND(inputunit)
   ierr = 0
@@ -5452,7 +5454,7 @@ SUBROUTINE Get_Zig_By_Omega
 !*************************************
 
   INTEGER :: ierr, line_nbr, nbr_entries, i, spec_counter
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(inputunit)
 
@@ -5513,7 +5515,7 @@ SUBROUTINE Get_Seed_Info
   ! The subroutine reads in the information on the starting seed for the simulation
 
   INTEGER :: ierr, line_nbr, nbr_entries
-  CHARACTER(120) :: line_string,line_array(20)
+  CHARACTER(240) :: line_string,line_array(80)
 
   REWIND(inputunit)
   ierr = 0
@@ -5576,7 +5578,7 @@ SUBROUTINE Get_Frequency_Info
   ! This subroutine obtains frequency for writing to various files
 
   INTEGER :: ierr, line_nbr, nbr_entries, ibox, is
-  CHARACTER(120) :: line_string, line_array(20),movie_header_file, &
+  CHARACTER(240) :: line_string, line_array(80),movie_header_file, &
                      movie_xyz_file
 
   REWIND(inputunit)
@@ -5599,6 +5601,8 @@ SUBROUTINE Get_Frequency_Info
   nmsd_freq = 0
   nvacf_freq = 0
   ndipole_freq = 0
+  nvirial_freq = 0
+  npotential_freq = 0
 
   DO
      line_nbr = line_nbr + 1
@@ -5768,6 +5772,20 @@ SUBROUTINE Get_Frequency_Info
                  WRITE(logunit,*) 
                  WRITE(logunit,'(A,T50,I8,A)') 'The dipole moment will be calculated/written at every', ndipole_freq, ' MC steps.'
 
+              ELSE IF (line_array(1) == 'Nvirialfreq') THEN
+
+                 nvirial_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The virial coefficient will be calculated/written at every', nvirial_freq, ' MC steps.'
+
+              ELSE IF (line_array(1) == 'Npotentialfreq') THEN
+
+                 npotential_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The effective potential will be calculated/written at every', npotential_freq, ' MC steps.'
+
               ELSE IF (line_array(1) == 'Ncoordfreq') THEN
               
                  ncoord_freq = String_To_Int(line_array(2))
@@ -5866,7 +5884,7 @@ END SUBROUTINE Get_Frequency_Info
 !*****************************************************************************************************
 SUBROUTINE Average_Info
 
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   INTEGER :: ierr, line_nbr, this_average, nbr_entries
 
@@ -5933,7 +5951,7 @@ USE Run_Variables, ONLY: cpcollect
 
   INTEGER :: ierr, line_nbr, nbr_properties, max_properties, nbr_entries
   INTEGER :: i, j, this_box, ibox, is, average_id, ifrac
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
   CHARACTER(12) :: extension
   CHARACTER(9) :: extension1
   CHARACTER(17) :: extension2
@@ -6148,7 +6166,7 @@ SUBROUTINE Get_Clustering_Info
 
   INTEGER :: ierr, line_nbr, nbr_entries, i, is, js, ia, ja, itype
   INTEGER :: imax_nmol, max_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
   REAL(8) :: distance
 
   REWIND(inputunit)
@@ -6496,7 +6514,7 @@ SUBROUTINE Get_Degree_Association_Info
   USE Degree_Association
 
   INTEGER :: ierr, line_nbr, nbr_entries, is, ia
-  CHARACTER(120) :: line_string, line_array(20) !filename
+  CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
   
@@ -6621,7 +6639,7 @@ SUBROUTINE Get_Oligomer_Cutoff_Info
   USE Cluster_Routines
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
-  CHARACTER(120) :: line_string, line_array(20) !filename
+  CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
 
@@ -6680,7 +6698,7 @@ SUBROUTINE Get_Bond_Histogram_Info
   USE Measure_Molecules
 
   INTEGER :: ierr, line_nbr, nbr_entries, is, ib, cnt
-  CHARACTER(120) :: line_string, line_array(20) !filename
+  CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
 
@@ -6743,7 +6761,7 @@ SUBROUTINE Get_Bond_Histogram_Info
   USE Measure_Molecules
 
   INTEGER :: ierr, line_nbr, nbr_entries, is, ia
-  CHARACTER(120) :: line_string, line_array(20) !filename
+  CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
 
@@ -6800,7 +6818,7 @@ SUBROUTINE Get_Bond_Histogram_Info
   USE Measure_Molecules
 
   INTEGER :: ierr, line_nbr, nbr_entries, is, id
-  CHARACTER(120) :: line_string, line_array(20) !filename
+  CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
 
@@ -6857,7 +6875,7 @@ SUBROUTINE Get_Bond_Histogram_Info
   USE Measure_Molecules
 
   INTEGER :: ierr, line_nbr, nbr_entries, iap
-  CHARACTER(120) :: line_string, line_array(20) !filename
+  CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
 
@@ -6923,7 +6941,7 @@ SUBROUTINE Get_Bond_Histogram_Info
   USE Excluded_Volume
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
-  CHARACTER(120) :: line_string, line_array(20) !filename
+  CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
   
@@ -7041,7 +7059,7 @@ SUBROUTINE Get_MSD_Info
   !USE Transport_Properties
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
-  CHARACTER(120) :: line_string, line_array(20) !filename
+  CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
   
@@ -7169,7 +7187,7 @@ SUBROUTINE Get_VACF_Info
   !USE Transport_Properties
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
-  CHARACTER(120) :: line_string, line_array(20) !filename
+  CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
   
@@ -7297,7 +7315,7 @@ SUBROUTINE Get_Dipole_Moment_Info
   !USE Transport_Properties
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
-  CHARACTER(120) :: line_string, line_array(20) !filename
+  CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
   
@@ -7415,6 +7433,99 @@ SUBROUTINE Get_Dipole_Moment_Info
 
 END SUBROUTINE Get_Dipole_Moment_Info
 
+SUBROUTINE Get_Virial_Info
+  !***************************************************************************************************
+  ! 
+  ! Dipole moment information
+  ! 
+  !***************************************************************************************************
+
+  !USE Transport_Properties
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is
+  CHARACTER(240) :: line_string, line_array(80) !filename
+
+  REWIND(inputunit)
+  
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Virial Coefficient calculation information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Virial_Info')
+     END IF
+
+     IF(line_string(1:17) == '# Virial_Info') THEN
+        CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= 3 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Need the minimum distance, step and max distance.'
+            CALL Clean_Abort(err_msg,'Get_Virial_Info')
+        END IF
+        mcvirial%min_dist = String_To_Double(line_array(1))
+        mcvirial%dist_step = String_To_Double(line_array(2))
+        mcvirial%max_dist = String_To_Double(line_array(3))
+
+        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= 2 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must give the index for the two species'
+            CALL Clean_Abort(err_msg,'Get_Virial_Info')
+        END IF
+        mcvirial%species(1) = String_To_Int(line_array(1))
+        mcvirial%species(2) = String_To_Int(line_array(2))
+
+        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= 2 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must give the number of fragments to trail at each distance for each species'
+            CALL Clean_Abort(err_msg,'Get_Virial_Info')
+        END IF
+        mcvirial%nconfs(1) = String_To_Int(line_array(1))
+        mcvirial%nconfs(2) = String_To_Int(line_array(2))
+
+        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= 2 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must give the number of rotations to trail at each distance for each species'
+            CALL Clean_Abort(err_msg,'Get_Virial_Info')
+        END IF
+        mcvirial%nrotations(1) = String_To_Int(line_array(1))
+        mcvirial%nrotations(2) = String_To_Int(line_array(2))
+    
+        IF (mcvirial%nrotations(1) < 1 .or. mcvirial%nrotations(2) < 1 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must give the number of rotations greater than 1'
+            CALL Clean_Abort(err_msg,'Get_Virial_Info')
+        END IF
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+        EXIT
+     END IF
+  END DO
+
+  IF (ndipole_freq /= 0) THEN
+     IF (.not. ALLOCATED(trans%dipole_species)) THEN
+        err_msg = ''
+        err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
+        CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+     ELSE IF(.not. ANY(trans%dipole_species == .TRUE.)) THEN
+        err_msg = ''
+        err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
+        CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
+     END IF
+  END IF
+
+END SUBROUTINE Get_Virial_Info
+
 SUBROUTINE Copy_Inputfile
 
 !**********************************************************************************************
@@ -7428,7 +7539,7 @@ SUBROUTINE Copy_Inputfile
 !***********************************************************************************************
 
   INTEGER :: ierr, line_nbr
-  CHARACTER(120) :: line_string
+  CHARACTER(240) :: line_string
   
 
   REWIND(inputunit)
@@ -7478,7 +7589,7 @@ SUBROUTINE Get_Rcutoff_Low
   !**********************************************************************************************
 
   INTEGER :: ierr, line_nbr, nbr_entries
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(inputunit)
   ierr = 0
@@ -7534,7 +7645,7 @@ SUBROUTINE Get_File_Info
 
   INTEGER :: ierr, nbr_entries, line_nbr, is
 
-  CHARACTER(120) :: line_array(20), line_string
+  CHARACTER(240) :: line_array(80), line_string
   
   ierr = 0
   REWIND(inputunit)
@@ -7584,7 +7695,7 @@ SUBROUTINE Get_Energy_Check_Info
   IMPLICIT NONE
 
   INTEGER :: ierr, line_nbr, nbr_entries, is, ibox
-  CHARACTER(120) :: line_string, line_array(20)
+  CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(inputunit)
 
@@ -7637,7 +7748,7 @@ SUBROUTINE Get_Mie_Nonbond
   USE File_Names
 
   INTEGER :: ierr, nbr_entries, line_nbr, is, Mk, Mi, Mj
-  CHARACTER(120) :: line_array(20), line_string
+  CHARACTER(240) :: line_array(80), line_string
   ierr = 0
   REWIND(inputunit)
   line_nbr = 0
@@ -7709,7 +7820,7 @@ SUBROUTINE Get_Lattice_File_Info
     IMPLICIT NONE
 
     INTEGER :: line_nbr, ierr, nbr_entries
-    CHARACTER*120 :: line_string, line_array(20)
+    CHARACTER*240 :: line_string, line_array(80)
 
     REWIND(inputunit)
 

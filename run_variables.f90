@@ -56,7 +56,7 @@ USE Type_Definitions
 !*********************************************************************************
   ! This section contains global variables used by many routines during the run.
 
-  CHARACTER(120) :: run_name,start_type
+  CHARACTER(240) :: run_name,start_type
   CHARACTER(80) :: err_msg(10)
 
   ! error handling variables
@@ -81,6 +81,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: sim_gemc_ig = 8
   INTEGER, PARAMETER :: sim_mcf = 9
   INTEGER, PARAMETER :: sim_pp = 10
+  INTEGER, PARAMETER :: sim_virial = 11
   LOGICAL :: lfugacity, lchempot, timed_run, openmp_flag, en_flag
 
   ! The starting seed for the random generator
@@ -134,6 +135,7 @@ USE Type_Definitions
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param5_table, vdw_param6_table, vdw_param7_table
   !QQ CORR
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param8_table
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param9_table, vdw_param10_table
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alpha_ewald, h_ewald_cut
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alphal_ewald
   REAL(DP), DIMENSION(:), ALLOCATABLE :: ewald_p_sqrt, ewald_p
@@ -477,6 +479,7 @@ USE Type_Definitions
 
   INTEGER :: nthermo_freq, ncoord_freq, n_mcsteps, n_equilsteps, this_mcstep
   INTEGER :: ncluster_freq, nexvol_freq, nalpha_freq, nalphaclus_freq, nendclus_freq, nmsd_freq, nvacf_freq, ndipole_freq, nbond_freq, nangle_freq, ndihedral_freq, natomdist_freq, natomenergy_freq
+  INTEGER :: nvirial_freq, npotential_freq
  
   INTEGER,DIMENSION(:),ALLOCATABLE :: nbr_prop_files
 
@@ -602,5 +605,7 @@ LOGICAL :: store_sum
   INTEGER, DIMENSION(:), ALLOCATABLE :: is_atoms
   INTEGER :: xtc_natoms, gro_natoms
   
+  TYPE(virial_Class), TARGET :: mcvirial
+
 END MODULE Run_Variables
 

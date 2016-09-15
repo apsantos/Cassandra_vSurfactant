@@ -22,7 +22,7 @@
 SUBROUTINE PP_Driver
   !****************************************************************************
   !
-  ! The subroutine performs GEMC moves. 
+  ! The subroutine performs Post Processing
   ! 
   ! Called by
   !
