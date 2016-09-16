@@ -443,10 +443,16 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   is = n1
   ! P_seq and P_bias equal 1.0 unless changed by Build_Molecule
-  nplocal = MIN(nmols(n1,this_box), nmols(n2,this_box))
-  ln_pacc = ln_pacc - DLOG(fp_seq * fp_bias) &
+  if (n1 /= n2) then
+     nplocal = MIN(nmols(n1,this_box), nmols(n2,this_box))
+     ln_pacc = ln_pacc - DLOG(fp_seq * fp_bias) &
                     - 2.0_DP*DLOG(REAL(nplocal,DP)) &
                     + 2.0_DP*DLOG(box_list(this_box)%volume)
+  else
+     ln_pacc = ln_pacc + DLOG(fp_seq * fp_bias) &
+                    - DLOG(REAL(nmols(is,this_box)+1,DP)) &
+                    + DLOG(box_list(this_box)%volume) 
+  endif
  
   IF(lchempot) THEN
      ! chemical potential is input
