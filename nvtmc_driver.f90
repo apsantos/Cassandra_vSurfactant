@@ -309,6 +309,19 @@ SUBROUTINE NVTMC_Driver
            END IF
         END IF
 
+        IF ( ncluster_freq /= 0 ) THEN
+           IF ( MOD(i,ncluster_freq) == 0 ) THEN
+           
+              DO ibox = 1, nbr_boxes
+              
+                 CALL Find_Clusters(ibox,1)
+                 CALL Write_Cluster(ibox)
+              
+              END DO
+           
+           END IF
+        END IF
+        
         IF(write_flag) THEN
 
            CALL Write_Checkpoint(i)
@@ -348,19 +361,6 @@ SUBROUTINE NVTMC_Driver
 
         END IF
 
-        IF ( ncluster_freq /= 0 ) THEN
-           IF ( MOD(i,ncluster_freq) == 0 ) THEN
-           
-              DO ibox = 1, nbr_boxes
-              
-                 CALL Find_Clusters(ibox,1)
-                 CALL Write_Cluster(ibox)
-              
-              END DO
-           
-           END IF
-        END IF
-        
         write_flag = .FALSE.
 
      ELSE
