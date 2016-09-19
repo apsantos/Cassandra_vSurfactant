@@ -93,6 +93,8 @@
     ALLOCATE(vdw_param6_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param7_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param8_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param9_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param10_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     vdw_param1_table = 0.0_DP
     vdw_param2_table = 0.0_DP
     vdw_param3_table = 0.0_DP
@@ -101,6 +103,8 @@
     vdw_param6_table = 0.0_DP
     vdw_param7_table = 0.0_DP
     vdw_param8_table = 0.0_DP
+    vdw_param9_table = 0.0_DP
+    vdw_param10_table = 0.0_DP
 
     ! Allocate memory for total number bead types in each box
     ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
@@ -398,6 +402,8 @@ SUBROUTINE Read_Nonbond_Table
     ALLOCATE(vdw_param6_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param7_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param8_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param9_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param10_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     vdw_param1_table = 0.0_DP
     vdw_param2_table = 0.0_DP
     vdw_param3_table = 0.0_DP
@@ -406,6 +412,8 @@ SUBROUTINE Read_Nonbond_Table
     vdw_param6_table = 0.0_DP
     vdw_param7_table = 0.0_DP
     vdw_param8_table = 0.0_DP
+    vdw_param9_table = 0.0_DP
+    vdw_param10_table = 0.0_DP
 
     ! Allocate memory for total number bead types in each box
     ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
@@ -470,6 +478,12 @@ SUBROUTINE Read_Nonbond_Table
                 vdw_param8_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param8_table(jtype,itype) = vdw_param8_table(itype,jtype)
 
+            ELSEIF (pot_type == 'Yukawa') THEN
+                vdw_param9_table(itype,jtype) = String_To_Double(line_array(i+1))
+                vdw_param9_table(jtype,itype) = vdw_param9_table(itype,jtype)
+                vdw_param10_table(itype,jtype) = String_To_Double(line_array(i+2))
+                vdw_param10_table(jtype,itype) = vdw_param10_table(itype,jtype)
+
             ENDIF
 
         ENDDO
@@ -484,7 +498,8 @@ SUBROUTINE Read_Nonbond_Table
                  vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype), &
                  vdw_param3_table(itype,jtype), vdw_param4_table(itype,jtype), &
                  vdw_param5_table(itype,jtype), vdw_param6_table(itype,jtype), &
-                 vdw_param7_table(itype,jtype), vdw_param8_table(itype,jtype)
+                 vdw_param7_table(itype,jtype), vdw_param8_table(itype,jtype), &
+                 vdw_param9_table(itype,jtype), vdw_param10_table(itype,jtype)
         ENDDO
     ENDDO
 

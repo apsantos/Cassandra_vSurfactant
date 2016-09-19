@@ -1594,7 +1594,7 @@ CONTAINS
     LOGICAL :: fraction
 
 !FSL Local Hydration and WCA Parameters
-    REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, E_wca, epswca, rwca
+    REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, E_wca, epswca, rwca, kappa
 
   !------------------------------------------------------------------------------------------
     Eij_vdw = 0.0_DP
@@ -1740,6 +1740,42 @@ CONTAINS
              
              
           ENDIF LJ_12_6_calculation
+
+          Yukawa_calculation: IF (vdw_param9_table(itype,jtype) /= 0) THEN
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             eps = vdw_param9_table(itype,jtype)
+             kappa = vdw_param10_table(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN
+                
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                
+                eps = eps * vdw_intra_scale(ia,ja,is)
+
+             ENDIF
+
+            IF (int_vdw_sum_style(ibox) == vdw_cut .OR. int_vdw_sum_style(ibox) == vdw_cut_tail) THEN
+                 
+                IF (rijsq < rcut_vdwsq(ibox)) THEN
+                   rij = SQRT(rijsq)
+                   Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij)
+                ENDIF
+
+            ELSEIF (int_vdw_sum_style(ibox) == vdw_cut_shift) THEN
+                
+                IF (rijsq < rcut_vdwsq(ibox)) THEN
+                    rij = SQRT(rijsq)
+                    rcut_vdw = SQRT(rcut_vdwsq(ibox))
+                    Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij) - (eps * exp(-kappa * rcut_vdw)/rcut_vdw)
+                ENDIF
+            ELSE
+                rij = SQRT(rijsq)
+                Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij)
+            ENDIF
+
+          ENDIF Yukawa_calculation
+
 !Closing loop for checking WCA
        ENDIF 
        ENDIF VDW_calculation
