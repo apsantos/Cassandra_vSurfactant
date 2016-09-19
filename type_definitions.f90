@@ -559,9 +559,9 @@ MODULE Type_Definitions
     REAL(DP), DIMENSION(:,:,:,:,:), ALLOCATABLE :: min_distance_sq
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: r1_sq, r2_sq, r3_sq
     INTEGER  :: n_oligomers, n_clusters, micelle_species
-    LOGICAL, DIMENSION(2, 4) :: criteria
+    LOGICAL, DIMENSION(3, 4) :: criteria
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: species_type
-    INTEGER, DIMENSION(2) :: n_species_type
+    INTEGER, DIMENSION(3) :: n_species_type
 
     ! cluster finding variables
     REAL(DP) :: clusmax, n_cluster

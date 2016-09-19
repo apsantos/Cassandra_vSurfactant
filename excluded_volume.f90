@@ -123,12 +123,12 @@ CONTAINS
                IF (cs == is .and. imol == im) CYCLE
                !IF (cluster%species_type(ispec) == is .and. imol == im) CYCLE
    
-               in_cluster = Neighbor(1, imol, im, cs, is)
+               in_cluster = Neighbor(3, imol, im, cs, is)
                IF (in_cluster) THEN
                    ! remove monomer
                    CALL Select_Monomer(im, is, this_box)
                    exvol%excluded = exvol%excluded + 1
-                   !write(*,*) 'cluster', ispec, imol, i_ins
+                   write(*,*) 'cluster', ispec, imol, i_ins
                    CYCLE ins_loop
                END IF
    
@@ -145,7 +145,7 @@ CONTAINS
            ! remove monomer
            CALL Select_Monomer(im, is, this_box)
            exvol%excluded = exvol%excluded + 1
-           !write(*,*) 'overlap', i_ins
+           write(*,*) 'overlap', i_ins
            CYCLE ins_loop
        END IF
    
@@ -157,7 +157,7 @@ CONTAINS
        ln_pacc = beta(this_box) * delta_e 
    
        IF (ln_pacc > exvol%criteria) THEN
-           !write(*,*) 'ene', delta_e, i_ins
+           write(*,*) 'ene', delta_e, i_ins
            exvol%excluded = exvol%excluded + 1
        END IF
        

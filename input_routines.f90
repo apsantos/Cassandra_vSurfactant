@@ -6198,14 +6198,14 @@ SUBROUTINE Get_Clustering_Info
         c_or_m = 0
         cluster%n_species_type = 0
         !                                 2 = move/cluster          0 =  COM
-        ALLOCATE( cluster%min_distance_sq(2, nspecies, nspecies, 0:MAXVAL(natoms), 0:MAXVAL(natoms)) )
+        ALLOCATE( cluster%min_distance_sq(3, nspecies, nspecies, 0:MAXVAL(natoms), 0:MAXVAL(natoms)) )
         cluster%min_distance_sq = 0.0_DP
-        ALLOCATE( cluster%r1_sq(2, nspecies,0:MAXVAL(natoms)), cluster%r2_sq(2, nspecies,0:MAXVAL(natoms)), cluster%r3_sq(2, nspecies,0:MAXVAL(natoms)) )
+        ALLOCATE( cluster%r1_sq(3, nspecies,0:MAXVAL(natoms)), cluster%r2_sq(3, nspecies,0:MAXVAL(natoms)), cluster%r3_sq(3, nspecies,0:MAXVAL(natoms)) )
         cluster%r1_sq = 0.0_DP
         cluster%r2_sq = 0.0_DP
         cluster%r3_sq = 0.0_DP
 
-CMloop: DO icm = 1, 2
+CMloop: DO icm = 1, 3
         imax_nmol = 0
         line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
@@ -6223,6 +6223,9 @@ CMloop: DO icm = 1, 2
                 WRITE(logunit,'(A)') 'but cluster move probability not given.'
             END IF
             c_or_m = 2
+
+        ELSE IF (line_array(1) == 'exvol') THEN
+            c_or_m = 3
 
         ! Error handling
         ELSE
@@ -6462,9 +6465,9 @@ EnLoop: DO ientry = 1, n_entries
 
         END DO CMloop
 
-        ALLOCATE(cluster%species_type(2, MAXVAL(cluster%n_species_type)))
+        ALLOCATE(cluster%species_type(3, MAXVAL(cluster%n_species_type)))
         cluster%species_type = 0
-        DO c_or_m = 1, 2
+        DO c_or_m = 1, 3
             i = 1
             DO is = 1, nspecies
                 IF ( ANY(cluster%min_distance_sq(c_or_m,is,:,:,:) > 0.000001) .OR. &
@@ -6479,6 +6482,7 @@ EnLoop: DO ientry = 1, n_entries
 
         ALLOCATE( cluster%M(max_nmol), cluster%N(max_nmol) )
         ALLOCATE( cluster%clabel(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
+        print*, 'nspectype', cluster%n_species_type
         cluster%M = 0
         cluster%N = 0
         cluster%clabel = 0
@@ -6495,6 +6499,8 @@ EnLoop: DO ientry = 1, n_entries
             WRITE(logunit,*) '**** Not Performing Cluster move ****** '
         ELSE IF (cluster%n_species_type(2) == 0) THEN
             WRITE(logunit,*) '**** Not Performing Clustering calculation ****** '
+        ELSE IF (cluster%n_species_type(3) == 0) THEN
+            WRITE(logunit,*) '**** Not Performing Excluded Volume calculation ****** '
         END IF
 
         EXIT

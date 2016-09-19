@@ -659,10 +659,9 @@ SUBROUTINE Write_Cluster(this_box)
      END DO
   END IF
         
-  WRITE(box_unit,'(/)', ADVANCE='NO')
-  
   DO iM = 1, SIZE(cluster%M)
      IF (cluster%M(iM) > 0) THEN
+        WRITE(box_unit,'(/)', ADVANCE='NO')
         WRITE(box_unit,'(I6, I10)', ADVANCE='NO') iM, cluster%M(iM)
 
         IF (nalphaclus_freq > 0) THEN
@@ -676,8 +675,6 @@ SUBROUTINE Write_Cluster(this_box)
             END DO
         END IF
         
-        WRITE(box_unit,'(/)', ADVANCE='NO')
-
      END IF
   END DO
   CLOSE(unit=cluster_file_unit+this_box)

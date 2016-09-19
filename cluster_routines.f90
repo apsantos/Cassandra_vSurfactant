@@ -497,8 +497,9 @@ CONTAINS
 
     ! cluster label of labels
     ! counts how many atoms are in the cluster
-    cluster%N = 0
-    cluster%clabel = 0
+    cluster%N(:) = 0
+    cluster%clabel(:,:) = 0
+    write(*,*) 'clabel', cluster%clabel(1:8,3)
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
 
@@ -548,7 +549,7 @@ CONTAINS
 
     !write(*,*) 'c/m', count_or_move
     !write(*,*) 'N', cluster%N(1:200)
-    !write(*,*) 'clabel', cluster%clabel
+    write(*,*) 'clabel', cluster%clabel(1:8,3)
     cluster%n_oligomers = 0
     cluster%n_clusters = 0
     DO is = 1, cluster%n_species_type(count_or_move)
