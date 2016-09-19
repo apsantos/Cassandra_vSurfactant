@@ -573,16 +573,18 @@ CONTAINS
         ic = 1
         DO WHILE ( cluster%N(ic) /= 0 )
 
-            ! Tally the aggregation number distribution
-            cluster%M( cluster%N(ic) ) = cluster%M( cluster%N(ic) ) + 1
-
-            ! Tally up the Nmols of oligomers and clustered
-            IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
-                cluster%n_oligomers = cluster%n_oligomers + cluster%N(ic)
-            ELSE
-                cluster%n_clusters = cluster%n_clusters + cluster%N(ic)
+            IF (cluster%N(ic) > 0) THEN
+                ! Tally the aggregation number distribution
+                cluster%M( cluster%N(ic) ) = cluster%M( cluster%N(ic) ) + 1
+    
+                ! Tally up the Nmols of oligomers and clustered
+                IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
+                    cluster%n_oligomers = cluster%n_oligomers + cluster%N(ic)
+                ELSE
+                    cluster%n_clusters = cluster%n_clusters + cluster%N(ic)
+                END IF
             END IF
-
+    
             ic = ic + 1
         END DO
     END DO
