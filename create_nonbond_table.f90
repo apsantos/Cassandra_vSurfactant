@@ -95,6 +95,8 @@
     ALLOCATE(vdw_param8_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param9_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param10_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param11_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param12_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     vdw_param1_table = 0.0_DP
     vdw_param2_table = 0.0_DP
     vdw_param3_table = 0.0_DP
@@ -105,6 +107,8 @@
     vdw_param8_table = 0.0_DP
     vdw_param9_table = 0.0_DP
     vdw_param10_table = 0.0_DP
+    vdw_param11_table = 0.0_DP
+    vdw_param12_table = 0.0_DP
 
     ! Allocate memory for total number bead types in each box
     ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
@@ -364,7 +368,7 @@ SUBROUTINE Read_Nonbond_Table
                     nbr_atomtypes = nbr_atomtypes + 1
                     temp_type_list(nbr_atomtypes) = temp_type
                 END IF
-                !Check which speicies and atom corresponds to this name
+                !Check which species and atom corresponds to this name
                 ncheck = 0
                 DO is = 1, nspecies
                     DO ia = 1, natoms(is)
@@ -402,6 +406,8 @@ SUBROUTINE Read_Nonbond_Table
     ALLOCATE(vdw_param8_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param9_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param10_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param11_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    ALLOCATE(vdw_param12_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     vdw_param1_table = 0.0_DP
     vdw_param2_table = 0.0_DP
     vdw_param3_table = 0.0_DP
@@ -412,6 +418,8 @@ SUBROUTINE Read_Nonbond_Table
     vdw_param8_table = 0.0_DP
     vdw_param9_table = 0.0_DP
     vdw_param10_table = 0.0_DP
+    vdw_param11_table = 0.0_DP
+    vdw_param12_table = 0.0_DP
 
     ! Allocate memory for total number bead types in each box
     ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
@@ -482,22 +490,29 @@ SUBROUTINE Read_Nonbond_Table
                 vdw_param10_table(itype,jtype) = String_To_Double(line_array(i+2))
                 vdw_param10_table(jtype,itype) = vdw_param10_table(itype,jtype)
 
+            ELSEIF (pot_type == 'SW') THEN
+                vdw_param11_table(itype,jtype) = String_To_Double(line_array(i+1))
+                vdw_param11_table(jtype,itype) = vdw_param11_table(itype,jtype)
+                vdw_param12_table(itype,jtype) = String_To_Double(line_array(i+2))
+                vdw_param12_table(jtype,itype) = vdw_param12_table(itype,jtype)
+
             ENDIF
 
         ENDDO
     ENDDO
 
     ! Write output
-    WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8 9 10'
+    WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8 9 10 11 12'
     DO itype = 1, nbr_atomtypes
         DO jtype = itype, nbr_atomtypes
-            WRITE(logunit,'(2I3,10f11.4)') &
+            WRITE(logunit,'(2I3,12f11.4)') &
                  itype, jtype, &
                  vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype), &
                  vdw_param3_table(itype,jtype), vdw_param4_table(itype,jtype), &
                  vdw_param5_table(itype,jtype), vdw_param6_table(itype,jtype), &
                  vdw_param7_table(itype,jtype), vdw_param8_table(itype,jtype), &
-                 vdw_param9_table(itype,jtype), vdw_param10_table(itype,jtype)
+                 vdw_param9_table(itype,jtype), vdw_param10_table(itype,jtype), &
+                 vdw_param11_table(itype,jtype), vdw_param12_table(itype,jtype)
         ENDDO
     ENDDO
 

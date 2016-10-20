@@ -1722,16 +1722,16 @@ CONTAINS
              ELSEIF (int_vdw_sum_style(ibox) == vdw_mie) THEN
 
                 rij = SQRT(rijsq)
-		rcut_vdw = SQRT(rcut_vdwsq(ibox))
+                rcut_vdw = SQRT(rcut_vdwsq(ibox))
                 
                 mie_n = mie_nlist(mie_Matrix(is,js))
                 mie_m = mie_mlist(mie_Matrix(is,js))
                 mie_coeff = mie_n/(mie_n-mie_m) * (mie_n/mie_m)**(mie_m/(mie_n-mie_m))
                 SigOverR = sig/rij
-		SigOverR_shift = sig/rcut_vdw
-		!use cut-shift potential
-		SigOverRn_shift = SigOverR_shift ** mie_n
-		SigOverRm_shift = SigOverR_shift ** mie_m
+                SigOverR_shift = sig/rcut_vdw
+                !use cut-shift potential
+                SigOverRn_shift = SigOverR_shift ** mie_n
+                SigOverRm_shift = SigOverR_shift ** mie_m
                 SigOverRn = SigOverR ** mie_n
                 SigOverRm = SigOverR ** mie_m
                 Eij_vdw =  mie_coeff * eps * ((SigOverRn - SigOverRm) - (SigOverRn_shift - SigOverRm_shift))
@@ -1759,7 +1759,30 @@ CONTAINS
                 Eij_vdw = Eij_vdw + eps * exp(-kappa * rij)/rij
              ENDIF
 
-         ENDIF Yukawa_calculation
+          ENDIF Yukawa_calculation
+
+          SquareWell_calculation: IF (vdw_param11_table(itype,jtype) /= 0) THEN
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             eps = vdw_param11_table(itype,jtype)
+             sig = vdw_param12_table(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN
+
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                eps = eps * vdw_intra_scale(ia,ja,is)
+
+             ENDIF
+
+             IF (rijsq < rcut_vdwsq(ibox)) THEN
+                Eij_vdw = Eij_vdw + 10000000.
+             ELSE IF (rijsq < sig) THEN
+                Eij_vdw = Eij_vdw - eps
+             ELSE 
+                Eij_vdw = Eij_vdw + 0.0
+             ENDIF
+
+          ENDIF SquareWell_calculation
 
 !Closing loop for checking WCA
        ENDIF 
