@@ -395,6 +395,30 @@ CONTAINS
             write_buff(ii+1) = cluster%n_oligomers
          END IF
 
+      ELSE IF (prop_written == 'NclustersOlig') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = cluster%n_olig_clus / REAL(ncluster_freq,DP)
+         ELSE
+            write_buff(ii+1) = cluster%n_olig_clus
+         END IF
+
+      ELSE IF (prop_written == 'NclustersMicelle') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = cluster%n_mic_clus / REAL(ncluster_freq,DP)
+         ELSE
+            write_buff(ii+1) = cluster%n_mic_clus
+         END IF
+
+      ELSE IF (prop_written == 'OligNNdist') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = cluster%olig_nn_dist / REAL(noligdist_freq,DP)
+         ELSE
+            write_buff(ii+1) = cluster%olig_nn_dist
+         END IF
+
       ELSE IF (prop_written == 'Excluded_Volume') THEN
 
          IF (block_average) THEN
