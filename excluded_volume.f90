@@ -73,7 +73,7 @@ CONTAINS
     LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: temp_exist
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: temp_nmols
 
-  REAL(DP) :: time_start, now_time
+    REAL(DP) :: time_start, now_time
 
     ALLOCATE( temp_locate(MAXVAL(nmolecules),nspecies) )
     ALLOCATE( temp_live(MAXVAL(nmolecules),nspecies) )
@@ -84,7 +84,6 @@ CONTAINS
     P_bias = 1.0_DP
 
     exvol%excluded = 0
-    exvol%criteria = LOG(1E8)
 
     IF (cluster%n_clusters == 0) RETURN
 
@@ -128,7 +127,7 @@ CONTAINS
                    ! remove monomer
                    CALL Select_Monomer(im, is, this_box)
                    exvol%excluded = exvol%excluded + 1
-                   write(*,*) 'cluster', ispec, imol, i_ins
+                   !print*, 'cluster', ispec, imol, i_ins
                    CYCLE ins_loop
                END IF
    
@@ -145,7 +144,7 @@ CONTAINS
            ! remove monomer
            CALL Select_Monomer(im, is, this_box)
            exvol%excluded = exvol%excluded + 1
-           write(*,*) 'overlap', i_ins
+           !print*, 'overlap', i_ins
            CYCLE ins_loop
        END IF
    
@@ -157,7 +156,7 @@ CONTAINS
        ln_pacc = beta(this_box) * delta_e 
    
        IF (ln_pacc > exvol%criteria) THEN
-           write(*,*) 'ene', delta_e, i_ins
+           !print*, 'ene', delta_e, i_ins
            exvol%excluded = exvol%excluded + 1
        END IF
        
@@ -185,9 +184,6 @@ CONTAINS
     INTEGER :: frag_type
     REAL(DP) :: this_lambda
 
-    LOGICAL :: larson_lattice
-
-    larson_lattice = .FALSE.
     alive(is) = locate(im,is)
     IF (molecule_list(im, is)%live == .FALSE.) THEN
        this_lambda = 1.0_DP
@@ -225,22 +221,13 @@ CONTAINS
                                 (rranf() - 0.5_DP) * box_list(this_box)%length(3,3)
        END IF
         
-       IF (larson_lattice) THEN
+       IF (lattice_sim) THEN
            molecule_list(alive(is),is)%xcom = &
-                                NINT((rranf() - 0.5_DP) * box_list(this_box)%length(1,1))
-           IF (molecule_list(alive(is),is)%xcom == -box_list(this_box)%hlength(1,1)) THEN
-                molecule_list(alive(is),is)%xcom = molecule_list(alive(is),is)%xcom + 1
-           END IF
+                                CEILING(rranf() * box_list(this_box)%length(1,1))
            molecule_list(alive(is),is)%ycom = &
-                               NINT((rranf() - 0.5_DP) * box_list(this_box)%length(2,2))
-           IF (molecule_list(alive(is),is)%ycom == -box_list(this_box)%hlength(2,2)) THEN
-               molecule_list(alive(is),is)%ycom = molecule_list(alive(is),is)%ycom + 1
-           END IF
+                                CEILING(rranf() * box_list(this_box)%length(2,2))
            molecule_list(alive(is),is)%zcom = &
-                                NINT((rranf() - 0.5_DP) * box_list(this_box)%length(3,3))
-           IF (molecule_list(alive(is),is)%zcom == -box_list(this_box)%hlength(3,3)) THEN
-                molecule_list(alive(is),is)%zcom = molecule_list(alive(is),is)%zcom + 1
-           END IF
+                                CEILING(rranf() * box_list(this_box)%length(3,3))
        END IF
 
        atom_list(:,alive(is),is)%rxp = atom_list(:,alive(is),is)%rxp + molecule_list(alive(is),is)%xcom
@@ -394,6 +381,8 @@ CONTAINS
         overlap = .TRUE.
         RETURN
     END IF
+
+    IF (lattice_sim) RETURN 
 
     ! There are no overlaps, so we can calculate the change in potential energy.
     ! Already have the change in nonbonded energies

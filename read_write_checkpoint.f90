@@ -613,6 +613,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
        CALL Parse_String(xyz_config_unit(ibox),line_nbr,0,nbr_entries,line_array,ierr)
        line_nbr = line_nbr + 1
 
+       ia = 1
        DO i_line = 1, n_lines 
 
           IF (1 < this_mc_step .and. this_mc_step < n_equilsteps) THEN
@@ -624,12 +625,13 @@ SUBROUTINE Read_XYZ(this_mc_step)
 
           is = String_To_Int(line_array(5))
           im = String_To_Int(line_array(6))
-          DO i = 1, natoms(is)
-             IF (line_array(1) == nonbond_list(i,is)%element) THEN
-                ia = i
-                EXIT
-             END IF
-          END DO
+        
+          !DO i = 1, natoms(is)
+          !   IF (line_array(1) == nonbond_list(i,is)%element) THEN
+          !      ia = i
+          !      EXIT
+          !   END IF
+          !END DO
 
           IF (.not. molecule_list(im,is)%live) THEN
               ! provide a linked number to this molecule
@@ -645,7 +647,14 @@ SUBROUTINE Read_XYZ(this_mc_step)
               ! assign the box to this molecule
               molecule_list(this_im,is)%which_box = ibox
               nmols(is,ibox) = nmols(is,ibox) + 1
+              ia = 1
                 
+          END IF
+
+          IF (line_array(1) /= nonbond_list(ia,is)%element) THEN
+             err_msg = ""
+             err_msg(1) = "An atom name in the xyz file does not match the name in the mcf file. Consider the order..."
+             CALL Clean_Abort(err_msg,'Read_XYZ')
           END IF
 
           this_im = locate(im,is)
@@ -659,6 +668,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
           atom_list(ia,this_im,is)%exist = .TRUE.
 
           line_nbr = line_nbr + 1
+          ia = ia + 1
 
        END DO
 
@@ -671,7 +681,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
           IF (check_nmol .LT. n_lines) THEN
              err_msg = ""
              err_msg(1) = "More molecules in XYZ, than possible from nmolecules in the input file."
-             err_msg(1) = "Or too many mcsteps in the input file."
+             err_msg(2) = "Or too many mcsteps in the input file."
              CALL Clean_Abort(err_msg,'Read_XYZ')
           ENDIF
        ENDIF
@@ -710,6 +720,8 @@ SUBROUTINE Read_XYZ(this_mc_step)
 
           this_box = molecule_list(this_im,is)%which_box
 
+          IF (.not. lattice_sim) THEN
+
           IF (l_cubic(this_box)) THEN
              
              CALL Apply_PBC_Anint(this_box,xcom_old,ycom_old,zcom_old, &
@@ -721,6 +733,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
                   xcom_new, ycom_new, zcom_new)
 
           END IF
+
           
           ! COM in the central simulation box
           
@@ -736,6 +749,8 @@ SUBROUTINE Read_XYZ(this_mc_step)
                ycom_new - ycom_old
           atom_list(1:natoms(is),this_im,is)%rzp = atom_list(1:natoms(is),this_im,is)%rzp + &
                zcom_new - zcom_old
+
+          END IF
           
           CALL Compute_Max_Com_Distance(this_im,is)
        END DO

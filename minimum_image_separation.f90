@@ -191,6 +191,43 @@ SUBROUTINE Fold_Molecule(alive,is,this_box)
 
   IF (l_cubic(this_box)) THEN
      
+     IF (lattice_sim) THEN
+
+         IF(molecule_list(alive,is)%xcom .GT. box_list(this_box)%length(1,1)) THEN
+            molecule_list(alive,is)%xcom = NINT( molecule_list(alive,is)%xcom - box_list(this_box)%length(1,1) )
+            atom_list(:,alive,is)%rxp = NINT( atom_list(:,alive,is)%rxp - box_list(this_box)%length(1,1) )
+    
+         ELSE IF(molecule_list(alive,is)%xcom .LT. 1) THEN
+    
+            molecule_list(alive,is)%xcom = NINT( molecule_list(alive,is)%xcom + box_list(this_box)%length(1,1) )
+            atom_list(:,alive,is)%rxp = NINT( atom_list(:,alive,is)%rxp + box_list(this_box)%length(1,1) )
+    
+         END IF
+    
+         IF(molecule_list(alive,is)%ycom .GT. box_list(this_box)%length(2,2) ) THEN
+            molecule_list(alive,is)%ycom = NINT( molecule_list(alive,is)%ycom - box_list(this_box)%length(2,2) )
+            atom_list(:,alive,is)%ryp = NINT( atom_list(:,alive,is)%ryp - box_list(this_box)%length(2,2) )
+    
+         ELSE IF(molecule_list(alive,is)%ycom .LT. 1) THEN
+    
+            molecule_list(alive,is)%ycom = NINT( molecule_list(alive,is)%ycom + box_list(this_box)%length(2,2) )
+            atom_list(:,alive,is)%ryp = NINT( atom_list(:,alive,is)%ryp + box_list(this_box)%length(2,2) )
+    
+         END IF
+    
+         IF(molecule_list(alive,is)%zcom .GT. box_list(this_box)%length(3,3) ) THEN
+            molecule_list(alive,is)%zcom = NINT( molecule_list(alive,is)%zcom - box_list(this_box)%length(3,3) )
+            atom_list(:,alive,is)%rzp = NINT( atom_list(:,alive,is)%rzp - box_list(this_box)%length(3,3) )
+    
+         ELSE IF(molecule_list(alive,is)%zcom .LT. 1) THEN
+    
+            molecule_list(alive,is)%zcom = NINT( molecule_list(alive,is)%zcom + box_list(this_box)%length(3,3) )
+            atom_list(:,alive,is)%rzp = NINT( atom_list(:,alive,is)%rzp + box_list(this_box)%length(3,3) )
+    
+         END IF
+
+     ELSE
+
      IF(molecule_list(alive,is)%xcom .GT. box_list(this_box)%hlength(1,1)) THEN
         molecule_list(alive,is)%xcom = &
              molecule_list(alive,is)%xcom - box_list(this_box)%length(1,1)
@@ -226,6 +263,8 @@ SUBROUTINE Fold_Molecule(alive,is,this_box)
         molecule_list(alive,is)%zcom = &
              molecule_list(alive,is)%zcom + box_list(this_box)%length(3,3)
         atom_list(:,alive,is)%rzp = atom_list(:,alive,is)%rzp + box_list(this_box)%length(3,3)
+     END IF
+
      END IF
 
 

@@ -125,6 +125,12 @@ SUBROUTINE Get_COM(alive,is)
   molecule_list(alive,is)%ycom = molecule_list(alive,is)%ycom / total_mass
   molecule_list(alive,is)%zcom = molecule_list(alive,is)%zcom / total_mass
 
+  IF (lattice_sim) THEN
+    molecule_list(alive,is)%xcom = NINT(molecule_list(alive,is)%xcom)
+    molecule_list(alive,is)%ycom = NINT(molecule_list(alive,is)%ycom)
+    molecule_list(alive,is)%zcom = NINT(molecule_list(alive,is)%zcom)
+  END IF
+
   IF (nvacf_freq /= 0) THEN
     molecule_list(alive,is)%vxcom = molecule_list(alive,is)%vxcom / total_mass
     molecule_list(alive,is)%vycom = molecule_list(alive,is)%vycom / total_mass

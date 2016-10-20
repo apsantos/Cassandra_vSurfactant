@@ -63,6 +63,9 @@ SUBROUTINE PP_Control
   ! including the volume
   CALL Get_Box_Info
 
+  ! Is the simulation on-lattice or off-lattice
+  CALL Get_Lattice
+
   ! Determine the type of VDW and charge interaction model to use, along with 
   ! associated parameters and the vdw mixing rule.
   CALL Get_Pair_Style

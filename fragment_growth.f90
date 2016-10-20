@@ -368,6 +368,12 @@ SUBROUTINE Build_Molecule(this_im,is,this_box,frag_order,this_lambda, &
               y_anchor = (0.5_DP - rranf()) * box_list(this_box)%length(2,2)
               z_anchor = (0.5_DP - rranf()) * box_list(this_box)%length(3,3)
 
+              IF (lattice_sim) THEN
+                 x_anchor = rranf() * box_list(this_box)%length(1,1)
+                 y_anchor = rranf() * box_list(this_box)%length(2,2)
+                 z_anchor = rranf() * box_list(this_box)%length(3,3)
+              END IF
+
            ELSE
 
               !Generate random positions in fractional coordinates
@@ -375,6 +381,12 @@ SUBROUTINE Build_Molecule(this_im,is,this_box,frag_order,this_lambda, &
               x_anchor = 0.5_DP - rranf()
               y_anchor = 0.5_DP - rranf()
               z_anchor = 0.5_DP - rranf()
+
+              IF (lattice_sim) THEN
+                 x_anchor = rranf()
+                 y_anchor = rranf()
+                 z_anchor = rranf()
+              END IF
 
               !transform back to cartesian
 
@@ -391,6 +403,12 @@ SUBROUTINE Build_Molecule(this_im,is,this_box,frag_order,this_lambda, &
                        box_list(this_box)%length(3,3)*z_anchor
 
 
+           END IF
+
+           IF (lattice_sim) THEN
+               x_anchor = NINT(x_anchor)
+               y_anchor = NINT(y_anchor)
+               z_anchor = NINT(z_anchor)
            END IF
 
         END IF
@@ -741,6 +759,12 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
                 box_list(this_box)%length(2,2)
            rtrial(first_atom,itrial)%rzp = (0.5_DP - rranf()) * &
                 box_list(this_box)%length(3,3)
+
+           IF (lattice_sim) THEN
+                 x_anchor = NINT( rranf() * box_list(this_box)%length(1,1) )
+                 y_anchor = NINT( rranf() * box_list(this_box)%length(2,2) )
+                 z_anchor = NINT( rranf() * box_list(this_box)%length(3,3) )
+           END IF
            
         END IF
 
