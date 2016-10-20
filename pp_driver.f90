@@ -150,6 +150,24 @@ SUBROUTINE PP_Driver
            END IF
         END IF
         
+        IF ( noligdist_freq /= 0 ) THEN
+           IF ( MOD(i,noligdist_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
+           
+              DO ibox = 1, nbr_boxes
+                 IF ( MOD(i,ncluster_freq) /= 0 ) THEN
+                    CALL Find_Clusters(ibox,1)
+                 END IF
+              
+                 CALL Calculate_Oligomer_NN_Distance(ibox)
+              
+              !CALL cpu_time(now_time)
+              !print '("exvol Time = ",f6.3," seconds.")',now_time-time_start
+              END DO
+           
+           END IF
+        END IF
+
         IF ( nexvol_freq /= 0 ) THEN
            IF ( MOD(i,nexvol_freq) == 0 ) THEN
               !CALL cpu_time(time_start)
