@@ -1544,7 +1544,6 @@ SUBROUTINE Get_Atom_Info(is)
            nonbond_list(ia,is)%charge = String_To_Double(line_array(5))
            IF(nonbond_list(ia,is)%charge .NE. 0.0_DP) has_charge(is) = .TRUE. 
            nonbond_list(ia,is)%vdw_potential_type = line_array(6)
-	   
 
            species_list(is)%total_charge = species_list(is)%total_charge + &
                 nonbond_list(ia,is)%charge
@@ -1743,7 +1742,7 @@ SUBROUTINE Get_Bond_Info(is)
                    'Harmonic Bond between atoms: ',bond_list(ib,is)%atom1, bond_list(ib,is)%atom2, &
                    ' in species', is
               bond_list(ib,is)%bond_param(2) = String_To_Double(line_array(5))
-              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond length, in A:',bond_list(ib,is)%bond_param(1)
+              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond length, in A:',bond_list(ib,is)%bond_param(2)
               WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond constant, in K/A^2:',String_To_Double(line_array(6))
               bond_list(ib,is)%bond_param(1) = String_To_Double(line_array(6))/atomic_to_K
 
@@ -5593,6 +5592,7 @@ SUBROUTINE Get_Frequency_Info
   nexvol_freq = 0
   nalpha_freq = 0
   nalphaclus_freq = 0
+  noligdist_freq = 0
   nendclus_freq = 0
   nbond_freq = 0
   nangle_freq = 0
@@ -5704,6 +5704,13 @@ SUBROUTINE Get_Frequency_Info
               
                  WRITE(logunit,*) 
                  WRITE(logunit,'(A,T50,I8,A)') 'The Degree of ion association to cluster as a function of clusters will be calculated/written at every', nalphaclus_freq, ' MC steps.'
+
+              ELSE IF (line_array(1) == 'Noligdistfreq') THEN
+
+                 noligdist_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'The average nearest-neighbor distance between oligomeric clusters will be calculated/written at every', noligdist_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nendtoendfreq') THEN
 
@@ -6284,41 +6291,39 @@ EnLoop: DO ientry = 1, n_entries
 
                 cluster%criteria(c_or_m, int_type) = .TRUE.
 
-                ntype_entries = nbr_entries - 1
+                ntype_entries = String_To_Int(line_array(2))
                 DO ie = 1, ntype_entries
                     line_nbr = line_nbr + 1
-                    CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
-                    IF ( ierr /= 0 ) THEN
+                    CALL Parse_String(inputunit,line_nbr,5,nbr_entries,line_array,ierr)
+                    IF ( nbr_entries /= 5 ) THEN
+                        err_msg = ""
+                        err_msg(1) = "Must give the 2 atom names and a distance for however many are being clustered"
+                        err_msg(2) = "    Cluster format is: i_species atom_name j_species atom_name distance"
+                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                    ELSE IF ( ierr /= 0 ) THEN
                         err_msg = ""
                         err_msg(1) = "Error while reading inputfile"
                         CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                    ELSE IF ( nbr_entries /= 3 ) THEN
-                        err_msg = ""
-                        err_msg(1) = "Must give the 2 atom names and a distance for however many are being clustered"
-                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                     END IF
 
-                    distance = String_To_Double(line_array(3))
+                    is = String_To_Int(line_array(1))
+                    js = String_To_Int(line_array(3))
+                    distance = String_To_Double(line_array(5))
                     ! Figure out the type of the atom from the name, remember could be multiple with the same name
                     IF (distance > 0.001) THEN
-                        DO is = 1, nspecies
-                            DO ia = 1, natoms(is)
-
-                                IF (nonbond_list(ia,is)%atom_name == line_array(1) ) THEN
-                                    DO js = 1, nspecies
-                                        DO ja = 1, natoms(js)
-                                            IF (nonbond_list(ja,js)%atom_name == line_array(2) ) THEN
-                                                cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
-                                                WRITE(logunit,*) 'atom type "', TRIM(line_array(1)), '" of species, ', is, 'and'
-                                                WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', js
-                                                WRITE(logunit,*) 'are included in the Clustering calculation'
-                                            END IF
-                                        END DO
-                                    END DO
-                                END IF
-
-                            END DO
+                        DO ia = 1, natoms(is)
+                            IF (nonbond_list(ia,is)%atom_name == line_array(2) ) THEN
+                                DO ja = 1, natoms(js)
+                                    IF (nonbond_list(ja,js)%atom_name == line_array(4) ) THEN
+                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
+                                        WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', is, 'and'
+                                        WRITE(logunit,*) 'atom type "', TRIM(line_array(4)), '" of species, ', js
+                                        WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
+                                    END IF
+                                END DO
+                            END IF
                         END DO
+
                     ENDIF
                     ! Make sure equivalent distances agree
                     DO is = 1, nspecies
@@ -6367,33 +6372,29 @@ EnLoop: DO ientry = 1, n_entries
                 END DO
 
                 line_nbr = line_nbr + 1
-                CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
+                CALL Parse_String(inputunit,line_nbr,5,nbr_entries,line_array,ierr)
                 IF ( ierr /= 0 ) THEN
                     err_msg = ""
                     err_msg(1) = "Error while reading inputfile"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                 END IF
 
-                distance = String_To_Double(line_array(3))
+                is = String_To_Int(line_array(1))
+                js = String_To_Int(line_array(3))
+                distance = String_To_Double(line_array(5))
                 ! Figure out the type of the atom from the name, remember could be multiple with the same name
                 IF (distance > 0.001) THEN
-                    DO is = 1, nspecies
-                        DO ia = 1, natoms(is)
-
-                            IF (nonbond_list(ia,is)%atom_name == line_array(1) ) THEN
-                                DO js = 1, nspecies
-                                    DO ja = 1, natoms(js)
-                                        IF (nonbond_list(ja,js)%atom_name == line_array(2) ) THEN
-                                            cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
-                                            WRITE(logunit,*) 'atom type "', TRIM(line_array(1)), '" of species, ', is, 'and'
-                                            WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', js
-                                            WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
-                                        END IF
-                                    END DO
-                                END DO
-                            END IF
-
-                        END DO
+                    DO ia = 1, natoms(is)
+                        IF (nonbond_list(ia,is)%atom_name == line_array(2) ) THEN
+                            DO ja = 1, natoms(js)
+                                IF (nonbond_list(ja,js)%atom_name == line_array(4) ) THEN
+                                    cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
+                                    WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', is, 'and'
+                                    WRITE(logunit,*) 'atom type "', TRIM(line_array(4)), '" of species, ', js
+                                    WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
+                                END IF
+                            END DO
+                        END IF
                     END DO
                 ENDIF
 
@@ -6482,10 +6483,9 @@ EnLoop: DO ientry = 1, n_entries
 
         ALLOCATE( cluster%M(max_nmol), cluster%N(max_nmol) )
         ALLOCATE( cluster%clabel(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
-        print*, 'nspectype', cluster%n_species_type
         cluster%M = 0
         cluster%N = 0
-        cluster%clabel = 0
+        cluster%clabel(:,:) = 0
         ! Now get the Oligomer_Cutoff_Info
         CALL Get_Oligomer_Cutoff_Info
         EXIT
@@ -7014,6 +7014,9 @@ SUBROUTINE Get_Bond_Histogram_Info
             err_msg(1) = 'Excluded volume species ('//TRIM(Int_To_String(exvol%species))//') can not be insertable!'
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
         END IF
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        exvol%criteria = String_To_Double(line_array(1))
+        exvol%criteria = LOG(exvol%criteria)
 
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
         IF (nexvol_freq /= 0 .AND. exvol%species == 0 .OR. nexvol_freq == 0 .AND. exvol%species /= 0) THEN
@@ -7812,6 +7815,62 @@ SUBROUTINE Get_Mie_Nonbond
 
 END SUBROUTINE Get_Mie_Nonbond
 
+
+SUBROUTINE Get_Lattice
+    !-----------------------------------------------------------------
+    !
+    ! This soubroutine gets the name of the xyz file containing lattice
+    ! coordinates
+    !
+    ! First written by Jindal Shah on 10/10/12
+    !
+    !-------------------------------------------------------------------
+
+    IMPLICIT NONE
+
+    INTEGER :: line_nbr, ierr, nbr_entries
+    CHARACTER*240 :: line_string, line_array(80)
+
+    REWIND(inputunit)
+
+    line_nbr = 0
+
+    DO 
+       line_nbr = line_nbr + 1
+       CALL Read_String(inputunit,line_string,ierr)
+       
+       IF (ierr /= 0 ) THEN
+          err_msg = ''
+          err_msg(1) = 'Error reading lattice info in the inputfile'
+          err_msg(2) = 'aborting'
+          CALL Clean_Abort(err_msg,'Get_Lattice')
+       END IF
+
+       IF (line_string(1:19) == '# Lattice') THEN
+          ! we found the section on Lattice File Info
+          WRITE(logunit,*)
+          WRITE(logunit,*) '***** Found section on lattice info ****'
+          WRITE(logunit,*) 
+
+          line_nbr = line_nbr + 1
+          CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+          
+          IF (line_array(1) == 'TRUE') THEN
+               lattice_sim = .TRUE.
+          ELSE
+               lattice_sim = .FALSE.
+          END IF
+
+          EXIT
+
+       ELSE
+          lattice_sim = .FALSE.
+          
+       END IF
+
+    END DO
+
+END SUBROUTINE Get_Lattice
 
 SUBROUTINE Get_Lattice_File_Info
     !-----------------------------------------------------------------
