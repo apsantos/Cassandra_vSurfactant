@@ -559,6 +559,7 @@ MODULE Type_Definitions
     REAL(DP), DIMENSION(:,:,:,:,:), ALLOCATABLE :: min_distance_sq
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: r1_sq, r2_sq, r3_sq
     INTEGER  :: n_oligomers, n_clusters, micelle_species
+    INTEGER  :: n_olig_clus, n_mic_clus
     LOGICAL, DIMENSION(3, 4) :: criteria
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: species_type
     INTEGER, DIMENSION(3) :: n_species_type
@@ -567,6 +568,11 @@ MODULE Type_Definitions
     REAL(DP) :: clusmax, n_cluster
     INTEGER, DIMENSION(:), ALLOCATABLE :: N, M, M_olig
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: clabel
+
+    ! oligomer nearest-neighbor distance variables
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: com_x, com_y, com_z
+    REAL(DP) :: olig_nn_dist
+    INTEGER  :: n_olig_dist
 
  END TYPE Cluster_Class
 
