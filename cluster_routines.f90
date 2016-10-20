@@ -68,7 +68,7 @@ CONTAINS
     INTEGER  :: im, imol, i  ! molecule indices
     INTEGER  :: total_mols ! number of molecules in the system
 
-    INTEGER  :: old_clusmax, old_n_oligomers, old_n_clusters
+    INTEGER  :: old_clusmax, old_n_olig_clus, old_n_mic_clus, old_n_oligomers, old_n_clusters
     INTEGER  :: c, cs
     INTEGER, ALLOCATABLE, DIMENSION(:) :: old_N, old_M
     INTEGER, ALLOCATABLE, DIMENSION(:) :: iclus_mol, iclus_is
@@ -268,7 +268,9 @@ CONTAINS
     old_M = cluster%M
     old_clabel = cluster%clabel
     old_n_oligomers = cluster%n_oligomers
+    old_n_olig_clus = cluster%n_olig_clus
     old_n_clusters = cluster%n_clusters
+    old_n_mic_clus = cluster%n_mic_clus
 
     !*********************************************************************************
     !   Step 3) Reject if any monomer has become part of a cluster
@@ -286,7 +288,9 @@ CONTAINS
 
         cluster%clabel = old_clabel
         cluster%n_oligomers = old_n_oligomers
+        cluster%n_olig_clus = old_n_olig_clus
         cluster%n_clusters = old_n_clusters
+        cluster%n_mic_clus = old_n_mic_clus
         DEALLOCATE(old_M, old_clabel, old_N)
 
         DO imol = 1, iclus_N
@@ -316,7 +320,9 @@ CONTAINS
 
             cluster%clusmax = old_clusmax
             cluster%n_oligomers = old_n_oligomers
+            cluster%n_olig_clus = old_n_olig_clus
             cluster%n_clusters = old_n_clusters
+            cluster%n_mic_clus = old_n_mic_clus
 
             cluster%N = old_N
             cluster%M = old_M
@@ -401,7 +407,9 @@ CONTAINS
     
                cluster%clabel = old_clabel
                cluster%n_oligomers = old_n_oligomers
+               cluster%n_olig_clus = old_n_olig_clus
                cluster%n_clusters = old_n_clusters
+               cluster%n_mic_clus = old_n_mic_clus
                DEALLOCATE(old_M, old_clabel, old_N)
        
                ! Revert to the old coordinates of atoms and com of the molecule
@@ -499,7 +507,16 @@ CONTAINS
     ! counts how many atoms are in the cluster
     cluster%N(:) = 0
     cluster%clabel(:,:) = 0
-    write(*,*) 'clabel', cluster%clabel(1:8,3)
+    IF (noligdist_freq /= 0) THEN
+        IF ( .not. ALLOCATED(cluster%com_x) ) THEN
+            ALLOCATE(cluster%com_x(SIZE(cluster%N)), cluster%com_y(SIZE(cluster%N)), cluster%com_z(SIZE(cluster%N)) )
+        END IF
+        cluster%com_x(:) = 0.0_DP
+        cluster%com_y(:) = 0.0_DP
+        cluster%com_z(:) = 0.0_DP
+    END IF
+
+    !write(*,*) 'clabel', cluster%clabel(1:8,3)
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
 
@@ -548,10 +565,12 @@ CONTAINS
     IF ( cluster%criteria(count_or_move, int_micelle) == .TRUE. ) CALL Micelle_Association(this_box, count_or_move)
 
     !write(*,*) 'c/m', count_or_move
-    !write(*,*) 'N', cluster%N(1:200)
-    write(*,*) 'clabel', cluster%clabel(1:8,3)
+    !write(*,*) 'N', cluster%N(1:20)
+    !print*, 'clabel', cluster%clabel(1:8,3)
     cluster%n_oligomers = 0
+    cluster%n_olig_clus = 0
     cluster%n_clusters = 0
+    cluster%n_mic_clus = 0
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
         IF ( cluster%criteria(count_or_move, int_micelle) == .TRUE.) THEN
@@ -581,18 +600,25 @@ CONTAINS
                 ! Tally up the Nmols of oligomers and clustered
                 IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
                     cluster%n_oligomers = cluster%n_oligomers + cluster%N(ic)
+                    cluster%n_olig_clus = cluster%n_olig_clus + 1
+                    IF (noligdist_freq /= 0) THEN
+                        CALL Cluster_COM(ic, count_or_move, this_box)
+                    END IF
                 ELSE
                     cluster%n_clusters = cluster%n_clusters + cluster%N(ic)
+                    cluster%n_mic_clus = cluster%n_mic_clus + 1
                 END IF
             END IF
 
             ic = ic + 1
+            IF ( ic > nmols(is_clus,this_box) ) EXIT
+
         END DO
     END DO
-    !write(*,*) 'N', cluster%N(1:200)
-    !write(*,*) 'clabel', cluster%clabel(1:500, 1)
-    !write(*,*) 'M', cluster%M
-    !write(*,*) 'olig, clus', cluster%n_oligomers, cluster%n_clusters
+    !write(*,*) 'N', cluster%N(1:10)
+    !write(*,*) 'clabel', cluster%clabel(1:100,1)
+    !write(*,*) 'M', cluster%M(1:10)
+    !write(*,*) 'olig, clus', cluster%n_olig_clus, cluster%n_mic_clus
 
   END SUBROUTINE Find_Clusters
 
@@ -725,7 +751,7 @@ CONTAINS
 
             DO cur_atom = 1 , natoms(cur_type)
                 IF (cluster%min_distance_sq(count_or_move, test_type, cur_type, test_atom, cur_atom) < 0.000001) CYCLE
-
+                
                 ! Get the positions of the COM of the two molecule species
                 rxijp = atom_list(test_atom, test_part, test_type)%rxp - &
                         atom_list(cur_atom, cur_part, cur_type)%rxp
@@ -739,7 +765,9 @@ CONTAINS
         
                 rijsq = rxij*rxij + ryij*ryij + rzij*rzij
                 
+                    !print *, 'dist acc', rijsq, cur_atom, cur_part,test_atom, test_part, rxijp, ryijp, rzijp, rxij, ryij, rzij, atom_list(test_atom, test_part, test_type)%rxp,atom_list(cur_atom, cur_part, cur_type)%rxp,atom_list(test_atom, test_part, test_type)%ryp,atom_list(cur_atom, cur_part, cur_type)%ryp,atom_list(test_atom, test_part, test_type)%rzp,atom_list(cur_atom, cur_part, cur_type)%rzp
                 IF ( rijsq < cluster%min_distance_sq(count_or_move, test_type, cur_type, test_atom, cur_atom) ) THEN
+
                    Neighbor = .TRUE.
                    RETURN
                 END IF
@@ -1099,5 +1127,104 @@ CONTAINS
 
   END SUBROUTINE Compute_Cluster_Ewald_Reciprocal_Energy_Difference
   !********************************************************************************************
+
+  SUBROUTINE Cluster_COM(this_cluster, count_or_move, this_box)
+    !*********************************************************************************
+    !
+    !  Calculate the average nearest-neighbor distance between oliomeric clusters
+    !
+    ! 9/26/16 : Andrew P. Santos
+    !*********************************************************************************
+    INTEGER, INTENT(IN) :: this_cluster, count_or_move, this_box
+    LOGICAL, ALLOCATABLE, DIMENSION(:) :: olig_count
+    INTEGER :: is, is_clus, imol, im
+    INTEGER :: max_clus, min_clus
+
+    DO is = 1, cluster%n_species_type(count_or_move)
+        is_clus = cluster%species_type(count_or_move, is)
+        IF ( cluster%criteria(count_or_move, int_micelle) == .TRUE.) THEN
+            ! IF micelle type then skip those that are associated
+            IF ( is_clus /= cluster%micelle_species) CYCLE
+        END IF
+
+        DO imol = 1, nmols(is_clus,this_box)
+            im = locate(imol, is_clus)
+            ! Make sure that the molecule exists in the simulation
+            IF( .NOT. molecule_list(im,is_clus)%live ) CYCLE 
+
+            IF (this_cluster ==  cluster%clabel(im, is_clus)) THEN
+                cluster%com_x(this_cluster) = cluster%com_x(this_cluster) + molecule_list(im, is_clus)%xcom
+                cluster%com_y(this_cluster) = cluster%com_y(this_cluster) + molecule_list(im, is_clus)%ycom
+                cluster%com_z(this_cluster) = cluster%com_z(this_cluster) + molecule_list(im, is_clus)%zcom
+            END IF
+
+        END DO
+    END DO
+    cluster%com_x(this_cluster) = cluster%com_x(this_cluster) / FLOAT( cluster%N(this_cluster) )
+    cluster%com_y(this_cluster) = cluster%com_y(this_cluster) / FLOAT( cluster%N(this_cluster) )
+    cluster%com_z(this_cluster) = cluster%com_z(this_cluster) / FLOAT( cluster%N(this_cluster) )
+
+    IF (lattice_sim) THEN
+        cluster%com_x(this_cluster) = NINT( cluster%com_x(this_cluster) )
+        cluster%com_y(this_cluster) = NINT( cluster%com_y(this_cluster) )
+        cluster%com_z(this_cluster) = NINT( cluster%com_z(this_cluster) )
+    END IF
+
+  END SUBROUTINE Cluster_COM
+
+  SUBROUTINE Calculate_Oligomer_NN_Distance(this_box)
+
+    !*********************************************************************************
+    !
+    !  Calculate the average nearest-neighbor distance between oliomeric clusters
+    !
+    ! 9/26/16 : Andrew P. Santos
+    !*********************************************************************************
+    INTEGER, INTENT(IN) :: this_box
+    REAL(DP) :: rxij, ryij, rzij, rij, rijmin, rxijp, ryijp, rzijp
+    REAL(DP) :: max_length
+    INTEGER :: is, is_clus, ic, jc
+
+    ic = 1
+    is_clus = cluster%species_type(1, 1)
+    max_length = MAX(box_list(this_box)%length(1,1), box_list(this_box)%length(2,2), box_list(this_box)%length(3,3))
+    cluster%olig_nn_dist = 0.0
+    cluster%n_olig_dist = 0
+    DO WHILE ( cluster%N(ic) /= 0 )
+        IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
+            jc = 1
+            IF (jc == ic) jc = ic + 1
+            rijmin = max_length
+            DO WHILE ( cluster%N(jc) /= 0 )
+                IF (cluster%N(jc) <= cluster%M_olig(is_clus)) THEN
+                    ! Get the positions of the COM of the two molecule species
+                    rxijp = cluster%com_x(ic) - cluster%com_x(jc)
+                    ryijp = cluster%com_y(ic) - cluster%com_y(jc)
+                    rzijp = cluster%com_z(ic) - cluster%com_z(jc)
+                    
+                    ! Now get the minimum image separation 
+                    CALL Minimum_Image_Separation(1, rxijp, ryijp, rzijp, rxij, ryij, rzij)
+            
+                    rij = (rxij*rxij + ryij*ryij + rzij*rzij)**0.5_DP
+
+                    IF (rij < rijmin) rijmin = rij
+                END IF
+
+                jc = jc + 1
+                IF (jc == ic) jc = ic + 1
+            END DO
+            cluster%olig_nn_dist = cluster%olig_nn_dist +  &
+                                   rijmin
+                                   !rijmin * cluster%N(ic)
+            cluster%n_olig_dist = cluster%n_olig_dist + 1
+        END IF
+        ic = ic + 1
+    END DO
+
+    IF (cluster%n_olig_dist /= 0) THEN
+        cluster%olig_nn_dist = cluster%olig_nn_dist / FLOAT(cluster%n_olig_dist)
+    END IF
+
+  END SUBROUTINE Calculate_Oligomer_NN_Distance
 
 END MODULE Cluster_Routines
