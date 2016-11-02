@@ -6241,13 +6241,13 @@ CMloop: DO icm = 1, 3
                 err_msg(1) = "Error while reading inputfile; expected count or move!"
                 CALL Clean_Abort(err_msg,'Get_Clustering_Info')
             ELSE IF (c_or_m == 1) THEN
-                IF (prob_cluster >= 0.0) THEN
+                IF (prob_cluster > 0.0) THEN
                     err_msg = ""
                     err_msg(1) = "Error while reading inputfile; expected move Clustering info!"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                 END IF
             ELSE IF (c_or_m == 2) THEN
-                IF (ncluster_freq >= 0) THEN
+                IF (ncluster_freq > 0) THEN
                     err_msg = ""
                     err_msg(1) = "Error while reading inputfile; expected count Clustering info!"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
@@ -6265,10 +6265,16 @@ EnLoop: DO ientry = 1, n_entries
 
                 DO is = 1, nspecies
                     line_nbr = line_nbr + 1
-                    CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+                    CALL Parse_String(inputunit,line_nbr,nspecies,nbr_entries,line_array,ierr)
                     IF ( ierr /= 0 ) THEN
                         err_msg = ""
                         err_msg(1) = "Error while reading inputfile"
+                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                    ELSE IF ( line_array(1) == 'com' .or. &
+                              line_array(1) == 'exvol' .or. &
+                              line_array(1) == 'move') THEN
+                        err_msg = ""
+                        err_msg(1) = "Must give a line for each species in the cluster criteria"
                         CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                     END IF
 
@@ -6549,6 +6555,7 @@ SUBROUTINE Get_Degree_Association_Info
             CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
         END IF
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
 
         alpha%cutoff_sq = (String_To_Double(line_array(1)))**2.0_DP
@@ -6560,6 +6567,7 @@ SUBROUTINE Get_Degree_Association_Info
         alpha%clus_species = 0
 
         DO is = 1, nspecies
+            line_nbr = line_nbr + 1
             CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
             IF ( ierr /= 0 ) THEN
                 err_msg = ''
@@ -6672,6 +6680,7 @@ SUBROUTINE Get_Oligomer_Cutoff_Info
             CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
         END IF
  
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= nspecies ) THEN
             err_msg = ''
@@ -6731,6 +6740,7 @@ SUBROUTINE Get_Bond_Histogram_Info
 
         measure_mol%l0ave = 0
         DO is = 1, nspecies
+            line_nbr = line_nbr + 1
             CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
             IF (line_array(1) == 'NONE' .or. line_array(1) == '0') CYCLE
 
@@ -6792,6 +6802,7 @@ SUBROUTINE Get_Bond_Histogram_Info
         measure_mol%angle_spec = .FALSE.
 
         DO is = 1, nspecies
+            line_nbr = line_nbr + 1
             CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
             IF (line_array(1) == 'NONE') CYCLE
 
@@ -6849,6 +6860,7 @@ SUBROUTINE Get_Bond_Histogram_Info
         measure_mol%dihedral_spec = .FALSE.
 
         DO is = 1, nspecies
+            line_nbr = line_nbr + 1
             CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
             IF (line_array(1) == 'NONE') CYCLE
 
@@ -6902,6 +6914,7 @@ SUBROUTINE Get_Bond_Histogram_Info
      END IF
  
      IF(line_string(1:25) == '# Atom_Distance_Histogram') THEN
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         measure_mol%natom_dists = String_To_Int(line_array(1))
         measure_mol%a_dist_max_sq = box_list(1)%hlength(1,1)**2.0 + box_list(1)%hlength(2,2)**2.0 + box_list(1)%hlength(3,3)**2.0
@@ -6911,6 +6924,7 @@ SUBROUTINE Get_Bond_Histogram_Info
             measure_mol%a_dist_pairs = 0
     
             DO iap = 1, measure_mol%natom_dists
+                line_nbr = line_nbr + 1
                 CALL Parse_String(inputunit,line_nbr,4,nbr_entries,line_array,ierr)
                 ! is ia js ja
                 measure_mol%a_dist_pairs(iap, 1) = String_To_Int(line_array(1))
@@ -6976,6 +6990,7 @@ SUBROUTINE Get_Bond_Histogram_Info
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
         END IF
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= nspecies ) THEN
             err_msg = ''
@@ -7014,9 +7029,19 @@ SUBROUTINE Get_Bond_Histogram_Info
             err_msg(1) = 'Excluded volume species ('//TRIM(Int_To_String(exvol%species))//') can not be insertable!'
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
         END IF
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-        exvol%criteria = String_To_Double(line_array(1))
-        exvol%criteria = LOG(exvol%criteria)
+        IF ( line_array(1) == 'distance') THEN
+            exvol%distance = .true.
+        ELSEIF ( line_array(1) == 'energy') THEN
+            exvol%distance = .false.
+            exvol%criteria = String_To_Double(line_array(2))
+            exvol%criteria = LOG(exvol%criteria)
+        ELSE
+            err_msg = ''
+            err_msg(1) = 'Excluded volume criteria is either distance [Angstrom] or energy [Atomistic]'
+            CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
+        END IF
 
      ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
         IF (nexvol_freq /= 0 .AND. exvol%species == 0 .OR. nexvol_freq == 0 .AND. exvol%species /= 0) THEN
@@ -7089,6 +7114,7 @@ SUBROUTINE Get_MSD_Info
      END IF
 
      IF(line_string(1:27) == '# Mean_Squared_Displacement') THEN
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 2 ) THEN
             err_msg = ''
@@ -7116,6 +7142,7 @@ SUBROUTINE Get_MSD_Info
             trans%sim_freq = String_To_Int(line_array(2))
         END IF
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 1 ) THEN
             err_msg = ''
@@ -7136,6 +7163,7 @@ SUBROUTINE Get_MSD_Info
         ALLOCATE( trans%msd_species(nspecies) )
         trans%msd_species = .FALSE.
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= nspecies ) THEN
             err_msg = ''
@@ -7217,6 +7245,7 @@ SUBROUTINE Get_VACF_Info
      END IF
 
      IF(line_string(1:26) == '# Velocity_Autocorrelation') THEN
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 2 ) THEN
             err_msg = ''
@@ -7244,6 +7273,7 @@ SUBROUTINE Get_VACF_Info
             trans%sim_freq = String_To_Int(line_array(2))
         END IF
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 1 ) THEN
             err_msg = ''
@@ -7264,6 +7294,7 @@ SUBROUTINE Get_VACF_Info
         ALLOCATE( trans%vacf_species(nspecies) )
         trans%vacf_species = .FALSE.
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= nspecies ) THEN
             err_msg = ''
@@ -7345,6 +7376,7 @@ SUBROUTINE Get_Dipole_Moment_Info
      END IF
 
      IF(line_string(1:15) == '# Dipole_Moment') THEN
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 2 ) THEN
             err_msg = ''
@@ -7372,6 +7404,7 @@ SUBROUTINE Get_Dipole_Moment_Info
             trans%sim_freq = String_To_Int(line_array(2))
         END IF
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 1 ) THEN
             err_msg = ''
@@ -7392,6 +7425,7 @@ SUBROUTINE Get_Dipole_Moment_Info
         ALLOCATE( trans%dipole_species(nspecies) )
         trans%dipole_species = .FALSE.
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (nbr_entries /= nspecies ) THEN
             err_msg = ''
@@ -7473,6 +7507,7 @@ SUBROUTINE Get_Virial_Info
      END IF
 
      IF(line_string(1:17) == '# Virial_Info') THEN
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 3 ) THEN
             err_msg = ''
@@ -7483,6 +7518,7 @@ SUBROUTINE Get_Virial_Info
         mcvirial%dist_step = String_To_Double(line_array(2))
         mcvirial%max_dist = String_To_Double(line_array(3))
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 2 ) THEN
             err_msg = ''
@@ -7492,6 +7528,7 @@ SUBROUTINE Get_Virial_Info
         mcvirial%species(1) = String_To_Int(line_array(1))
         mcvirial%species(2) = String_To_Int(line_array(2))
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 2 ) THEN
             err_msg = ''
@@ -7501,6 +7538,7 @@ SUBROUTINE Get_Virial_Info
         mcvirial%nconfs(1) = String_To_Int(line_array(1))
         mcvirial%nconfs(2) = String_To_Int(line_array(2))
 
+        line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
         IF (nbr_entries /= 2 ) THEN
             err_msg = ''
@@ -7834,6 +7872,7 @@ SUBROUTINE Get_Lattice
     REWIND(inputunit)
 
     line_nbr = 0
+    lattice_sim = .FALSE.
 
     DO 
        line_nbr = line_nbr + 1
@@ -7864,8 +7903,11 @@ SUBROUTINE Get_Lattice
           EXIT
 
        ELSE
-          lattice_sim = .FALSE.
-          
+
+          IF (line_nbr > 1000 .OR. line_string(1:3) == 'END') THEN
+             EXIT
+          END IF
+
        END IF
 
     END DO
