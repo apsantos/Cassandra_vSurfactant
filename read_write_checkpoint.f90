@@ -591,6 +591,8 @@ SUBROUTINE Read_XYZ(this_mc_step)
     molecule_list(:,:)%molecule_type = int_none
     molecule_list(:,:)%cfc_lambda = int_none
     atom_list(:,:,:)%exist = .FALSE.
+    line_array = ''
+    n_lines = 0
     
     line_nbr = 1
     DO ibox = 1, nbr_boxes
@@ -608,6 +610,10 @@ SUBROUTINE Read_XYZ(this_mc_step)
           ELSE
              CYCLE
           END IF
+       ELSE IF (nbr_entries > 3) THEN
+          err_msg = ""
+          err_msg(1) = "Too many entries for number of atoms line, probably end of file"
+          CALL Clean_Abort(err_msg,'Read_XYZ')
        END IF
 
        CALL Parse_String(xyz_config_unit(ibox),line_nbr,0,nbr_entries,line_array,ierr)
@@ -622,6 +628,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
           END IF
 
           CALL Parse_String(xyz_config_unit(ibox),line_nbr,6,nbr_entries,line_array,ierr)
+          line_nbr = line_nbr + 1
 
           is = String_To_Int(line_array(5))
           im = String_To_Int(line_array(6))
@@ -653,7 +660,9 @@ SUBROUTINE Read_XYZ(this_mc_step)
 
           IF (line_array(1) /= nonbond_list(ia,is)%element) THEN
              err_msg = ""
-             err_msg(1) = "An atom name in the xyz file does not match the name in the mcf file. Consider the order..."
+             err_msg(1) = "An atom name in the xyz file does not match the name in the mcf file."
+             err_msg(2) = "Consider the order..."
+
              CALL Clean_Abort(err_msg,'Read_XYZ')
           END IF
 
