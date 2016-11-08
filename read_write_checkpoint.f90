@@ -626,9 +626,9 @@ SUBROUTINE Read_XYZ(this_mc_step)
              READ(xyz_config_unit(ibox), *) 
              CYCLE
           END IF
+          line_nbr = line_nbr + 1
 
           CALL Parse_String(xyz_config_unit(ibox),line_nbr,6,nbr_entries,line_array,ierr)
-          line_nbr = line_nbr + 1
 
           is = String_To_Int(line_array(5))
           im = String_To_Int(line_array(6))
@@ -639,6 +639,13 @@ SUBROUTINE Read_XYZ(this_mc_step)
           !      EXIT
           !   END IF
           !END DO
+          IF ( im > nmolecules(is) ) THEN
+             err_msg = ""
+             err_msg(1) = 'Number of molecules in xyz file exceeds limit of ' // &
+                  INT_to_String(nmolecules(is)) 
+             err_msg(2) = 'Increase molecule number limit in input file '
+             CALL Clean_Abort(err_msg,'Read_XYZ')
+          END IF
 
           IF (.not. molecule_list(im,is)%live) THEN
               ! provide a linked number to this molecule
