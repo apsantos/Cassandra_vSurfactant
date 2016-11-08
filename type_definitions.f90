@@ -580,7 +580,8 @@ MODULE Type_Definitions
     ! exlcuded volume variables
     INTEGER  :: n_iter, species
     INTEGER  :: excluded
-    REAL(DP)  :: criteria
+    REAL(DP) :: criteria
+    LOGICAL  :: distance
 
  END TYPE ExVol_Class
 

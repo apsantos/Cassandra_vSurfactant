@@ -148,7 +148,8 @@ CONTAINS
            CYCLE ins_loop
        END IF
    
-   
+       IF (exvol%distance) CYCLE
+
        !*********************************************************************************
        !   Step 5) Accept or reject the test insertion
        !*********************************************************************************
@@ -383,6 +384,8 @@ CONTAINS
     END IF
 
     IF (lattice_sim) RETURN 
+
+    IF (exvol%distance) RETURN 
 
     ! There are no overlaps, so we can calculate the change in potential energy.
     ! Already have the change in nonbonded energies

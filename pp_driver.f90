@@ -156,7 +156,7 @@ SUBROUTINE PP_Driver
            
               DO ibox = 1, nbr_boxes
                  IF ( MOD(i,ncluster_freq) /= 0 ) THEN
-                    CALL Find_Clusters(ibox,1)
+                    CALL Find_Clusters(ibox,3)
                  END IF
               
                  CALL Calculate_Oligomer_NN_Distance(ibox)
