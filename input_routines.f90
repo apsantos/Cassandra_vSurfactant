@@ -5895,7 +5895,7 @@ SUBROUTINE Get_Clustering_Info
   ierr = 0
   line_nbr = 0
   cluster%criteria = .FALSE.
-  IF (l_pair_nrg == .TRUE.) THEN
+  IF (l_pair_nrg .eqv. .TRUE.) THEN
       err_msg = ""
       err_msg(1) = "Cannot have cluster moves and store Pair_Energy!"
       CALL Clean_Abort(err_msg,'Get_Clustering_Info')
@@ -6180,7 +6180,7 @@ EnLoop: DO ientry = 1, n_entries
 
         END DO CMloop
 
-        IF ( ANY(cluster%criteria(:,int_skh) == .FALSE.)) DEALLOCATE(cluster%r1_sq, cluster%r2_sq, cluster%r3_sq)
+        IF ( ANY(cluster%criteria(:,int_skh) .eqv. .FALSE.)) DEALLOCATE(cluster%r1_sq, cluster%r2_sq, cluster%r3_sq)
 
         ALLOCATE(cluster%species_type(2, MAXVAL(cluster%n_species_type)))
         cluster%species_type = 0
