@@ -449,7 +449,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
                     - 2.0_DP*DLOG(REAL(nplocal,DP)) &
                     + 2.0_DP*DLOG(box_list(this_box)%volume)
   else
-     ln_pacc = ln_pacc + DLOG(fp_seq * fp_bias) &
+     ln_pacc = ln_pacc - DLOG(fp_seq * fp_bias) &
                     - DLOG(REAL(nmols(is,this_box),DP)) &
                     + DLOG(box_list(this_box)%volume) 
   endif
