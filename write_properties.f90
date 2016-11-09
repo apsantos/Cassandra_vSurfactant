@@ -885,7 +885,7 @@ SUBROUTINE Write_Dihedral(this_box)
 
   DO is = 1, nspecies
      IF( .NOT. ANY(measure_mol%dihedral_spec(:,is) )) CYCLE
-     dihedral_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.dihedral'
+     dihedral_file = TRIM(run_name)//'.box'//TRIM(Int_To_String(this_box))//'.species'//TRIM(Int_To_String(is))//'.dihedral'
      box_unit = dihedral_file_unit + this_box
      OPEN(unit=dihedral_file_unit+this_box, file=dihedral_file)
 
@@ -893,7 +893,10 @@ SUBROUTINE Write_Dihedral(this_box)
      DO id = 1, ndihedrals(is)
         IF (.not. measure_mol%dihedral_spec(id, is) ) CYCLE
         write (Tatom, '(I5)') dihedral_list(id,is)%atom4
-        WRITE(box_unit,'(I5,A,I5,A,I5,A,A)', ADVANCE='NO') dihedral_list(id,is)%atom1, '-', dihedral_list(id,is)%atom2, '-', dihedral_list(id,is)%atom3, '-', adjustl(Tatom)
+        WRITE(box_unit,'(I5,A,I5,A,I5,A,A)', ADVANCE='NO') dihedral_list(id,is)%atom1, '-', &
+                                                           dihedral_list(id,is)%atom2, '-', &
+                                                           dihedral_list(id,is)%atom3, '-', &
+                                                           adjustl(Tatom)
      END DO
         
      WRITE(box_unit,'(/)', ADVANCE='NO')
@@ -913,7 +916,7 @@ SUBROUTINE Write_Dihedral(this_box)
      END DO
      CLOSE(unit=dihedral_file_unit+this_box)
 
-     dihedral_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.species' // TRIM(Int_To_String(is)) // '.dihedral_his'
+     dihedral_file = TRIM(run_name)//'.box'//TRIM(Int_To_String(this_box))//'.species'//TRIM(Int_To_String(is))//'.dihedral_his'
      box_unit = dihedral_file_unit + this_box
      OPEN(unit=dihedral_file_unit+this_box, file=dihedral_file)
 
@@ -921,7 +924,10 @@ SUBROUTINE Write_Dihedral(this_box)
      DO id = 1, ndihedrals(is)
         IF (.not. measure_mol%dihedral_spec(id, is) ) CYCLE
         write (Tatom, '(I5)') dihedral_list(id,is)%atom4
-        WRITE(box_unit,'(I5,A,I5,A,I5,A,A)', ADVANCE='NO') dihedral_list(id,is)%atom1, '-', dihedral_list(id,is)%atom2, '-', dihedral_list(id,is)%atom3, '-', adjustl(Tatom)
+        WRITE(box_unit,'(I5,A,I5,A,I5,A,A)', ADVANCE='NO') dihedral_list(id,is)%atom1, '-', &
+                                                           dihedral_list(id,is)%atom2, '-', &
+                                                           dihedral_list(id,is)%atom3, '-', &
+                                                           adjustl(Tatom)
      END DO
         
      bin_width = twoPI / FLOAT(measure_mol%nd_bins)

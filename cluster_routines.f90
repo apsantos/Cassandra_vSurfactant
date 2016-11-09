@@ -213,7 +213,7 @@ CONTAINS
     
             im_clab = cluster%clabel(im, cs)
             ! IF micelle type then some will not be in 'clustered'
-            IF (cluster%criteria(2, int_micelle) == .TRUE.) THEN
+            IF (cluster%criteria(2, int_micelle) .eqv. .TRUE.) THEN
                 IF (im_clab == 0) CYCLE
             END IF
 
@@ -240,7 +240,7 @@ CONTAINS
         cs = iclus_is(imol)
 
         ! IF micelle type then some will not be in 'clustered'
-        IF (cluster%criteria(2, int_micelle) == .TRUE.) THEN
+        IF (cluster%criteria(2, int_micelle) .eqv. .TRUE.) THEN
             IF (im == 0) CYCLE
         END IF
 
@@ -299,7 +299,7 @@ CONTAINS
             cs = iclus_is(imol)
 
             ! IF micelle type then some will not be in 'clustered'
-            IF (cluster%criteria(2, int_micelle) == .TRUE.) THEN
+            IF (cluster%criteria(2, int_micelle) .eqv. .TRUE.) THEN
                 IF (im == 0) CYCLE
             END IF
 
@@ -334,7 +334,7 @@ CONTAINS
                 im = iclus_mol(imol)
                 cs = iclus_is(imol)
                 ! IF micelle type then some will not be in 'clustered'
-                IF (cluster%criteria(2, int_micelle) == .TRUE.) THEN
+                IF (cluster%criteria(2, int_micelle) .eqv. .TRUE.) THEN
                     IF (im == 0) CYCLE
                 END IF
 
@@ -353,7 +353,8 @@ CONTAINS
                sin_mol_old(:,:) = sin_mol(1:nvecs(this_box),:)
                !$OMP END PARALLEL WORKSHARE
        
-               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(iclus_N, iclus_mol, iclus_is, int_cluster, this_box, E_reciprocal_move)
+               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(iclus_N, iclus_mol, iclus_is, int_cluster, &
+                                                                       this_box, E_reciprocal_move)
                
             END IF
             
@@ -418,7 +419,7 @@ CONTAINS
                    im = iclus_mol(imol)
                    cs = iclus_is(imol)
                    ! IF micelle type then some will not be in 'clustered'
-                   IF (cluster%criteria(2, int_micelle) == .TRUE.) THEN
+                   IF (cluster%criteria(2, int_micelle) .eqv. .TRUE.) THEN
                        IF (im == 0) CYCLE
                    END IF
 
@@ -456,7 +457,8 @@ CONTAINS
        END IF
   
        WRITE(logunit,*)
-       WRITE(logunit,'(A,I3,A,I1,A,F8.5)')'Success ratio, cluster translation of species ', is , ' in box ', this_box, ' : ', success_ratio
+       WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Success ratio, cluster translation of species ', is, &
+                                           ' in box ', this_box, ' : ', success_ratio
   
        IF ( int_run_style == run_equil ) THEN
   
@@ -476,7 +478,8 @@ CONTAINS
                max_clus_disp(is,this_box) = MIN(rcut_small,2.0_DP*success_ratio*max_clus_disp(is,this_box))
            END IF
   
-           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is,' in box ', this_box, ' : ', max_clus_disp(is,this_box)
+           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is, &
+                                               ' in box ', this_box, ' : ', max_clus_disp(is,this_box)
           
        END IF
   
@@ -520,7 +523,7 @@ CONTAINS
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
 
-        IF ( cluster%criteria(count_or_move, int_micelle) == .TRUE.) THEN
+        IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE.) THEN
             IF ( is_clus /= cluster%micelle_species) CYCLE
         END IF
 
@@ -534,7 +537,7 @@ CONTAINS
 
                 js_clus = cluster%species_type(count_or_move, js)
 
-                IF ( cluster%criteria(count_or_move, int_micelle) == .TRUE.) THEN
+                IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE.) THEN
                     IF ( js_clus /= cluster%micelle_species) CYCLE
                 END IF
 
@@ -562,7 +565,7 @@ CONTAINS
         END DO
     END DO
 
-    IF ( cluster%criteria(count_or_move, int_micelle) == .TRUE. ) CALL Micelle_Association(this_box, count_or_move)
+    IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE. ) CALL Micelle_Association(this_box, count_or_move)
 
     !write(*,*) 'c/m', count_or_move
     !write(*,*) 'N', cluster%N(1:20)
@@ -573,7 +576,7 @@ CONTAINS
     cluster%n_mic_clus = 0
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
-        IF ( cluster%criteria(count_or_move, int_micelle) == .TRUE.) THEN
+        IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE.) THEN
             ! IF micelle type then skip those that are associated
             IF ( is_clus /= cluster%micelle_species) CYCLE
         END IF
@@ -637,7 +640,7 @@ CONTAINS
     INTEGER :: max_clus, min_clus
 
     DO ineigh = 1, nmolecules(js)
-        IF (neigh_list(ineigh) == .FALSE.) CYCLE
+        IF (neigh_list(ineigh) .eqv. .FALSE.) CYCLE
 
         ! current site' cluster label
         iclus = cluster%clabel(imol, is)
@@ -685,7 +688,7 @@ CONTAINS
                 cluster%clusmax = cluster%clusmax + 1
                 cluster%clabel(imol, is) = cluster%clusmax
                 iclus = cluster%clusmax
-                cluster%N(cluster%clusmax) = 1
+                cluster%N( INT(cluster%clusmax) ) = 1
             END IF
 
             cluster%clabel(ineigh, js) = iclus
@@ -701,7 +704,7 @@ CONTAINS
     IF (cluster%clabel(imol, is) == 0) THEN
         cluster%clusmax = cluster%clusmax + 1
         cluster%clabel(imol, is) = cluster%clusmax
-        cluster%N(cluster%clusmax) = 1
+        cluster%N( INT(cluster%clusmax) ) = 1
     END IF
 
   END SUBROUTINE Update_Labels
@@ -865,7 +868,7 @@ CONTAINS
                 am = locate(j, as_clus)
                 IF( .NOT. molecule_list(am, as_clus)%live ) CYCLE
     
-                IF (Neighbor(c_or_m, am, cm, as_clus, cs) == .true.) THEN
+                IF (Neighbor(c_or_m, am, cm, as_clus, cs) .eqv. .true.) THEN
                     ! Add it to the clabel and N
                     cluster%clabel(am, as_clus) = cluster%clabel(cm, cs)
                     nclus = cluster%clabel(cm, cs)
@@ -1142,7 +1145,7 @@ CONTAINS
 
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
-        IF ( cluster%criteria(count_or_move, int_micelle) == .TRUE.) THEN
+        IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE.) THEN
             ! IF micelle type then skip those that are associated
             IF ( is_clus /= cluster%micelle_species) CYCLE
         END IF

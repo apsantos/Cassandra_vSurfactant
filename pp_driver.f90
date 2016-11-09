@@ -138,6 +138,7 @@ SUBROUTINE PP_Driver
            IF ( MOD(i,ncluster_freq) == 0 ) THEN
               !CALL cpu_time(time_start)
            
+                print*, 'hi'
               DO ibox = 1, nbr_boxes
               
                  CALL Find_Clusters(ibox,1)
@@ -176,9 +177,11 @@ SUBROUTINE PP_Driver
                  IF ( MOD(i,ncluster_freq) /= 0 ) THEN
                     CALL Find_Clusters(ibox,1)
                  END IF
+                print*, 'hi'
               
                  CALL Calculate_Excluded_Volume(ibox)
               
+                print*, 'hi'
               !CALL cpu_time(now_time)
               !print '("exvol Time = ",f6.3," seconds.")',now_time-time_start
               END DO

@@ -317,7 +317,8 @@ SUBROUTINE Rotate(this_box)
            max_rot(is,this_box) = MIN(PI,1.05_DP*max_rot(is,this_box))
 
         END IF
-        WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, rotation of species ', is,' in box ', this_box, ' : ', max_rot(is,this_box)
+        WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, rotation of species ', is, &
+                                            ' in box ', this_box, ' : ', max_rot(is,this_box)
         
      END IF
      

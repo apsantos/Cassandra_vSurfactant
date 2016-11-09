@@ -5014,7 +5014,8 @@ SUBROUTINE Get_Start_Type
                  
                  DO ibox = 1, nbr_boxes
                     nmol_actual(i,ibox) = String_To_Int(line_array(ibox))
-                    WRITE(logunit,'(A41,2x,I2,2X,A7,2X,I2,2X,A2,2X,I6)') 'Starting number of molecules of species', i, ' in box ', ibox, 'is',  nmol_actual(i,ibox)
+                    WRITE(logunit,'(A41,2x,I2,2X,A7,2X,I2,2X,A2,2X,I6)') 'Starting number of molecules of species', i, &
+                                                                         ' in box ', ibox, 'is',  nmol_actual(i,ibox)
                  END DO
  
                  species_list(i)%nmoltotal = SUM(nmol_actual(i,:))
@@ -5027,7 +5028,8 @@ SUBROUTINE Get_Start_Type
                  END IF
 
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A36,2X,I2,2X,A21,2X,I6)') 'Total number of molecules of species ', i , ' present initially is', species_list(i)%nmoltotal
+                 WRITE(logunit,'(A36,2X,I2,2X,A21,2X,I6)') 'Total number of molecules of species ', i, &
+                                                           ' present initially is', species_list(i)%nmoltotal
 
 !!$                 ! --- open the geometry file and read in the coordinates 
 !!$                 OPEN(unit=init_geomunit,file=init_geomfile(i),status='old')
@@ -5675,49 +5677,59 @@ SUBROUTINE Get_Frequency_Info
                  nthermo_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'Thermodynamic quantities will written at every', nthermo_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'Thermodynamic quantities will written at every', &
+                                                nthermo_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nclusterfreq') THEN
 
                  ncluster_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', ncluster_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', &
+                                                ncluster_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nexvolfreq') THEN
 
                  nexvol_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The excluded volume by clusters be calculated/written at every', nexvol_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The excluded volume by clusters be calculated/written at every', &
+                                                nexvol_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Ndegreefreq') THEN
 
                  nalpha_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The Degree of ion association to cluster will be calculated/written at every', nalpha_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The degree of ion association to cluster will be calculated/written at every', &
+                                                nalpha_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nclusdegreefreq') THEN
 
                  nalphaclus_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The Degree of ion association to cluster as a function of clusters will be calculated/written at every', nalphaclus_freq, ' MC steps.'
+                 WRITE(logunit,'(2A,T50,I8,A)') 'The degree of ion association to cluster', &
+                                                ' as a function of clusters will be calculated/written at every', &
+                                                nalphaclus_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Noligdistfreq') THEN
 
                  noligdist_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The average nearest-neighbor distance between oligomeric clusters will be calculated/written at every', noligdist_freq, ' MC steps.'
+                 WRITE(logunit,'(2A,T50,I8,A)') 'The average nearest-neighbor dist. between', &
+                                                ' oligomeric clusters will be calculated/written at every', &
+                                                noligdist_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nendtoendfreq') THEN
 
                  nendclus_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The end-to-end distance as a function of clusters will be calculated/written at every', nendclus_freq, ' MC steps.'
+                 WRITE(logunit,'(2A,T50,I8,A)') 'The end-to-end distance as a function of clusters', &
+                                                ' will be calculated/written at every', &
+                                                nendclus_freq, ' MC steps.'
 
                  ALLOCATE( measure_mol%end2end(MAXVAL(nmolecules), nspecies) )
                  ALLOCATE( measure_mol%end2end_spec(nspecies) )
@@ -5735,28 +5747,33 @@ SUBROUTINE Get_Frequency_Info
                  nbond_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The bond distribution and time-average will be calculated/written at every', nbond_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The bond distribution and time-average will be calculated/written at every', &
+                                                nbond_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nanglefreq') THEN
 
                  nangle_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The angle distribution and time-average will be calculated/written at every', nangle_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The angle distribution and time-average will be calculated/written at every', &
+                                                nangle_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Ndihedralfreq') THEN
 
                  ndihedral_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The dihedral distribution and time-average will be calculated/written at every', ndihedral_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The dihedral distribution and time-average will be calculated/written at every', &
+                                                ndihedral_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Natomdistfreq') THEN
 
                  natomdist_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The inter/intra atomic distance distribution and time-average will be calculated/written at every', natomdist_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The inter/intra atomic distance distribution and time-average', &
+                                               ' will be calculated/written at every', &
+                                                natomdist_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nmsdfreq') THEN
 
@@ -5770,28 +5787,32 @@ SUBROUTINE Get_Frequency_Info
                  nvacf_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The vacf will be calculated/written at every', nvacf_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The vacf will be calculated/written at every', &
+                                                nvacf_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Ndipolefreq') THEN
 
                  ndipole_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The dipole moment will be calculated/written at every', ndipole_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The dipole moment will be calculated/written at every', &
+                                                ndipole_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nvirialfreq') THEN
 
                  nvirial_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The virial coefficient will be calculated/written at every', nvirial_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The virial coefficient will be calculated/written at every', &
+                                                nvirial_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Npotentialfreq') THEN
 
                  npotential_freq = String_To_Int(line_array(2))
               
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'The effective potential will be calculated/written at every', npotential_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'The effective potential will be calculated/written at every', &
+                                                npotential_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Ncoordfreq') THEN
               
@@ -6185,7 +6206,7 @@ SUBROUTINE Get_Clustering_Info
   ierr = 0
   line_nbr = 0
   cluster%criteria = .FALSE.
-  IF (l_pair_nrg == .TRUE.) THEN
+  IF (l_pair_nrg .eqv. .TRUE.) THEN
       err_msg = ""
       err_msg(1) = "Cannot have cluster moves and store Pair_Energy!"
       CALL Clean_Abort(err_msg,'Get_Clustering_Info')
@@ -6207,7 +6228,9 @@ SUBROUTINE Get_Clustering_Info
         !                                 2 = move/cluster          0 =  COM
         ALLOCATE( cluster%min_distance_sq(3, nspecies, nspecies, 0:MAXVAL(natoms), 0:MAXVAL(natoms)) )
         cluster%min_distance_sq = 0.0_DP
-        ALLOCATE( cluster%r1_sq(3, nspecies,0:MAXVAL(natoms)), cluster%r2_sq(3, nspecies,0:MAXVAL(natoms)), cluster%r3_sq(3, nspecies,0:MAXVAL(natoms)) )
+        ALLOCATE( cluster%r1_sq(3, nspecies,0:MAXVAL(natoms)))
+        ALLOCATE( cluster%r2_sq(3, nspecies,0:MAXVAL(natoms)))
+        ALLOCATE( cluster%r3_sq(3, nspecies,0:MAXVAL(natoms)))
         cluster%r1_sq = 0.0_DP
         cluster%r2_sq = 0.0_DP
         cluster%r3_sq = 0.0_DP
@@ -6218,7 +6241,8 @@ CMloop: DO icm = 1, 3
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
         ! Clustering for cluster counting or cluster translation
         IF (line_array(1) == 'count') THEN
-                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', ncluster_freq, ' MC steps.'
+                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', &
+                                                ncluster_freq, ' MC steps.'
             IF (ncluster_freq == 0) THEN
                 WRITE(logunit,'(A)') 'Clustering info given to calculate cluster distr.,'
                 WRITE(logunit,'(A)') 'but cluster distribution frequency not given.'
@@ -6332,25 +6356,32 @@ EnLoop: DO ientry = 1, n_entries
 
                     ENDIF
                     ! Make sure equivalent distances agree
-                    DO is = 1, nspecies
-                        DO js = 1, nspecies
-                            DO ja = 1, natoms(js)
-                                DO ia = 1, natoms(is)
-                                    IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
-                                        IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
-                                            cluster%min_distance_sq(c_or_m, is, js, ia, ja) = cluster%min_distance_sq(c_or_m, js, is, ja, ia)
-                                        ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
-                                            cluster%min_distance_sq(c_or_m, js, is, ja, ia) = cluster%min_distance_sq(c_or_m, is, js, ia, ja)
-                                        ELSE
-                                            err_msg = ""
-                                            err_msg(1) = "Two type clustering criteria do not agree"
-                                            CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                                        END IF
-                                    END IF
-                                END DO
-                            END DO
-                        END DO
-                    END DO
+                    isloop: DO is = 1, nspecies
+                    jsloop: DO js = 1, nspecies
+                    jaloop: DO ja = 1, natoms(js)
+                    ialoop: DO ia = 1, natoms(is)
+                            IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= &
+                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
+
+                                IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
+                                    cluster%min_distance_sq(c_or_m, is, js, ia, ja) = &
+                                        cluster%min_distance_sq(c_or_m, js, is, ja, ia)
+
+                                ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
+                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia) = &
+                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja)
+
+                                ELSE
+                                    err_msg = ""
+                                    err_msg(1) = "Two type clustering criteria do not agree"
+                                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                                END IF
+
+                             END IF
+                    END DO ialoop
+                    END DO jaloop
+                    END DO jsloop
+                    END DO isloop
 
                 END DO
 
@@ -6405,25 +6436,33 @@ EnLoop: DO ientry = 1, n_entries
                 ENDIF
 
                 ! Make sure equivalent distances agree
-                DO is = 1, nspecies
-                    DO js = 1, nspecies
-                        DO ja = 1, natoms(js)
-                            DO ia = 1, natoms(is)
-                                IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
-                                    IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
-                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja) = cluster%min_distance_sq(c_or_m, js, is, ja, ia)
-                                    ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
-                                        cluster%min_distance_sq(c_or_m, js, is, ja, ia) = cluster%min_distance_sq(c_or_m, is, js, ia, ja)
-                                    ELSE
-                                        err_msg = ""
-                                        err_msg(1) = "Two type clustering criteria do not agree"
-                                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                                    END IF
-                                END IF
-                            END DO
-                        END DO
-                    END DO
-                END DO
+                isloop2: DO is = 1, nspecies
+                jsloop2: DO js = 1, nspecies
+                jaloop2: DO ja = 1, natoms(js)
+                ialoop2: DO ia = 1, natoms(is)
+                        IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= &
+                                cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
+
+                            IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
+                                cluster%min_distance_sq(c_or_m, is, js, ia, ja) = &
+                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia)
+
+                            ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
+                                cluster%min_distance_sq(c_or_m, js, is, ja, ia) = &
+                                    cluster%min_distance_sq(c_or_m, is, js, ia, ja)
+
+                            ELSE
+                                err_msg = ""
+                                err_msg(1) = "Two type clustering criteria do not agree"
+                                CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                            END IF
+
+                         END IF
+                END DO ialoop2
+                END DO jaloop2
+                END DO jsloop2
+                END DO isloop2
+
             ELSE IF (line_array(1) == 'skh') THEN
                 cluster%criteria(c_or_m, int_skh) = .TRUE.
                 DO is = 1, nspecies
@@ -6484,7 +6523,7 @@ EnLoop: DO ientry = 1, n_entries
                 END IF
             END DO
         END DO
-        IF ( .not. ANY(cluster%criteria(:,int_skh) == .TRUE.)) DEALLOCATE(cluster%r1_sq, cluster%r2_sq, cluster%r3_sq)
+        IF ( .not. ANY(cluster%criteria(:,int_skh) .eqv. .TRUE.)) DEALLOCATE(cluster%r1_sq, cluster%r2_sq, cluster%r3_sq)
 
 
         ALLOCATE( cluster%M(max_nmol), cluster%N(max_nmol) )
@@ -6549,7 +6588,7 @@ SUBROUTINE Get_Degree_Association_Info
 
      IF(line_string(1:20) == '# Degree_Association') THEN
         !IF ( cluster%n_species_type(1) == 0 ) THEN
-        IF ( .not. ANY(cluster%criteria(1,:) == .TRUE.) ) THEN
+        IF ( .not. ANY(cluster%criteria(1,:) .eqv. .TRUE.) ) THEN
             err_msg = ''
             err_msg(1) = 'Cannot compute degree ion association without clustering information'
             CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
@@ -6591,7 +6630,8 @@ SUBROUTINE Get_Degree_Association_Info
 
             IF (alpha%atype(is) == -1) THEN
                 err_msg = ''
-                err_msg(1) = 'Degree Association name ('//TRIM(alpha%aname(is))//') is not part of the species: '//TRIM(Int_To_String(is))
+                err_msg(1) = 'Degree Association name ('//TRIM(alpha%aname(is))//')'
+                err_msg(1) = ' is not part of the species: '//TRIM(Int_To_String(is))
                 CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
             END IF
 
@@ -6674,7 +6714,7 @@ SUBROUTINE Get_Oligomer_Cutoff_Info
      END IF
  
      IF(line_string(1:17) == '# Oligomer_Cutoff') THEN
-        IF ( .not. ANY(cluster%criteria(1,:) == .TRUE.) ) THEN
+        IF ( .not. ANY(cluster%criteria(1,:) .eqv. .TRUE.) ) THEN
             err_msg = ''
             err_msg(1) = 'Cannot compute oligomer cutoff without clustering information'
             CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
@@ -6984,7 +7024,7 @@ SUBROUTINE Get_Bond_Histogram_Info
      END IF
 
      IF(line_string(1:17) == '# Excluded_Volume') THEN
-        IF ( .not. ANY(cluster%criteria(1,:) == .TRUE.) ) THEN
+        IF ( .not. ANY(cluster%criteria(1,:) .eqv. .TRUE.) ) THEN
             err_msg = ''
             err_msg(1) = 'Cannot compute excluded volume without clustering information'
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
@@ -7014,7 +7054,8 @@ SUBROUTINE Get_Bond_Histogram_Info
 
         IF (nmolecules(exvol%species) /= 1) THEN
             err_msg = ''
-            err_msg(1) = 'Max of 1 molecule for excluded volume species. '//TRIM(Int_To_String(nmolecules(exvol%species)))//' given.'
+            err_msg(1) = 'Max of 1 molecule for excluded volume species. '
+            err_msg(2) = TRIM(Int_To_String(nmolecules(exvol%species)))//' given.'
             CALL Clean_Abort(err_msg,'Get_Excluded_Volume_Info')
         END IF
 
@@ -7205,7 +7246,7 @@ SUBROUTINE Get_MSD_Info
         err_msg = ''
         err_msg(1) = '# Mean_Squared_Displacement info not given in input, but Nmsdfreq specified.'
         CALL Clean_Abort(err_msg,'Get_MSD_Info')
-     ELSE IF (.not. ANY(trans%msd_species == .TRUE.)) THEN
+     ELSE IF (.not. ANY(trans%msd_species .eqv. .TRUE.)) THEN
         err_msg = ''
         err_msg(1) = '# Mean_Squared_Displacement info not given in input, but Nmsdfreq specified.'
         CALL Clean_Abort(err_msg,'Get_MSD_Info')
@@ -7336,7 +7377,7 @@ SUBROUTINE Get_VACF_Info
         err_msg = ''
         err_msg(1) = '# Velocity_Autocorrelation info not given in input, but Nvacffreq specified.'
         CALL Clean_Abort(err_msg,'Get_Velocity_Autocorrelation_Info')
-     ELSE IF (.not. ANY(trans%vacf_species == .TRUE.)) THEN
+     ELSE IF (.not. ANY(trans%vacf_species .eqv. .TRUE.)) THEN
         err_msg = ''
         err_msg(1) = '# Velocity_Autocorrelation info not given in input, but Nvacffreq specified.'
         CALL Clean_Abort(err_msg,'Get_Velocity_Autocorrelation_Info')
@@ -7467,7 +7508,7 @@ SUBROUTINE Get_Dipole_Moment_Info
         err_msg = ''
         err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
         CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
-     ELSE IF(.not. ANY(trans%dipole_species == .TRUE.)) THEN
+     ELSE IF(.not. ANY(trans%dipole_species .eqv. .TRUE.)) THEN
         err_msg = ''
         err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
         CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
@@ -7564,7 +7605,7 @@ SUBROUTINE Get_Virial_Info
         err_msg = ''
         err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
         CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')
-     ELSE IF(.not. ANY(trans%dipole_species == .TRUE.)) THEN
+     ELSE IF(.not. ANY(trans%dipole_species .eqv. .TRUE.)) THEN
         err_msg = ''
         err_msg(1) = '# Dipole_Moment info not given in input, but Ndipolefreq specified.'
         CALL Clean_Abort(err_msg,'Get_Dipole_Moment_Info')

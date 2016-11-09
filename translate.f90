@@ -324,7 +324,8 @@ SUBROUTINE Translate(this_box,mc_step)
              max_disp(is,this_box) = MIN(rcut_small,2.0_DP*success_ratio*max_disp(is,this_box))
          END IF
 
-         WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, translation of species ', is,' in box ', this_box, ' : ', max_disp(is,this_box)
+         WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, translation of species ', is,' in box ', &
+                                              this_box, ' : ', max_disp(is,this_box)
         
      END IF
 

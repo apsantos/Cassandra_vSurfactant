@@ -218,7 +218,9 @@ SUBROUTINE Participation
 
         DO ibonds = 1, bondpart_list(iatom,ispecies)%nbonds
            WRITE(logunit,*) 'species, atom, local bond nbr, global bond nbr, atom bonded '
-           WRITE(logunit,'(3X,I2,7X,I3,5X,I3,10X,I3,15X,I3)') ispecies,iatom,ibonds,bondpart_list(iatom,ispecies)%bond_num(ibonds), bondpart_list(iatom,ispecies)%atom(ibonds)
+           WRITE(logunit,'(3X,I2,7X,I3,5X,I3,10X,I3,15X,I3)') ispecies, iatom, ibonds, &
+                                                              bondpart_list(iatom,ispecies)%bond_num(ibonds), &
+                                                              bondpart_list(iatom,ispecies)%atom(ibonds)
         ENDDO
         WRITE(logunit,*)
      ENDDO

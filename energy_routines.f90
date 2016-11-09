@@ -1585,7 +1585,8 @@ CONTAINS
     REAL(DP) :: eps,sig,SigOverRsq,SigOverR6,SigOverR12
     REAL(DP) :: SigOverRsq_shift,SigOverR6_shift,SigOverR12_shift
     REAL(DP) :: roffsq_rijsq, roffsq_rijsq_sq, factor2, fscale
-    REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff, rij,  mie_n, mie_m, rij_shift, SigOverR_shift, SigOverRn_shift, SigOverRm_shift, rcut_vdw
+    REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff, rij,  mie_n, mie_m, rij_shift
+    REAL(DP) :: SigOverR_shift, SigOverRn_shift, SigOverRm_shift, rcut_vdw
 !    REAL(DP) :: Eij_vdw_check
     Real(DP) :: qi,qj, qsc
     REAL(DP) :: this_lambda, RsqOverSig, R6OverSig, factorLJ

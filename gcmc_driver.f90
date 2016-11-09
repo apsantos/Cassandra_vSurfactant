@@ -365,7 +365,8 @@ SUBROUTINE GCMC_Driver
   write(logunit,*) '***** Insertion efficiency *****************'
   DO ibox = 1, nbr_boxes
      DO is = 1, nspecies
-        write(logunit,'(A40,2X,I2,2X,A2,2X,I10)') 'Total number of insertions for species', is , 'is', ntrials(is,this_box)%insertion
+        write(logunit,'(A40,2X,I2,2X,A2,2X,I10)') 'Total number of insertions for species', &
+                                                  is , 'is', ntrials(is,this_box)%insertion
         write(logunit,'(A22,2X)') 'Successful insertions', nsuccess(is,this_box)%insertion
      END DO
      write(logunit,*)

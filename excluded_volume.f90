@@ -148,17 +148,17 @@ CONTAINS
            CYCLE ins_loop
        END IF
    
-       IF (exvol%distance) CYCLE
-
        !*********************************************************************************
        !   Step 5) Accept or reject the test insertion
        !*********************************************************************************
    
-       ln_pacc = beta(this_box) * delta_e 
-   
-       IF (ln_pacc > exvol%criteria) THEN
-           !print*, 'ene', delta_e, i_ins
-           exvol%excluded = exvol%excluded + 1
+       IF ( .not. exvol%distance) THEN
+           ln_pacc = beta(this_box) * delta_e 
+       
+           IF (ln_pacc > exvol%criteria) THEN
+               !print*, 'ene', delta_e, i_ins
+               exvol%excluded = exvol%excluded + 1
+           END IF
        END IF
        
        ! Remove inserting monomer
@@ -186,7 +186,7 @@ CONTAINS
     REAL(DP) :: this_lambda
 
     alive(is) = locate(im,is)
-    IF (molecule_list(im, is)%live == .FALSE.) THEN
+    IF (molecule_list(im, is)%live .eqv. .FALSE.) THEN
        this_lambda = 1.0_DP
        frag_start = 1
        frag_type = frag_list(frag_start,is)%type
@@ -246,7 +246,7 @@ CONTAINS
        CALL Compute_Max_COM_Distance(alive(is),is)
 
     !Remove the Monomer
-    ELSE IF (molecule_list(im, is)%live == .TRUE.) THEN
+    ELSE IF (molecule_list(im, is)%live .eqv. .TRUE.) THEN
        ! clean up
        molecule_list(alive(is),is)%live = .FALSE.
        atom_list(:,alive(is),is)%exist = .FALSE.
