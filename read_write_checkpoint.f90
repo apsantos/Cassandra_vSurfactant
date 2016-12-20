@@ -335,7 +335,7 @@ SUBROUTINE Read_XTC(this_mc_step)
           atom_list(1:natoms(is),this_im,is)%rzp = atom_list(1:natoms(is),this_im,is)%rzp + &
                zcom_new - zcom_old
           
-          CALL Compute_Max_Com_Distance(this_im,is)
+          CALL Compute_Max_COM_Distance(this_im,is)
        END DO
     END DO
     
@@ -558,7 +558,7 @@ SUBROUTINE Read_GRO(this_mc_step)
           atom_list(1:natoms(is),this_im,is)%rzp = atom_list(1:natoms(is),this_im,is)%rzp + &
                zcom_new - zcom_old
           
-          CALL Compute_Max_Com_Distance(this_im,is)
+          CALL Compute_Max_COM_Distance(this_im,is)
        END DO
     END DO
     
@@ -768,7 +768,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
 
           END IF
           
-          CALL Compute_Max_Com_Distance(this_im,is)
+          CALL Compute_Max_COM_Distance(this_im,is)
        END DO
     END DO
     
@@ -1039,7 +1039,7 @@ SUBROUTINE Read_Checkpoint
           
           nmols(is,this_box) = nmols(is,this_box) + 1
           
-          CALL Compute_Max_Com_Distance(this_im,is)
+          CALL Compute_Max_COM_Distance(this_im,is)
        END DO
     END DO
     
@@ -1205,7 +1205,7 @@ SUBROUTINE Read_Checkpoint
           this_im = locate(im,is)
           IF( .NOT. molecule_list(this_im,is)%live) CYCLE
           CALL Get_COM(this_im,is)
-          CALL Compute_Max_Com_Distance(this_im,is)
+          CALL Compute_Max_COM_Distance(this_im,is)
        END DO
     END DO
 
