@@ -216,7 +216,7 @@
                 
                 ! compute the distance of the psuedoatom farthest from the COM.
                 
-                CALL Compute_Max_Com_Distance(alive,is)
+                CALL Compute_Max_COM_Distance(alive,is)
                 ! write to a file for viewing
                 
                 WRITE(*,*) 'successfully inserted molecule', im
