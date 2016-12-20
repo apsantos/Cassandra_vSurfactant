@@ -32,7 +32,7 @@
 !      This routine is used to determine values of intramolecular degrees
 !      of freedom of a molecule
 ! 
-!  Get_Max_Com_Distance
+!  Get_Max_COM_Distance
 !
 !      The routine calculates the distance between the COM and the atom
 !      furthest to it
@@ -236,7 +236,7 @@ SUBROUTINE Get_Internal_Coordinates(alive,ispecies)
 END SUBROUTINE Get_Internal_Coordinates
 !******************************************************************************
 
-SUBROUTINE Compute_Max_Com_Distance(alive,is)
+SUBROUTINE Compute_Max_COM_Distance(alive,is)
 
   !*****************************************************************************
   ! The program is used to compute the maximum distance of any psuedoatom from
@@ -295,7 +295,7 @@ SUBROUTINE Compute_Max_Com_Distance(alive,is)
 
   molecule_list(alive,is)%max_dcom = DSQRT(dmax)
 
-END SUBROUTINE Compute_Max_Com_Distance
+END SUBROUTINE Compute_Max_COM_Distance
      
 
   
