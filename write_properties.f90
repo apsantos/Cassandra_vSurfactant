@@ -425,6 +425,8 @@ CONTAINS
             write_buff(ii+1) = exvol%excluded / REAL(nexvol_freq * exvol%n_iter,DP)
          ELSE
             write_buff(ii+1) = exvol%excluded / REAL(exvol%n_iter)
+            IF (lattice_sim) write_buff(ii+1) = exvol%excluded / REAL(exvol%n_iter * box_list(1)%volume)
+
          END IF
 
       ELSE IF (prop_written == 'Degree_Association') THEN

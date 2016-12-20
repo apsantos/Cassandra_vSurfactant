@@ -56,22 +56,17 @@ CONTAINS
     !*********************************************************************************
 
     INTEGER, INTENT(IN) :: this_box
-    INTEGER :: i_mono_conf, i_type, iatom, im, is, i, j
-    INTEGER :: ierr, line_nbr, nbr_entries
-    INTEGER :: alive(nspecies)               ! molecule indices
+    INTEGER :: im, is, i, j
+    INTEGER :: i_ins
 
-    INTEGER :: ispec, imol, is_clus, t_im
-    INTEGER :: i_ins, cs
-
-    REAL(DP) :: ln_pacc, P_seq, P_bias, this_lambda, delta_e
-
-    LOGICAL :: accept, accept_or_reject, isfrag, isgas, rej_pair, cbmc_rej_pair
-    LOGICAL :: in_cluster, overlap
+    ! for the lattice_sim option
+    INTEGER :: ix, iy, iz
 
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: temp_locate
     LOGICAL, DIMENSION(:,:), ALLOCATABLE :: temp_live
     LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: temp_exist
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: temp_nmols
+
 
     REAL(DP) :: time_start, now_time
 
@@ -79,9 +74,6 @@ CONTAINS
     ALLOCATE( temp_live(MAXVAL(nmolecules),nspecies) )
     ALLOCATE( temp_exist(MAXVAL(natoms),MAXVAL(nmolecules),nspecies) )
     ALLOCATE( temp_nmols(nspecies,nbr_boxes) )
-    ln_pacc = 0.0_DP
-    P_seq = 1.0_DP
-    P_bias = 1.0_DP
 
     exvol%excluded = 0
 
@@ -99,68 +91,50 @@ CONTAINS
 
     CALL Remove_Small_Clusters(this_box)
 
+    is = exvol%species
     ins_loop: DO i_ins = 1, exvol%n_iter
        !*********************************************************************************
        !   Step 2) Choose insertion monomer and insertion location
        !*********************************************************************************
-       is = exvol%species
        im = 1
        locate(im,is) = im
    
        CALL Select_Monomer(im, is, this_box)
    
        !*********************************************************************************
-       !   Step 3) See if the test monomer is part of a cluster
+       !   Step 3) See if the test monomer is accessible or inaccessible
        !*********************************************************************************
-   
-       DO ispec = 1, cluster%n_species_type(1)
-           cs = cluster%species_type(1,ispec)
-           DO i = 1, nmols(cs,this_box)
-           !DO i = 1, nmols(cluster%species_type(ispec),this_box)
-               !imol = locate(i,cluster%species_type(ispec) )
-               imol = locate(i,cs )
-               IF (cs == is .and. imol == im) CYCLE
-               !IF (cluster%species_type(ispec) == is .and. imol == im) CYCLE
-   
-               in_cluster = Neighbor(3, imol, im, cs, is)
-               IF (in_cluster) THEN
-                   ! remove monomer
-                   CALL Select_Monomer(im, is, this_box)
-                   exvol%excluded = exvol%excluded + 1
-                   !print*, 'cluster', ispec, imol, i_ins
-                   CYCLE ins_loop
-               END IF
-   
+       IF (.false.) THEN
+       !IF (lattice_sim) THEN
+           
+           DO ix = 1, INT(box_list(this_box)%length(1,1))
+               molecule_list(im,is)%xcom = ix
+               atom_list(:,im,is)%rxp = atom_list(:,im,is)%rxp + 1
+
+               DO iy = 1, INT(box_list(this_box)%length(2,2))
+                   molecule_list(im,is)%ycom = iy
+                   atom_list(:,im,is)%ryp = atom_list(:,im,is)%ryp + 1
+
+                   DO iz = 1, INT(box_list(this_box)%length(3,3))
+                       molecule_list(im,is)%zcom = iz
+                       atom_list(:,im,is)%rzp = atom_list(:,im,is)%rzp + 1
+
+                       CALL Fold_Molecule(im, is, this_box)
+                       CALL Get_COM(im, is)
+                       CALL Compute_Max_COM_Distance(im, is)
+
+                       CALL Check_Excluded_Volume(im, is, this_box)
+                   END DO
+                   atom_list(:,im,is)%rzp = atom_list(:,im,is)%rzp - INT(box_list(this_box)%length(3,3)) 
+
+               END DO
+               atom_list(:,im,is)%ryp = atom_list(:,im,is)%ryp - INT(box_list(this_box)%length(2,2))
+
            END DO
-       END DO
-   
-       !*********************************************************************************
-       !   Step 4) Calculate the change in potential energy, essentially the same as in insertion
-       !*********************************************************************************
-   
-       CALL Get_Monomer_DeltaE(im, is, this_box, overlap, delta_e)
-   
-       IF (overlap) THEN
-           ! remove monomer
-           CALL Select_Monomer(im, is, this_box)
-           exvol%excluded = exvol%excluded + 1
-           !print*, 'overlap', i_ins
-           CYCLE ins_loop
+       ELSE
+           CALL Check_Excluded_Volume(im, is, this_box)
        END IF
    
-       !*********************************************************************************
-       !   Step 5) Accept or reject the test insertion
-       !*********************************************************************************
-   
-       IF ( .not. exvol%distance) THEN
-           ln_pacc = beta(this_box) * delta_e 
-       
-           IF (ln_pacc > exvol%criteria) THEN
-               !print*, 'ene', delta_e, i_ins
-               exvol%excluded = exvol%excluded + 1
-           END IF
-       END IF
-       
        ! Remove inserting monomer
        CALL Select_Monomer(im, is, this_box)
    
@@ -172,6 +146,63 @@ CONTAINS
     nmols = temp_nmols
 
   END SUBROUTINE Calculate_Excluded_Volume
+
+  SUBROUTINE Check_Excluded_Volume(im, is, this_box)
+    INTEGER, INTENT(IN) :: this_box, im, is
+    INTEGER :: i, j
+    INTEGER :: ispec, imol, cs
+
+    REAL(DP) :: ln_pacc, delta_e
+
+    LOGICAL :: in_cluster, overlap
+    ln_pacc = 0.0_DP
+
+       !*********************************************************************************
+       !   Step 1) See if the test monomer is part of a cluster
+       !*********************************************************************************
+       DO ispec = 1, cluster%n_species_type(1)
+           cs = cluster%species_type(1,ispec)
+           DO i = 1, nmols(cs,this_box)
+               imol = locate(i,cs )
+               IF (cs == is .and. imol == im) CYCLE
+   
+               in_cluster = Neighbor(3, imol, im, cs, is)
+               IF (in_cluster) THEN
+                   ! remove monomer
+                   exvol%excluded = exvol%excluded + 1
+                   !print*, 'cluster', ispec, imol
+                   RETURN
+               END IF
+   
+           END DO
+       END DO
+   
+       !*********************************************************************************
+       !   Step 2) Calculate the change in potential energy, essentially the same as in insertion
+       !*********************************************************************************
+   
+       CALL Get_Monomer_DeltaE(im, is, this_box, overlap, delta_e)
+   
+       IF (overlap) THEN
+           exvol%excluded = exvol%excluded + 1
+           !print*, 'overlap'
+           RETURN
+       END IF
+   
+       !*********************************************************************************
+       !   Step 3) Accept or reject the test insertion
+       !*********************************************************************************
+   
+       IF ( .not. exvol%distance) THEN
+           ln_pacc = beta(this_box) * delta_e 
+       
+           IF (ln_pacc > exvol%criteria) THEN
+               !print*, 'ene', delta_e, i_ins
+               exvol%excluded = exvol%excluded + 1
+           END IF
+       END IF
+
+  END SUBROUTINE Check_Excluded_Volume
 
   SUBROUTINE Select_Monomer(im, is, this_box)
     INTEGER, INTENT(IN) :: im, is, this_box
@@ -212,6 +243,8 @@ CONTAINS
      
        molecule_list(alive(is),is)%live = .TRUE.
    
+       !IF (lattice_sim) RETURN
+
        ! Randomize the molecule's COM position anywhere in the box.
        IF ( box_list(this_box)%int_box_shape == int_cubic ) THEN
            molecule_list(alive(is),is)%xcom = &
@@ -255,7 +288,6 @@ CONTAINS
     END IF
 
   END SUBROUTINE Select_Monomer
-
 
   SUBROUTINE Remove_Small_Clusters(this_box)
 
