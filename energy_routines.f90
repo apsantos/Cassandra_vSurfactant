@@ -456,7 +456,7 @@ CONTAINS
     ! Revision history: 
     !
     ! 01/19/09 (JS) : Added CHARMM functional form
-	! 12/8/12 (AV): Added AMBER functional form for multiple dihedrals
+    ! 12/8/12 (AV): Added AMBER functional form for multiple dihedrals
   !----------------------------------------------------------------------------------------------            
   USE Run_Variables
     INTEGER :: at1,at2,at3,at4,molecule,species
@@ -516,7 +516,7 @@ CONTAINS
                 
                 energy_dihed = a0 * (1.0_DP + DCOS(a1*phi - a2))
                 ierr = 0
-			!AV: AMBER dihedral form	
+            !AV: AMBER dihedral form    
              ELSEIF (dihedral_list(idihed,species)%int_dipot_type == int_amber ) THEN
                 
                 a0 = dihedral_list(idihed,species)%dihedral_param(1)
@@ -538,7 +538,7 @@ CONTAINS
                      a6 * (1.0_DP + DCOS(a7*phi - a8)) !+ &
                 !a9 * (1.0_DP + DCOS(a10*phi - a11))
                 
-			 
+             
              ENDIF DihedPot1234
 
              EXIT
@@ -590,7 +590,7 @@ CONTAINS
                 ierr = 0
 
                 ! Add more potential functions here.
-			 ELSEIF (dihedral_list(idihed,species)%int_dipot_type == int_amber ) THEN
+             ELSEIF (dihedral_list(idihed,species)%int_dipot_type == int_amber ) THEN
 
                 a0 = dihedral_list(idihed,species)%dihedral_param(1)
                 a1 = dihedral_list(idihed,species)%dihedral_param(2)
@@ -762,19 +762,19 @@ CONTAINS
           a6 = dihedral_list(idihed,species)%dihedral_param(7)
           a7 = dihedral_list(idihed,species)%dihedral_param(8)
           a8 = dihedral_list(idihed,species)%dihedral_param(9)
-		  ! AV: I comment this out b/c it is not usually necessary.
-		  !a9 = dihedral_list(idihed,species)%dihedral_param(10)
-		  !a10 = dihedral_list(idihed,species)%dihedral_param(11)
-		  !a11 = dihedral_list(idihed,species)%dihedral_param(12)
+          ! AV: I comment this out b/c it is not usually necessary.
+          !a9 = dihedral_list(idihed,species)%dihedral_param(10)
+          !a10 = dihedral_list(idihed,species)%dihedral_param(11)
+          !a11 = dihedral_list(idihed,species)%dihedral_param(12)
 
           CALL Get_Dihedral_Angle(idihed,molecule,species,phi)
           
           edihed = a0 * (1.0_DP + DCOS(a1*phi - a2)) + &
-			a3 * (1.0_DP + DCOS(a4*phi - a5)) + &
-				a6 * (1.0_DP + DCOS(a7*phi - a8)) !+ &
-				!a9 * (1.0_DP + DCOS(a10*phi - a11))
-		  
-		  
+            a3 * (1.0_DP + DCOS(a4*phi - a5)) + &
+                a6 * (1.0_DP + DCOS(a7*phi - a8)) !+ &
+                !a9 * (1.0_DP + DCOS(a10*phi - a11))
+          
+          
        ELSEIF (dihedral_list(idihed,species)%int_dipot_type == int_harmonic ) THEN
 
           atom1 = dihedral_list(idihed,species)%atom1
@@ -1167,7 +1167,7 @@ CONTAINS
                       SigOverR12 = SigOverR6 * SigOverR6
                       Eij_vdw = 4.0_DP * eps * (SigOverR12 - SigOverR6)
                       
-		      x = alpha_ewald(this_box) * rij
+              x = alpha_ewald(this_box) * rij
                       T = 1.0_DP / (1.0_DP + P*x)
                       xsq = x*x
                       TP = T * (A1 + T * (A2 + T * (A3 + T * (A4 + T * A5))))
@@ -1681,6 +1681,7 @@ CONTAINS
 
              ELSEIF (int_vdw_sum_style(ibox) == vdw_cut_shift) THEN
                 
+                IF (rijsq < rcut_vdwsq(ibox)) THEN
                 SigOverRsq = (sig**2)/rijsq
                 SigOverR6 = SigOverRsq * SigOverRsq * SigOverRsq
                 SigOverR12 = SigOverR6 * SigOverR6
@@ -1691,6 +1692,7 @@ CONTAINS
                 SigOverR12_shift = SigOverR6_shift * SigOverR6_shift
                 
                 Eij_vdw = 4.0_DP * eps * ( (SigOverR12 - SigOverR6) - (SigOverR12_shift - SigOverR6_shift) )
+                ENDIF
 
                 
              ELSEIF (int_vdw_sum_style(ibox) == vdw_cut_switch) THEN
@@ -1722,16 +1724,16 @@ CONTAINS
              ELSEIF (int_vdw_sum_style(ibox) == vdw_mie) THEN
 
                 rij = SQRT(rijsq)
-		rcut_vdw = SQRT(rcut_vdwsq(ibox))
+                rcut_vdw = SQRT(rcut_vdwsq(ibox))
                 
                 mie_n = mie_nlist(mie_Matrix(is,js))
                 mie_m = mie_mlist(mie_Matrix(is,js))
                 mie_coeff = mie_n/(mie_n-mie_m) * (mie_n/mie_m)**(mie_m/(mie_n-mie_m))
                 SigOverR = sig/rij
-		SigOverR_shift = sig/rcut_vdw
-		!use cut-shift potential
-		SigOverRn_shift = SigOverR_shift ** mie_n
-		SigOverRm_shift = SigOverR_shift ** mie_m
+                SigOverR_shift = sig/rcut_vdw
+                !use cut-shift potential
+                SigOverRn_shift = SigOverR_shift ** mie_n
+                SigOverRm_shift = SigOverR_shift ** mie_m
                 SigOverRn = SigOverR ** mie_n
                 SigOverRm = SigOverR ** mie_m
                 Eij_vdw =  mie_coeff * eps * ((SigOverRn - SigOverRm) - (SigOverRn_shift - SigOverRm_shift))
@@ -3593,7 +3595,7 @@ CONTAINS
 
     ! Local
     INTEGER :: itype,jtype, this_box
-    REAL(DP) :: eps,sig,SigOverRsq,SigOverR6,SigOverR12
+    REAL(DP) :: eps,sig,SigOverRsq,SigOverR6,SigOverR12, kappa
     REAL(DP) :: SigOverRsq_shift,SigOverR6_shift,SigOverR12_shift
     REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff, mie_n, mie_m
     REAL(DP) :: roffsq_rijsq, roffsq_rijsq_sq, factor2, fscale
@@ -3707,7 +3709,31 @@ CONTAINS
              
              ! Add other potential types here
           ENDIF LJ_12_6_calculation
-          
+
+          Yukawa_calculation: IF (vdw_param9_table(itype,jtype) /= 0) THEN 
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             eps = vdw_param9_table(itype,jtype)
+             kappa = vdw_param10_table(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN 
+      
+                ! This controls 1-2, 1-3, and 1-4 interactions
+      
+                eps = eps * vdw_intra_scale(ia,ja,is)
+
+             ENDIF
+
+             IF (int_vdw_sum_style(ibox) == vdw_cut .OR. int_vdw_sum_style(ibox) == vdw_cut_tail .OR. &
+                 int_vdw_sum_style(ibox) == vdw_cut_shift) THEN 
+      
+                   rij = SQRT(rijsq)
+                   Wij_vdw = Wij_vdw + ( eps * exp(-kappa * rij) * (kappa + 1.0 / rij))
+
+            ENDIF
+
+          ENDIF Yukawa_calculation
+
        ENDIF VDW_calculation
        qq_calculation: IF (get_qq) THEN
 

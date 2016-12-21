@@ -490,10 +490,10 @@ SUBROUTINE Read_Nonbond_Table
     ENDDO
 
     ! Write output
-    WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8'
+    WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8 9 10'
     DO itype = 1, nbr_atomtypes
         DO jtype = itype, nbr_atomtypes
-            WRITE(logunit,'(2I3,8f11.4)') &
+            WRITE(logunit,'(2I3,10f11.4)') &
                  itype, jtype, &
                  vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype), &
                  vdw_param3_table(itype,jtype), vdw_param4_table(itype,jtype), &
