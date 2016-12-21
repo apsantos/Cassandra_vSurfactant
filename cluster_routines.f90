@@ -357,7 +357,6 @@ CONTAINS
                IF (ALLOCATED(cos_mol_old)) DEALLOCATE(cos_mol_old)
                IF (ALLOCATED(sin_mol_old)) DEALLOCATE(sin_mol_old)
 
-               CALL Update_Cluster_Counters(2)
        
             ELSE
                reject_type = -3
@@ -382,6 +381,9 @@ CONTAINS
         END IF
 
     END IF
+
+    ! update the cluster counters in anycase so that the clusters don't have to be found twice
+    CALL Update_Cluster_Counters(2)
 
     IF ( .not. accept ) THEN
         ! reset the cluster parameters and positions
