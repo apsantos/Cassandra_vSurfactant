@@ -358,6 +358,8 @@ SUBROUTINE Get_Sim_Type
      int_sim_type = sim_ring
   ELSEIF(sim_type == 'MCF_Gen') THEN
      int_sim_type = sim_mcf
+  ELSEIF(sim_type == 'TEST') THEN
+     int_sim_type = sim_test
   END IF
   
 END SUBROUTINE Get_Sim_Type

@@ -80,6 +80,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: sim_gemc_npt = 7
   INTEGER, PARAMETER :: sim_gemc_ig = 8
   INTEGER, PARAMETER :: sim_mcf = 9
+  INTEGER, PARAMETER :: sim_test = 10
   LOGICAL :: lfugacity, lchempot, timed_run, openmp_flag, en_flag
 
   ! The starting seed for the random generator
@@ -104,6 +105,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: vdw_charmm = 6
   INTEGER, PARAMETER :: vdw_cut_switch = 7
   INTEGER, PARAMETER :: vdw_mie = 8
+  INTEGER, PARAMETER :: vdw_y = 9
 
   INTEGER, PARAMETER :: charge_none = 0
   INTEGER, PARAMETER :: charge_coul = 1
@@ -554,6 +556,8 @@ USE Type_Definitions
   ! dimensions == (SUM(nmolecules), MAX(nvecs))
   REAL(DP), ALLOCATABLE :: cos_mol(:,:) , sin_mol(:,:)
   LOGICAL :: l_pair_nrg
+
+  INTEGER :: reject_type ! a negative number for the reason the move was rejected
 
   REAL(DP) pacc, paccbiased, freev
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: chpot, chpotid
