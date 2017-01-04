@@ -68,11 +68,12 @@ CONTAINS
     INTEGER  :: im, imol, i  ! molecule indices
     INTEGER  :: total_mols ! number of molecules in the system
 
-    INTEGER  :: old_clusmax, old_n_olig_clus, old_n_mic_clus, old_n_oligomers, old_n_clusters
     INTEGER  :: c, cs
-    INTEGER, ALLOCATABLE, DIMENSION(:) :: old_N, old_M
     INTEGER, ALLOCATABLE, DIMENSION(:) :: iclus_mol, iclus_is
+
+    INTEGER, ALLOCATABLE, DIMENSION(:) :: old_N
     INTEGER, ALLOCATABLE, DIMENSION(:,:) :: old_clabel
+    INTEGER :: old_clusmax
     
     REAL(DP) :: nmols_box(nbr_boxes)
     REAL(DP), ALLOCATABLE :: x_box(:), x_species(:)
@@ -88,6 +89,7 @@ CONTAINS
     INTEGER :: position
     REAL(DP), ALLOCATABLE :: cos_mol_old(:,:), sin_mol_old(:,:)
 
+    reject_type = 0
     E_vdw_move = 0.0_DP
     E_qq_move = 0.0_DP
     E_vdw = 0.0_DP
@@ -171,10 +173,12 @@ CONTAINS
     CALL Find_Clusters(this_box,2)
   
     ! Choose a cluster (bigger than a monomer) at random
-    IF ( MAXVAL(cluster%N) < 2. ) RETURN
+    IF ( MAXVAL(cluster%N) < cluster%M_olig(is) ) RETURN
+    !IF ( MAXVAL(cluster%N) < 2. ) RETURN
 
     iclus = INT ( rranf() * cluster%clusmax ) + 1
-    DO WHILE (cluster%N(iclus) < 2)
+    DO WHILE (cluster%N(iclus) < cluster%M_olig(is))
+    !DO WHILE (cluster%N(iclus) < 2)
 
         iclus = INT ( rranf() * cluster%clusmax ) + 1
     END DO
@@ -190,6 +194,11 @@ CONTAINS
     dx = ( 2.0_DP * rranf() - 1.0_DP) * max_clus_disp(is,this_box)
     dy = ( 2.0_DP * rranf() - 1.0_DP) * max_clus_disp(is,this_box)
     dz = ( 2.0_DP * rranf() - 1.0_DP) * max_clus_disp(is,this_box)
+    IF (int_sim_type == sim_test) THEN
+    dx = 1
+    dy = 0
+    dz = 0
+    END IF
   
     !*********************************************************************************
     !   Step 2) Save old energy
@@ -260,17 +269,12 @@ CONTAINS
 
     END DO
   
-    ALLOCATE(old_M(SIZE(cluster%M)), old_N(SIZE(cluster%N)))
+    ALLOCATE(old_N(SIZE(cluster%N)))
     ALLOCATE( old_clabel(MAXVAL(nmolecules(:)), cluster%n_species_type(2)) )
   
     old_clusmax = cluster%clusmax
     old_N = cluster%N
-    old_M = cluster%M
     old_clabel = cluster%clabel
-    old_n_oligomers = cluster%n_oligomers
-    old_n_olig_clus = cluster%n_olig_clus
-    old_n_clusters = cluster%n_clusters
-    old_n_mic_clus = cluster%n_mic_clus
 
     !*********************************************************************************
     !   Step 3) Reject if any monomer has become part of a cluster
@@ -281,31 +285,7 @@ CONTAINS
     ! IF cluster translate added a molecule, so move is rejected
     IF ( iclus_N /= cluster%N(iclus) ) THEN 
         accept = .FALSE.
-
-        cluster%clusmax = old_clusmax
-        cluster%N = old_N
-        cluster%M = old_M
-
-        cluster%clabel = old_clabel
-        cluster%n_oligomers = old_n_oligomers
-        cluster%n_olig_clus = old_n_olig_clus
-        cluster%n_clusters = old_n_clusters
-        cluster%n_mic_clus = old_n_mic_clus
-        DEALLOCATE(old_M, old_clabel, old_N)
-
-        DO imol = 1, iclus_N
-    
-            im = iclus_mol(imol)
-            cs = iclus_is(imol)
-
-            ! IF micelle type then some will not be in 'clustered'
-            IF (cluster%criteria(2, int_micelle) .eqv. .TRUE.) THEN
-                IF (im == 0) CYCLE
-            END IF
-
-            CALL Revert_Old_Cartesian_Coordinates(im,cs)
-
-        END DO
+        reject_type = -1
 
     !*********************************************************************************
     !   Step 4) Calculate the change in potential energy
@@ -317,30 +297,7 @@ CONTAINS
         IF (inter_overlap) THEN ! Move is rejected
 
             accept = .FALSE.
-
-            cluster%clusmax = old_clusmax
-            cluster%n_oligomers = old_n_oligomers
-            cluster%n_olig_clus = old_n_olig_clus
-            cluster%n_clusters = old_n_clusters
-            cluster%n_mic_clus = old_n_mic_clus
-
-            cluster%N = old_N
-            cluster%M = old_M
-            cluster%clabel = old_clabel
-            DEALLOCATE(old_M, old_clabel, old_N)
-
-            DO imol = 1, iclus_N
-    
-                im = iclus_mol(imol)
-                cs = iclus_is(imol)
-                ! IF micelle type then some will not be in 'clustered'
-                IF (cluster%criteria(2, int_micelle) .eqv. .TRUE.) THEN
-                    IF (im == 0) CYCLE
-                END IF
-
-                CALL Revert_Old_Cartesian_Coordinates(im,cs)
-    
-            END DO
+            reject_type = -2
 
         ELSE
 
@@ -353,8 +310,7 @@ CONTAINS
                sin_mol_old(:,:) = sin_mol(1:nvecs(this_box),:)
                !$OMP END PARALLEL WORKSHARE
        
-               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(iclus_N, iclus_mol, iclus_is, int_cluster, &
-                                                                       this_box, E_reciprocal_move)
+               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(iclus_N, iclus_mol, iclus_is, int_cluster, this_box, E_reciprocal_move)
                
             END IF
             
@@ -367,6 +323,7 @@ CONTAINS
                   accept = .TRUE.
                ELSE
                   accept = .FALSE.
+                  reject_type = -3
                END IF
             ELSE
        
@@ -380,7 +337,7 @@ CONTAINS
     !*********************************************************************************
             IF ( accept ) THEN
        
-            !print*, 'clus accep', E_vdw, E_vdw_move, iclus_N
+               !print*, 'clus accep', delta_e, (dx**2.0 + dy**2.0 + dz**2.0)**0.5, iclus_N
                ! accept the move and update the global energies
                energy(this_box)%inter_vdw = energy(this_box)%inter_vdw + E_vdw_move - E_vdw
                energy(this_box)%inter_q   = energy(this_box)%inter_q   + E_qq_move - E_qq
@@ -399,33 +356,10 @@ CONTAINS
                IF (l_pair_nrg) DEALLOCATE(pair_vdw_temp,pair_qq_temp)
                IF (ALLOCATED(cos_mol_old)) DEALLOCATE(cos_mol_old)
                IF (ALLOCATED(sin_mol_old)) DEALLOCATE(sin_mol_old)
+
        
             ELSE
-       
-               cluster%clusmax = old_clusmax
-               cluster%N = old_N
-               cluster%M = old_M
-    
-               cluster%clabel = old_clabel
-               cluster%n_oligomers = old_n_oligomers
-               cluster%n_olig_clus = old_n_olig_clus
-               cluster%n_clusters = old_n_clusters
-               cluster%n_mic_clus = old_n_mic_clus
-               DEALLOCATE(old_M, old_clabel, old_N)
-       
-               ! Revert to the old coordinates of atoms and com of the molecule
-               DO imol = 1, iclus_N
-       
-                   im = iclus_mol(imol)
-                   cs = iclus_is(imol)
-                   ! IF micelle type then some will not be in 'clustered'
-                   IF (cluster%criteria(2, int_micelle) .eqv. .TRUE.) THEN
-                       IF (im == 0) CYCLE
-                   END IF
-
-                   CALL Revert_Old_Cartesian_Coordinates(im,cs)
-       
-               END DO
+               reject_type = -3
        
                IF (l_pair_nrg) CALL Reset_Molecule_Pair_Interaction_Arrays(im,is,this_box, &
                                               iclus_N, iclus_mol, iclus_is)
@@ -448,6 +382,32 @@ CONTAINS
 
     END IF
 
+    ! update the cluster counters in anycase so that the clusters don't have to be found twice
+    CALL Update_Cluster_Counters(2)
+
+    IF ( .not. accept ) THEN
+        ! reset the cluster parameters and positions
+        cluster%clusmax = old_clusmax
+        cluster%N = old_N
+
+        cluster%clabel = old_clabel
+        DEALLOCATE(old_clabel, old_N)
+
+        DO imol = 1, iclus_N
+    
+            im = iclus_mol(imol)
+            cs = iclus_is(imol)
+
+            ! IF micelle type then some will not be in 'clustered'
+            IF (cluster%criteria(2, int_micelle) .eqv. .TRUE.) THEN
+                IF (im == 0) CYCLE
+            END IF
+
+            CALL Revert_Old_Cartesian_Coordinates(im,cs)
+
+        END DO
+
+    END IF
 
     IF ( MOD(ntrials(is,this_box)%cluster_translate,nupdate) == 0 ) THEN
        IF ( int_run_style == run_equil ) THEN 
@@ -457,8 +417,7 @@ CONTAINS
        END IF
   
        WRITE(logunit,*)
-       WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Success ratio, cluster translation of species ', is, &
-                                           ' in box ', this_box, ' : ', success_ratio
+       WRITE(logunit,'(A,I3,A,I1,A,F8.5)')'Success ratio, cluster translation of species ', is , ' in box ', this_box, ' : ', success_ratio
   
        IF ( int_run_style == run_equil ) THEN
   
@@ -478,8 +437,7 @@ CONTAINS
                max_clus_disp(is,this_box) = MIN(rcut_small,2.0_DP*success_ratio*max_clus_disp(is,this_box))
            END IF
   
-           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is, &
-                                               ' in box ', this_box, ' : ', max_clus_disp(is,this_box)
+           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is,' in box ', this_box, ' : ', max_clus_disp(is,this_box)
           
        END IF
   
@@ -508,18 +466,8 @@ CONTAINS
 
     ! cluster label of labels
     ! counts how many atoms are in the cluster
-    cluster%N(:) = 0
-    cluster%clabel(:,:) = 0
-    IF (noligdist_freq /= 0) THEN
-        IF ( .not. ALLOCATED(cluster%com_x) ) THEN
-            ALLOCATE(cluster%com_x(SIZE(cluster%N)), cluster%com_y(SIZE(cluster%N)), cluster%com_z(SIZE(cluster%N)) )
-        END IF
-        cluster%com_x(:) = 0.0_DP
-        cluster%com_y(:) = 0.0_DP
-        cluster%com_z(:) = 0.0_DP
-    END IF
-
-    !write(*,*) 'clabel', cluster%clabel(1:8,3)
+    cluster%N = 0
+    cluster%clabel = 0
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
 
@@ -568,12 +516,10 @@ CONTAINS
     IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE. ) CALL Micelle_Association(this_box, count_or_move)
 
     !write(*,*) 'c/m', count_or_move
-    !write(*,*) 'N', cluster%N(1:20)
-    !print*, 'clabel', cluster%clabel(1:8,3)
+    !write(*,*) 'N', cluster%N(1:200)
+    !write(*,*) 'clabel', cluster%clabel
     cluster%n_oligomers = 0
-    cluster%n_olig_clus = 0
     cluster%n_clusters = 0
-    cluster%n_mic_clus = 0
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
         IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE.) THEN
@@ -592,10 +538,23 @@ CONTAINS
             END DO
 
         END DO
+    END DO
 
+    IF (count_or_move == 1) THEN
+        CALL Update_Cluster_Counters(count_or_move)
+    ENDIF
+
+  END SUBROUTINE Find_Clusters
+
+  SUBROUTINE Update_Cluster_Counters(count_or_move)
+    INTEGER, INTENT(IN) :: count_or_move
+    INTEGER :: is, ic, is_clus
+
+    DO is = 1, cluster%n_species_type(count_or_move)
+        is_clus = cluster%species_type(count_or_move, is)
         ic = 1
         DO WHILE ( cluster%N(ic) /= 0 )
-
+    
             IF (cluster%N(ic) > 0) THEN
                 ! Tally the aggregation number distribution
                 cluster%M( cluster%N(ic) ) = cluster%M( cluster%N(ic) ) + 1
@@ -603,27 +562,20 @@ CONTAINS
                 ! Tally up the Nmols of oligomers and clustered
                 IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
                     cluster%n_oligomers = cluster%n_oligomers + cluster%N(ic)
-                    cluster%n_olig_clus = cluster%n_olig_clus + 1
-                    IF (noligdist_freq /= 0) THEN
-                        CALL Cluster_COM(ic, count_or_move, this_box)
-                    END IF
                 ELSE
                     cluster%n_clusters = cluster%n_clusters + cluster%N(ic)
-                    cluster%n_mic_clus = cluster%n_mic_clus + 1
                 END IF
             END IF
-
+    
             ic = ic + 1
-            IF ( ic > nmols(is_clus,this_box) ) EXIT
-
         END DO
     END DO
-    !write(*,*) 'N', cluster%N(1:10)
-    !write(*,*) 'clabel', cluster%clabel(1:100,1)
-    !write(*,*) 'M', cluster%M(1:10)
-    !write(*,*) 'olig, clus', cluster%n_olig_clus, cluster%n_mic_clus
+    !write(*,*) 'N', cluster%N(1:200)
+    !write(*,*) 'clabel', cluster%clabel(1:500, 1)
+    !write(*,*) 'M', cluster%M
+    !write(*,*) 'olig, clus', cluster%n_oligomers, cluster%n_clusters
 
-  END SUBROUTINE Find_Clusters
+  END SUBROUTINE Update_Cluster_Counters
 
   SUBROUTINE Update_Labels(imol, is, js, neigh_list)
 
@@ -688,7 +640,7 @@ CONTAINS
                 cluster%clusmax = cluster%clusmax + 1
                 cluster%clabel(imol, is) = cluster%clusmax
                 iclus = cluster%clusmax
-                cluster%N( INT(cluster%clusmax) ) = 1
+                cluster%N(INT(cluster%clusmax)) = 1
             END IF
 
             cluster%clabel(ineigh, js) = iclus
@@ -704,7 +656,7 @@ CONTAINS
     IF (cluster%clabel(imol, is) == 0) THEN
         cluster%clusmax = cluster%clusmax + 1
         cluster%clabel(imol, is) = cluster%clusmax
-        cluster%N( INT(cluster%clusmax) ) = 1
+        cluster%N(INT(cluster%clusmax)) = 1
     END IF
 
   END SUBROUTINE Update_Labels
@@ -754,7 +706,7 @@ CONTAINS
 
             DO cur_atom = 1 , natoms(cur_type)
                 IF (cluster%min_distance_sq(count_or_move, test_type, cur_type, test_atom, cur_atom) < 0.000001) CYCLE
-                
+
                 ! Get the positions of the COM of the two molecule species
                 rxijp = atom_list(test_atom, test_part, test_type)%rxp - &
                         atom_list(cur_atom, cur_part, cur_type)%rxp
@@ -768,9 +720,7 @@ CONTAINS
         
                 rijsq = rxij*rxij + ryij*ryij + rzij*rzij
                 
-                    !print *, 'dist acc', rijsq, cur_atom, cur_part,test_atom, test_part, rxijp, ryijp, rzijp, rxij, ryij, rzij, atom_list(test_atom, test_part, test_type)%rxp,atom_list(cur_atom, cur_part, cur_type)%rxp,atom_list(test_atom, test_part, test_type)%ryp,atom_list(cur_atom, cur_part, cur_type)%ryp,atom_list(test_atom, test_part, test_type)%rzp,atom_list(cur_atom, cur_part, cur_type)%rzp
                 IF ( rijsq < cluster%min_distance_sq(count_or_move, test_type, cur_type, test_atom, cur_atom) ) THEN
-
                    Neighbor = .TRUE.
                    RETURN
                 END IF
@@ -936,8 +886,8 @@ CONTAINS
     my_overlap = .FALSE.
     shared_overlap = .false.
     
-        !print*, 'im, is, E_inter_vdw, E_inter_qq'
-    !print*, clus_mol
+    !print*, 'im, is, E_inter_vdw, E_inter_qq'
+    !print*, 'clumol', clus_mol
     clusMolLoop: DO ic_mol = 1, nclus_mol
 
         im = clus_mol(ic_mol)
@@ -972,8 +922,8 @@ CONTAINS
               ! Skip those that are included in the clusters
               
               DO imc_test = 1, nclus_mol
-                  im_test = clus_mol(ic_mol)
-                  is_test = clus_is(ic_mol)
+                  im_test = clus_mol(imc_test)
+                  is_test = clus_is(imc_test)
                   IF( im_test == this_locate .AND. ispecies == is_test) CYCLE moleculeLOOP
               END DO
               

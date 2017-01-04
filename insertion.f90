@@ -581,10 +581,17 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
 
   is = n1
   ! P_seq and P_bias equal 1.0 unless changed by Build_Molecule.
-  nplocal = MIN(nmols(n1,this_box), nmols(n2,this_box))
-  ln_pacc = ln_pacc + DLOG(fp_seq * fp_bias) &
+  if (n1 /= n2) then
+     nplocal = MIN(nmols(n1,this_box), nmols(n2,this_box))
+     ln_pacc = ln_pacc + DLOG(fp_seq * fp_bias) &
                     + 2.0_DP*DLOG(REAL(nplocal+1,DP)) &
                     - 2.0_DP*DLOG(box_list(this_box)%volume) 
+  else
+     ln_pacc = ln_pacc + DLOG(fp_seq * fp_bias) &
+                    + DLOG(REAL(nmols(is,this_box)+1,DP)) &
+                    - DLOG(box_list(this_box)%volume) 
+  endif
+
   IF(lchempot) THEN
     if (n1 /= n2) then
        dblocal = species_list(n1)%de_broglie(this_box)*& 
@@ -606,6 +613,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   accept = accept_or_reject(ln_pacc)
   
   IF (accept) THEN
+
      ! update the number of molecules
      do is = n1, n2, dn
      nmols(is,this_box) = nmols(is,this_box) + 1

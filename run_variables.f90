@@ -567,6 +567,8 @@ USE Type_Definitions
   REAL(DP), ALLOCATABLE :: cos_mol(:,:) , sin_mol(:,:)
   LOGICAL :: l_pair_nrg
 
+  INTEGER :: reject_type ! a negative number for the reason the move was rejected
+
   REAL(DP) pacc, paccbiased, freev
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: chpot, chpotid
 
