@@ -640,7 +640,7 @@ CONTAINS
                 cluster%clusmax = cluster%clusmax + 1
                 cluster%clabel(imol, is) = cluster%clusmax
                 iclus = cluster%clusmax
-                cluster%N(cluster%clusmax) = 1
+                cluster%N(INT(cluster%clusmax)) = 1
             END IF
 
             cluster%clabel(ineigh, js) = iclus
@@ -656,7 +656,7 @@ CONTAINS
     IF (cluster%clabel(imol, is) == 0) THEN
         cluster%clusmax = cluster%clusmax + 1
         cluster%clabel(imol, is) = cluster%clusmax
-        cluster%N(cluster%clusmax) = 1
+        cluster%N(INT(cluster%clusmax)) = 1
     END IF
 
   END SUBROUTINE Update_Labels
