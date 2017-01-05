@@ -200,13 +200,13 @@ SUBROUTINE Read_Intra_Exclusion_Table
 
   IMPLICIT NONE
 
-  INTEGER :: is,ia,ii,jj,kk,js,ja
-  INTEGER :: ierr,line_nbr,nbr_entries, i_line
+  INTEGER :: is, ia, ja, ii, jj
+  INTEGER :: ierr,nbr_entries, i_line
   INTEGER :: t_atoms
   INTEGER, ALLOCATABLE, DIMENSION(:,:) :: temp_type
 
   CHARACTER(240) :: line_string, line_array(80)
-  CHARACTER(6) :: temp_name
+  CHARACTER(240) :: temp_name
 !-----------------------------------------------------------------------------
     ! Open intra scalingfile and find the line where the data begins
     OPEN(UNIT=intrafile_unit,FILE=intrafile_name,STATUS="OLD",IOSTAT=openstatus,ACTION="READ")
@@ -227,8 +227,8 @@ SUBROUTINE Read_Intra_Exclusion_Table
                   IF (ANY(temp_name == nonbond_list(:,is)%atom_name ) .eqv. .FALSE.) THEN
                      err_msg(1) = "Atom name and type in Intra Scaling table (" &
                                    //TRIM(temp_name)//") does not match the MCF file."
-                     err_msg(2) = "Make sure the atom list in the file starts with &
-                                   species 1 then 2 and so on."
+                     err_msg(2) = "Make sure the atom list in the file begins with "
+                     err_msg(3) = "species 1 then 2 and so on."
                      CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
                   ENDIF
 
@@ -254,8 +254,8 @@ SUBROUTINE Read_Intra_Exclusion_Table
                 EXIT
               ENDIF
    
-              ii = String_To_Double(line_array(1))
-              jj = String_To_Double(line_array(2))
+              ii = String_To_Int(line_array(1))
+              jj = String_To_Int(line_array(2))
               t_atoms = 0
               DO is = 1, nspecies
                  t_atoms = t_atoms + temp_type(natoms(is),is)

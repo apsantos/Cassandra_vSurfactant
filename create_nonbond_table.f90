@@ -62,7 +62,6 @@
 
     ! Steele potential
 
-    REAL(DP) :: sigma_ss, eps_ss, rho_s, delta_s, eps_sf
     !custom mixing rules
     INTEGER :: ierr,line_nbr,nbr_entries, is_1, is_2, ia_1, ia_2, itype_custom, jtype_custom
     CHARACTER(240) :: line_string, line_array(80)
@@ -252,48 +251,48 @@
 
           ELSE !custom mixing rule if
   
-    	REWIND(inputunit)
+            REWIND(inputunit)
 
-  	ierr = 0
-   	line_nbr = 0
+            ierr = 0
+            line_nbr = 0
 
-    	DO
-       		line_nbr = line_nbr + 1
+            DO
+               line_nbr = line_nbr + 1
 
-       		CALL Read_String(inputunit,line_string,ierr)
+               CALL Read_String(inputunit,line_string,ierr)
 
 
-       		IF (ierr .NE. 0) THEN
-          		err_msg = ""
-          		err_msg(1) = "Error reading mixing rules1."
-          		CALL Clean_Abort(err_msg,'Get_Mixing_Rules')
-    		END IF
+               IF (ierr .NE. 0) THEN
+                  err_msg = ""
+                  err_msg(1) = "Error reading mixing rules1."
+                  CALL Clean_Abort(err_msg,'Get_Mixing_Rules')
+               END IF
 
-       		IF (line_string(1:13) == '# Mixing_Rule') THEN
-  			READ(inputunit,*)
-  			! Assign the first entry on the line to the mixing rule
-  			DO is_1 = 1, nspecies
-  				DO ia_1 = 1, natoms(is_1)
-  					itype_custom = nonbond_list(ia_1,is_1)%atom_type_number
-  					DO is_2 = 1, nspecies
-  						DO ia_2 = 1, natoms(is_2)
-          						CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-  							jtype_custom = nonbond_list(ia_2,is_2)%atom_type_number
-  							!Convert epsilon to atomic units amu A^2/ps^2 
-  							vdw_param1_table(itype_custom,jtype_custom) = kboltz * String_To_Double(line_array(3))
-  							vdw_param2_table(itype_custom,jtype_custom) = String_To_Double(line_array(4))
-  							!line_nbr = line_nbr + 1
-  	  	  		                  	WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
-  					                       atom_type_list(itype_custom), atom_type_list(jtype_custom), &
-  					                       vdw_param1_table(itype_custom,jtype_custom), vdw_param2_table(itype_custom,jtype_custom)
+               IF (line_string(1:13) == '# Mixing_Rule') THEN
+                  READ(inputunit,*)
+                  ! Assign the first entry on the line to the mixing rule
+                  DO is_1 = 1, nspecies
+                      DO ia_1 = 1, natoms(is_1)
+                          itype_custom = nonbond_list(ia_1,is_1)%atom_type_number
+                          DO is_2 = 1, nspecies
+                              DO ia_2 = 1, natoms(is_2)
+                                 CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+                                 jtype_custom = nonbond_list(ia_2,is_2)%atom_type_number
+                                 !Convert epsilon to atomic units amu A^2/ps^2 
+                                 vdw_param1_table(itype_custom,jtype_custom) = kboltz * String_To_Double(line_array(3))
+                                 vdw_param2_table(itype_custom,jtype_custom) = String_To_Double(line_array(4))
+                                 !line_nbr = line_nbr + 1
+                                 WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
+                                     atom_type_list(itype_custom), atom_type_list(jtype_custom), &
+                                     vdw_param1_table(itype_custom,jtype_custom), vdw_param2_table(itype_custom,jtype_custom)
 
-  						END DO
-  					END DO
-  				END DO
-  			END DO
-  			RETURN
-                    END IF
-         END DO
+                              END DO
+                          END DO
+                      END DO
+                  END DO
+                  RETURN
+               END IF
+            END DO
            END IF
          ENDDO
     
@@ -326,19 +325,18 @@ SUBROUTINE Read_Nonbond_Table
     
     IMPLICIT NONE
 
-    INTEGER :: i, is, ia, itype, jtype, iset,jset,k, tot_natoms, iatom
-    REAL(DP), DIMENSION(max_nonbond_params) :: temp_param_i, temp_param_j
+    INTEGER :: i, is, ia, itype, jtype, tot_natoms, iatom
+    !REAL(DP), DIMENSION(max_nonbond_params) :: temp_param_i, temp_param_j
 
     ! Steele potential
 
-    REAL(DP) :: sigma_ss, eps_ss, rho_s, delta_s, eps_sf
     !custom mixing rules
-    INTEGER :: ierr,line_nbr,nbr_entries, is_1, is_2, ia_1, ia_2, itype_custom, jtype_custom, i_line, n_params, cur_line
+    INTEGER :: ierr,nbr_entries, i_line, n_params, cur_line
     CHARACTER(240) :: line_string, line_array(80)
-    CHARACTER(120) :: temp_name
+    CHARACTER(240) :: temp_name
     INTEGER :: temp_type_list(30), temp_type, ncheck
 
-    CHARACTER(120) :: pot_type
+    CHARACTER(240) :: pot_type
   !********************************************************************************
 
 
@@ -537,7 +535,7 @@ SUBROUTINE Compute_Atom_Types
 
     LOGICAL :: repeat_type
     CHARACTER(6), DIMENSION(:), ALLOCATABLE :: temp_atomtypes ! same dimension as atom_name
-    INTEGER :: ii, is, ia, k
+    INTEGER :: ii, is, ia
 
 !********************************************************************************
     ALLOCATE(temp_atomtypes(1000), Stat=AllocateStatus)

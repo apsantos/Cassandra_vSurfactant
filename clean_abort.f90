@@ -64,8 +64,8 @@ SUBROUTINE Clean_Abort(fail_message,sub_where_failed)
 
   IMPLICIT NONE
 
-  CHARACTER(*) :: sub_where_failed
-  CHARACTER(*), DIMENSION(10) :: fail_message
+  CHARACTER(*), INTENT(IN) :: sub_where_failed
+  CHARACTER(*), DIMENSION(10), INTENT(IN) :: fail_message
   INTEGER :: ii
   LOGICAL :: FileOpen, FileExist
 

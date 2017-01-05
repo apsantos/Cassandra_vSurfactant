@@ -144,7 +144,7 @@ SUBROUTINE Get_Bond_Length(this_bond,this_molecule,is,r21)
    IMPLICIT NONE
 
    INTEGER, INTENT(IN) :: this_bond, this_molecule, is
-   INTEGER             :: atom1, atom2, this_box
+   INTEGER             :: atom1, atom2 !, this_box
    REAL(DP)            :: rx21, ry21, rz21, r21sq, r21
 
   
@@ -197,7 +197,7 @@ SUBROUTINE Get_Bond_Length(this_bond,this_molecule,is,r21)
 
    INTEGER, INTENT(IN) :: this_angle, this_molecule, is
 
-   INTEGER             :: atom1, atom2, atom3, this_box
+   INTEGER             :: atom1, atom2, atom3
    REAL(DP)            :: rx21, ry21, rz21, rx32, ry32, rz32
    REAL(DP)            :: C22, C23, C33, inv_rt_C3322, costheta, theta
 
@@ -275,7 +275,7 @@ SUBROUTINE Get_Bond_Length(this_bond,this_molecule,is,r21)
 
    INTEGER, INTENT(IN) :: this_dihedral, this_molecule, is
 
-   INTEGER             :: atom1, atom2, atom3, atom4, this_box
+   INTEGER             :: atom1, atom2, atom3, atom4
 
    REAL(DP)            :: rx12, ry12, rz12, rx32, ry32, rz32
    REAL(DP)            :: rx34, ry34, rz34, mx, my, mz, nx, ny, nz
@@ -373,7 +373,7 @@ SUBROUTINE Get_Bond_Length(this_bond,this_molecule,is,r21)
 
    INTEGER, INTENT(IN) :: this_improper, is, this_molecule
 
-   INTEGER             :: atom1, atom2, atom3, atom4, im, this_box
+   INTEGER             :: atom1, atom2, atom3, atom4
 
    REAL(DP)            :: rx12, ry12, rz12, rx32, ry32, rz32
    REAL(DP)            :: rx34, ry34, rz34, mx, my, mz, nx, ny, nz

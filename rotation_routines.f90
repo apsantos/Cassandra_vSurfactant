@@ -61,7 +61,7 @@ CONTAINS
    REAL(DP) :: theta, phi, psi, rot11, rot12, rot13, rot21, rot22, rot23
    REAL(DP) :: rot31, rot32, rot33, rxpnew, rypnew, rzpnew
    
-   INTEGER :: i, ia
+   INTEGER :: ia
    
    ! Pick random eulerians
    
@@ -145,7 +145,7 @@ CONTAINS
 
    INTEGER, INTENT(IN) :: alive, is,frag_start,  mtype
    INTEGER :: atom_orig
-   LOGICAL :: lx, ly,lz
+   LOGICAL, INTENT(IN) :: lx, ly,lz
    REAL(DP) :: theta, phi, psi, rot11, rot12, rot13, rot21, rot22, rot23
    REAL(DP) :: rot31, rot32, rot33, rxpnew, rypnew, rzpnew
    
@@ -153,6 +153,15 @@ CONTAINS
 
    INTEGER :: i, ia, istart
    
+   IF ((.not. lx) .or. (.not. ly) .or. (.not. lz)) THEN
+        err_msg = ''
+        err_msg(1) = 'Must rotate along all xyz axes'
+        CALL Clean_Abort(err_msg,'Rotate_XYZ_Axes')
+   ELSEIF (mtype /= 1)  THEN
+        err_msg = ''
+        err_msg(1) = 'Can only rotate fragment 1...'
+        CALL Clean_Abort(err_msg,'Rotate_XYZ_Axes')
+   END IF
    ! Pick random eulerians
    
    theta = ACOS(1.0_DP-2.0_DP*rranf())

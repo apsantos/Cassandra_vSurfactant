@@ -40,7 +40,7 @@ SUBROUTINE Accumulate(this_box)
 
   IMPLICIT NONE
 
-  INTEGER :: is, this_box, nmolecules_is
+  INTEGER :: is, this_box
 
   !--- energy accumulators
 

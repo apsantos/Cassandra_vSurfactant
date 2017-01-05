@@ -70,7 +70,7 @@ SUBROUTINE Participation
 
   IMPLICIT NONE
 
-  INTEGER :: ispecies, iatom, jatom, tot_bonds, ibonds, atom1, atom2, i ,j, k
+  INTEGER :: ispecies, iatom, jatom, tot_bonds, ibonds, atom1, atom2, i ,j
   INTEGER :: atom3, atom4, idihedral, tot_dihedral, tot_angles
   INTEGER :: iangles, ndisp_atoms, is, ia, this_atom, this_bond, frag_no, ia_nangles
   INTEGER :: this_angle, first_atom, third_atom, anchor_atom, ifrag, atom_j
@@ -615,7 +615,7 @@ SUBROUTINE Participation
                     ! We could not locate the bond connecting this_atom and anchor, abort with an error
                     
                     err_msg = ''
-                    err_msg(1) = 'Error while generating a fragment mcf file for the fragment '//Int_To_String(ifrag)
+                    err_msg(1) = 'Error generating a fragment mcf file'
                     err_msg(2) = 'Species '//Int_To_String(is)
                     err_msg(3) = 'Fragment ' //Int_To_String(ifrag)
                     err_msg(4) = ' No bond found between the atoms'//Int_To_String(ia)
@@ -787,7 +787,7 @@ SUBROUTINE Participation
 102  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F8.5)
 103  FORMAT(I5,2X,I5,2X,I5,2X,I5,2X,A9,2X,F10.3,2X,F10.5)
 104  FORMAT(I5,2X,I5,2X,I5,2X,I5,2X,A9,2X,F10.5)
-105  FORMAT(A,2X,I5,2X,A2,2X,6(I3,2X))
+!105  FORMAT(A,2X,I5,2X,A2,2X,6(I3,2X))
      
   END IF
 
@@ -1331,7 +1331,7 @@ CONTAINS
          IF (ierr .NE. 0) THEN
             err_msg = ""
             err_msg(1) = "Error reading the pdb file"
-            err_msg(2) = pdb_file
+            err_msg(2) = pdb_file(1:80)
             CALL Clean_Abort(err_msg,'Read_inputfile')
          END IF
 
@@ -1357,7 +1357,7 @@ CONTAINS
             ! No name specified so abort
             err_msg = ""
             err_msg(1) = 'Exceeded file size in'
-            err_msg(2) = pdb_file
+            err_msg(2) = pdb_file(1:80)
             err_msg(3) = 'The atom'
             err_msg(4) = Int_To_String(this_atom)
             err_msg(5) = 'could not be found'

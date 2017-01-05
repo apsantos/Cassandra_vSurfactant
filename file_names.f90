@@ -137,6 +137,10 @@ CHARACTER(FILENAME_LEN),DIMENSION(:,:,:), ALLOCATABLE :: prop_output
 INTEGER,DIMENSION(:),ALLOCATABLE :: xyz_config_unit
 CHARACTER(FILENAME_LEN),DIMENSION(:),ALLOCATABLE :: xyz_config_file
 
+! Variables associated with dcd configuration file
+INTEGER :: dcd_config_unit
+CHARACTER(FILENAME_LEN) :: dcd_config_file
+
 ! index file 
 INTEGER :: ndx_unit
 CHARACTER(FILENAME_LEN) :: ndx_file

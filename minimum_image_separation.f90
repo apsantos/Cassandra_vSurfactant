@@ -52,7 +52,6 @@ SUBROUTINE Minimum_Image_Separation(ibox,rxijp,ryijp,rzijp,rxij,ryij,rzij)
   REAL(DP), INTENT(OUT) :: rxij,ryij,rzij
 
   REAL(DP), DIMENSION(3) :: temp_vec
-  REAL(DP), DIMENSION(3) :: hbox   
  
   !---------------------------------------------------------------------------------------------- 
 
@@ -183,11 +182,9 @@ SUBROUTINE Fold_Molecule(alive,is,this_box)
 
   INTEGER, INTENT(IN) :: alive, is, this_box
 
-  REAL(DP) :: dx, dy, dz
-
-  REAL(DP) :: thisx,thisy,thisz, thisiax,thisiay,thisiaz, fraciax,fraciay,fraciaz
+  REAL(DP) :: thisx,thisy,thisz
+  !REAL(DP) :: thisiax,thisiay,thisiaz, fraciax,fraciay,fraciaz
   REAL(DP) :: frac_comx, frac_comy, frac_comz, displacement
-  INTEGER :: i
 
   IF (l_cubic(this_box)) THEN
      
@@ -459,6 +456,7 @@ END SUBROUTINE
 SUBROUTINE Cartesian_To_Fractional(rx,ry,rz,sx,sy,sz,ibox)
 USE Run_Variables
 USE Type_Definitions
+INTEGER, INTENT(IN) :: ibox
 REAL(DP), INTENT(IN) :: rx,ry,rz
 REAL(DP), INTENT(OUT) :: sx,sy,sz
 
@@ -481,6 +479,7 @@ END SUBROUTINE
 SUBROUTINE Fractional_To_Cartesian(sx,sy,sz,rx,ry,rz,ibox)
 USE Run_Variables
 USE Type_Definitions
+INTEGER, INTENT(IN) :: ibox
 REAL(DP), INTENT(OUT) :: rx,ry,rz
 REAL(DP), INTENT(IN) :: sx,sy,sz
 
