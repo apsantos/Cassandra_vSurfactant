@@ -674,6 +674,10 @@ SUBROUTINE Read_XYZ(this_mc_step)
           END IF
 
           this_im = locate(im,is)
+
+          ia_atoms(i_line) = ia
+          im_atoms(i_line) = this_im
+          is_atoms(i_line) = is
           
           nonbond_list(ia,is)%element = line_array(1)
     
@@ -777,6 +781,158 @@ SUBROUTINE Read_XYZ(this_mc_step)
     END DO
 
   END SUBROUTINE Read_XYZ
+
+SUBROUTINE Read_DCD(this_mc_step)
+    INTEGER, INTENT(IN) :: this_mc_step
+
+    INTEGER :: i, ia, im, is, this_im, this_box, ierr, step, temp_n_equilsteps
+
+    REAL(DP) :: xcom_old, ycom_old, zcom_old
+    REAL(DP) :: xcom_new, ycom_new, zcom_new
+
+    LOGICAL :: lopen, ex
+
+    CHARACTER(1024) :: filename
+
+    real, allocatable :: pos(:,:)
+    real :: box(6)
+
+    CHARACTER(4) :: HDR 
+    INTEGER, DIMENSION(20) :: ICNTRL
+    REAL(4) :: delta
+
+    this_box = 1
+
+    IF ( this_mc_step == -1 ) THEN 
+       temp_n_equilsteps = n_equilsteps
+       n_equilsteps = 1
+       CALL Read_XYZ(1)
+       xyz_natoms = 0
+       DO is = 1, nspecies
+          xyz_natoms = xyz_natoms + (nmols(is,this_box)*natoms(is))
+       END DO
+
+       n_equilsteps = temp_n_equilsteps
+
+       filename = dcd_config_file
+
+       ! Open the file for reading. Convert C pointer to Fortran pointer.
+       INQUIRE(file=trim(filename),exist=ex)
+       IF (.not. ex) THEN 
+          err_msg = ""
+          err_msg(1) = "Could not find the dcd file."
+          CALL Clean_Abort(err_msg,'Read_DCD')
+       END IF
+       OPEN(UNIT=8, FILE=dcd_config_file, FORM = 'unformatted',STATUS= 'old')
+   
+       ! Read the header information
+       READ(8) HDR, (ICNTRL(i),i=1,9),delta,(ICNTRL(i),i=11,20)          
+       READ(8) 
+       READ(8) dcd_natoms
+
+       IF ( dcd_natoms /= xyz_natoms ) THEN
+          err_msg = ""
+          err_msg(1) = "Found different number of atoms in the dcd and gro files"
+          err_msg(2) = "dcd: "//Int_To_String(dcd_natoms)
+          err_msg(3) = "xyz: "//Int_To_String(xyz_natoms)
+          CALL Clean_Abort(err_msg,'Read_DCD')
+       END IF
+
+    END IF
+    
+    ! Read the periodic bounday informatin if present (not used!)
+    IF(ICNTRL(11) .EQ. 1) THEN
+      READ(8,IOSTAT=ierr) (box(i),i=1,6)
+    ENDIF
+
+    ! Read the atomic coordinates from the DCD trajectory file
+    allocate(pos(3,dcd_natoms))
+    READ(8,IOSTAT=ierr) (pos(1, im),im=1,dcd_natoms)
+    READ(8,IOSTAT=ierr) (pos(2, im),im=1,dcd_natoms)
+    READ(8,IOSTAT=ierr) (pos(3, im),im=1,dcd_natoms)
+
+
+    IF ( 1 == this_mc_step) THEN
+        ! C is row-major, whereas Fortran is column major. Hence the following.
+        DO i = 1, 3
+           IF ( (1.0 / 1000) < ( box(i) - box_list(1)%length(i,i) ) ) THEN
+             err_msg = ""
+             err_msg(1) = "box dimension in inputfile and dcd do not agree, check units maybe."
+             CALL Clean_Abort(err_msg,'Read_DCD')
+           END IF
+        END DO
+
+    ELSEIF (this_mc_step < n_equilsteps) THEN
+        RETURN
+
+    ELSEIF (ierr /= 0) THEN
+        WRITE(logunit,*) 'There are only ', this_mc_step, 'steps in dcd file'
+        err_msg = ""
+        err_msg(1) = "Not as many steps in the dcd file."
+        CALL Clean_Abort(err_msg,'Read_DCD')
+    END IF
+
+    DO i = 1, dcd_natoms
+        ia = ia_atoms(i)
+        im = im_atoms(i)
+        is = is_atoms(i)
+
+        atom_list(ia,im,is)%rxp = DBLE( pos(1,i) )
+        atom_list(ia,im,is)%ryp = DBLE( pos(2,i) )
+        atom_list(ia,im,is)%rzp = DBLE( pos(3,i) )
+    END DO
+
+    deallocate(pos)
+
+    CALL Get_Internal_Coords
+    
+    ! Calculate COM and distance of the atom farthest to the COM.
+    
+    DO is = 1, nspecies
+       DO im = 1, nmolecules(is)
+          this_im = locate(im,is)
+          IF( .NOT. molecule_list(this_im,is)%live) CYCLE
+          ! Now let us ensure that the molecular COM is inside the central simulation box
+          CALL Get_COM(this_im,is)
+
+          xcom_old = molecule_list(this_im,is)%xcom
+          ycom_old = molecule_list(this_im,is)%ycom
+          zcom_old = molecule_list(this_im,is)%zcom
+          
+          ! Apply PBC
+
+          this_box = molecule_list(this_im,is)%which_box
+
+          IF (l_cubic(this_box)) THEN
+             CALL Apply_PBC_Anint(this_box,xcom_old,ycom_old,zcom_old, &
+                  xcom_new, ycom_new, zcom_new)
+
+          ELSE
+             CALL Minimum_Image_Separation(this_box,xcom_old,ycom_old,zcom_old, &
+                  xcom_new, ycom_new, zcom_new)
+
+          END IF
+          
+          ! COM in the central simulation box
+          molecule_list(this_im,is)%xcom = xcom_new
+          molecule_list(this_im,is)%ycom = ycom_new
+          molecule_list(this_im,is)%zcom = zcom_new
+          
+          ! displace atomic coordinates
+          atom_list(1:natoms(is),this_im,is)%rxp = atom_list(1:natoms(is),this_im,is)%rxp + &
+               xcom_new - xcom_old
+          atom_list(1:natoms(is),this_im,is)%ryp = atom_list(1:natoms(is),this_im,is)%ryp + &
+               ycom_new - ycom_old
+          atom_list(1:natoms(is),this_im,is)%rzp = atom_list(1:natoms(is),this_im,is)%rzp + &
+               zcom_new - zcom_old
+          
+          CALL Compute_Max_COM_Distance(this_im,is)
+       END DO
+    END DO
+    
+    IF(int_vdw_sum_style(1) == vdw_cut_tail) CALL Compute_Beads(1)
+
+  END SUBROUTINE Read_DCD
 
 SUBROUTINE Read_Checkpoint
 

@@ -84,6 +84,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: sim_mcf = 9
   INTEGER, PARAMETER :: sim_pp = 10
   INTEGER, PARAMETER :: sim_virial = 11
+  INTEGER, PARAMETER :: sim_test = 12
   LOGICAL :: lfugacity, lchempot, timed_run, openmp_flag, en_flag
 
   ! The starting seed for the random generator
@@ -613,7 +614,7 @@ LOGICAL :: store_sum
   INTEGER, DIMENSION(:), ALLOCATABLE :: ia_atoms
   INTEGER, DIMENSION(:), ALLOCATABLE :: im_atoms
   INTEGER, DIMENSION(:), ALLOCATABLE :: is_atoms
-  INTEGER :: xtc_natoms, gro_natoms
+  INTEGER :: dcd_natoms, xtc_natoms, gro_natoms, xyz_natoms
   
   TYPE(virial_Class), TARGET :: mcvirial
 

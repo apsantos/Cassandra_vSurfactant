@@ -277,6 +277,11 @@ PROGRAM Main
 
      CALL Read_XYZ(0)
 
+  ELSEIF (start_type == 'read_dcd') THEN
+     ! Read in xtc coordinates for post processing
+
+     CALL Read_DCD(-1)
+
   ELSEIF (start_type == 'read_gro') THEN
      ! Read in xyz coordinates for post processing
 

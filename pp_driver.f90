@@ -98,6 +98,11 @@ SUBROUTINE PP_Driver
            CALL Read_XTC(i)
         ENDIF
         lopen = .true.
+     ELSEIF (start_type == 'read_dcd' ) THEN
+        IF (i > 1) THEN
+           CALL Read_DCD(i)
+        ENDIF
+        lopen = .true.
      ENDIF
  
      IF (.not. lopen) THEN

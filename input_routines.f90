@@ -5156,6 +5156,59 @@ SUBROUTINE Get_Start_Type
               is_atoms = 0
                  
               EXIT inputLOOP
+           ELSE IF (line_array(1) == 'read_dcd') THEN
+              ALLOCATE(xyz_config_file(nbr_boxes))
+              ALLOCATE(xyz_config_unit(nbr_boxes))
+              ! in this case we will read in the information of coordinates from
+              ! an binary output dcd file with multiple timesteps for processing
+              IF (int_sim_type /= sim_pp) THEN
+                 err_msg = ""
+                 err_msg(1) = 'Cannot read dcd unless simulation type is "PP"'
+                 CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+              ELSE IF ( nbr_boxes /= 1) THEN
+                 err_msg = ""
+                 err_msg(1) = 'Can only have 1 box when processing gromacs data'
+                 CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+              END IF 
+
+              start_type = 'read_dcd'
+
+              WRITE(logunit,*)
+              WRITE(logunit,*) 'Configurations will be read from dcd files'
+              line_nbr = line_nbr + 1
+              xyz_config_unit = 227 
+              CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+              ! Make sure that the characters of the string are alphanumeric with
+              ! a possibility of a . (dot). The first character must be an alphabet
+              CALL Check_String(line_array(1),ierr)
+              IF (ierr /= 0 ) THEN
+                 err_msg = ""
+                 err_msg(1) = 'An error in the input line ' // TRIM(Int_to_String(line_nbr)) &
+                      // ' of input file.'
+                 CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
+              END IF
+
+              WRITE(logunit,*)
+              WRITE(logunit,'(A,T40,I3,A,T50)')'Starting configuration is'
+              WRITE(logunit,*) ADJUSTL(line_array(1))
+              WRITE(logunit,'(A,T40,I3,A,T50)')'Trajectory is'
+              WRITE(logunit,*) ADJUSTL(line_array(2))
+
+              xyz_config_file = TRIM(ADJUSTL(line_array(1)))
+              dcd_config_file = TRIM(ADJUSTL(line_array(2)))//C_NULL_CHAR
+                 
+              tot_natoms = 0
+              DO is = 1, nspecies
+                 tot_natoms = tot_natoms + (nmolecules(is) * natoms(is))
+              END DO
+              ALLOCATE( ia_atoms(tot_natoms))
+              ALLOCATE( im_atoms(tot_natoms))
+              ALLOCATE( is_atoms(tot_natoms))
+              ia_atoms = 0
+              im_atoms = 0
+              is_atoms = 0
+
+              EXIT inputLOOP
            ELSE IF (line_array(1) == 'read_xtc') THEN
               ! in this case we will read in the information of coordinates from
               ! an binary output xtc file with multiple timesteps for processing
