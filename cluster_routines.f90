@@ -310,7 +310,8 @@ CONTAINS
                sin_mol_old(:,:) = sin_mol(1:nvecs(this_box),:)
                !$OMP END PARALLEL WORKSHARE
        
-               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(iclus_N, iclus_mol, iclus_is, int_cluster, this_box, E_reciprocal_move)
+               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(iclus_N, iclus_mol, iclus_is, int_cluster, &
+                                                                       this_box, E_reciprocal_move)
                
             END IF
             
@@ -417,7 +418,8 @@ CONTAINS
        END IF
   
        WRITE(logunit,*)
-       WRITE(logunit,'(A,I3,A,I1,A,F8.5)')'Success ratio, cluster translation of species ', is , ' in box ', this_box, ' : ', success_ratio
+       WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Success ratio, cluster translation of species ', is, &
+                                           ' in box ', this_box, ' : ', success_ratio
   
        IF ( int_run_style == run_equil ) THEN
   
@@ -437,7 +439,8 @@ CONTAINS
                max_clus_disp(is,this_box) = MIN(rcut_small,2.0_DP*success_ratio*max_clus_disp(is,this_box))
            END IF
   
-           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is,' in box ', this_box, ' : ', max_clus_disp(is,this_box)
+           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is, & 
+                                               ' in box ', this_box, ' : ', max_clus_disp(is,this_box)
           
        END IF
   
