@@ -102,8 +102,8 @@ END FUNCTION rranf
       ! LOCAL
       INTEGER :: ib, ia, ibc, ida, isum, iff, ie, ix, iy, ix2, ix1
 
-      ib= iseed/65536
-      ia= iseed - ib*65536
+      ib= iseed/INT(65536,8)
+      ia= iseed - ib*INT(65536,8)
       ibc= ib*63253
       ida= ia*24301
       isum= ibc - 2147483647 + ida

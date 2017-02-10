@@ -155,13 +155,41 @@ SUBROUTINE PP_Driver
            END IF
         END IF
         
+        IF ( ncluslife_freq /= 0 ) THEN
+           IF ( MOD(i,ncluslife_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
+           
+              DO ibox = 1, nbr_boxes
+                 IF ( MOD(i,ncluster_freq) /= 0 ) THEN
+                    CALL Find_Clusters(ibox,1)
+                 END IF
+                 IF ( i == 0) THEN
+                    cluster%clabel = cluster%clabel_prev
+                    cluster%N = cluster%N_prev
+                 ENDIF
+              
+                 CALL Update_Cluster_Life(ibox)
+                 CALL Write_Cluster(ibox)
+                 IF ( ncoord_freq /= 0 ) THEN
+                    IF ( MOD(i,ncoord_freq) == 0 ) THEN
+                        CALL Write_Cluster_Color(ibox)
+                    END IF
+                 END IF
+              
+              !CALL cpu_time(now_time)
+              !print '("exvol Time = ",f6.3," seconds.")',now_time-time_start
+              END DO
+           
+           END IF
+        END IF
+
         IF ( noligdist_freq /= 0 ) THEN
            IF ( MOD(i,noligdist_freq) == 0 ) THEN
               !CALL cpu_time(time_start)
            
               DO ibox = 1, nbr_boxes
                  IF ( MOD(i,ncluster_freq) /= 0 ) THEN
-                    CALL Find_Clusters(ibox,3)
+                    CALL Find_Clusters(ibox,1)
                  END IF
               
                  CALL Calculate_Oligomer_NN_Distance(ibox)

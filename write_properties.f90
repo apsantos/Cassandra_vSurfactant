@@ -411,6 +411,14 @@ CONTAINS
             write_buff(ii+1) = cluster%n_mic_clus
          END IF
 
+      ELSE IF (prop_written == 'MicelleSize') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = cluster%Mave / REAL(ncluster_freq,DP)
+         ELSE
+            write_buff(ii+1) = cluster%Mave
+         END IF
+
       ELSE IF (prop_written == 'OligNNdist') THEN
 
          IF (block_average) THEN
@@ -673,10 +681,16 @@ SUBROUTINE Write_Cluster(this_box)
   box_unit = cluster_file_unit + this_box
   OPEN(unit=cluster_file_unit+this_box, file=cluster_file)
 
-  WRITE(box_unit,'(A)', ADVANCE='NO') '#   M    pop'
+  WRITE(box_unit,'(A)', ADVANCE='NO') '#    M       pop'
+
   IF (nalphaclus_freq > 0) THEN
      WRITE(box_unit,'(A)', ADVANCE='NO') '   bound-counterions'
   END IF
+
+  IF (ncluslife_freq > 0) THEN
+     WRITE(box_unit,'(A)', ADVANCE='NO') '  lifetime       n_birth   n_death'
+  END IF
+
   IF (nendclus_freq > 0) THEN
      WRITE(box_unit,'(A)', ADVANCE='NO') '   End-to-end distance (A) for species:'
      DO is = 1, nspecies
@@ -692,6 +706,10 @@ SUBROUTINE Write_Cluster(this_box)
 
         IF (nalphaclus_freq > 0) THEN
             WRITE(box_unit,'(I10)', ADVANCE='NO') alpha%n_assoc_clus(iM)
+        END IF
+        
+        IF (ncluslife_freq > 0) THEN
+            WRITE(box_unit,'(3I10)', ADVANCE='NO') cluster%lifetime(iM), cluster%n_clus_birth(iM), cluster%n_clus_death(iM)
         END IF
         
         IF (nendclus_freq > 0) THEN

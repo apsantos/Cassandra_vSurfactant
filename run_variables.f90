@@ -486,7 +486,7 @@ USE Type_Definitions
 
   INTEGER :: nthermo_freq, ncoord_freq, n_mcsteps, n_equilsteps, this_mcstep
   INTEGER :: ncluster_freq, nexvol_freq, nalpha_freq, nalphaclus_freq, noligdist_freq 
-  INTEGER :: nmsd_freq, nvacf_freq, ndipole_freq
+  INTEGER :: nmsd_freq, nvacf_freq, ndipole_freq, ncluslife_freq
   INTEGER :: nbond_freq, nangle_freq, ndihedral_freq, natomdist_freq, natomenergy_freq, nendclus_freq
   INTEGER :: nvirial_freq, npotential_freq
  
@@ -592,6 +592,8 @@ LOGICAL :: store_sum
 
   ! Will have dimensions of (nspecies,nbr_boxes)
   TYPE(Cluster_Class), TARGET :: cluster
+
+  INTEGER :: max_nmol
 
   INTEGER, PARAMETER :: int_com = 1
   INTEGER, PARAMETER :: int_type = 2

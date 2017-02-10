@@ -161,7 +161,7 @@ CONTAINS
   ! Only does water now.
   SUBROUTINE Calculate_Permitivity(box_int, solvent, eps)
     INTEGER, INTENT(IN) :: box_int
-    CHARACTER(120), INTENT(IN) :: solvent
+    CHARACTER(80), INTENT(IN) :: solvent
     REAL(DP), INTENT(OUT) :: eps
 
     IF (solvent == 'water') THEN
@@ -976,16 +976,15 @@ CONTAINS
     REAL(DP), INTENT(OUT) :: E_intra_vdw,E_inter_vdw,E_intra_qq,E_inter_qq
     REAL(DP) :: E_intra_vdw_new,E_inter_vdw_new,E_intra_qq_new,E_inter_qq_new
     LOGICAL, INTENT(OUT) :: overlap   
-    INTEGER :: this_box,is,im,js,ia, mol_is, itype, jtype, rinteraction, vdw_in
+    INTEGER :: this_box,is,im,ia, mol_is, itype, jtype, vdw_in
     REAL(DP) :: rxij,ryij,rzij,rijsq,rxijp,ryijp,rzijp
     REAL(DP) :: Eij_vdw,Eij_qq
     REAL(DP) :: eps, sig, SigOverRsq, SigOverR6, SigOverR12
     REAL(DP) :: qi, qj, rij, erf_val, erfc_val, qsc
     REAL(DP) :: T, x, xsq, TP
     REAL(DP) :: rcom,rx,ry,rz
-    REAL(DP) :: rcut, rcutsq
+    REAL(DP) :: rcut, rcutsq, rinteraction
     REAL(DP) :: this_lambda_lj
-    REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff,  mie_n, mie_m
  
     LOGICAL :: get_vdw,get_qq, f_intra_nrg, get_interaction
 
@@ -1282,7 +1281,7 @@ CONTAINS
                    ! Compute vdw and q-q energy using if required
                    IF (get_vdw .OR. get_qq) THEN 
                       
-                      CALL Pair_Energy(rxij,ryij,rzij,rijsq,is,im,ia,this_species,this_molecule,this_atom,&
+                      CALL Pair_Energy(rijsq,is,im,ia,this_species,this_molecule,this_atom,&
                            get_vdw,get_qq,Eij_vdw,Eij_qq)
                       
                       IF (f_intra_nrg) THEN
@@ -1349,9 +1348,9 @@ CONTAINS
     REAL(DP) :: Eij_vdw, Eij_qq
     REAL(DP), OPTIONAL :: E_self
     
-    REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-    REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-    REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
+    !REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
+    !REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
+    !REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
 
     LOGICAL :: get_vdw, get_qq, intra_overlap
 
@@ -1402,7 +1401,7 @@ CONTAINS
              ! Compute vdw and q-q energy using if required
              IF (get_vdw .OR. get_qq) THEN 
                 
-                CALL Pair_Energy(rxij,ryij,rzij,rijsq,is,im,ia,is,im,ja,get_vdw,get_qq,Eij_vdw,Eij_qq)
+                CALL Pair_Energy(rijsq,is,im,ia,is,im,ja,get_vdw,get_qq,Eij_vdw,Eij_qq)
                 
                 E_intra_vdw = E_intra_vdw + Eij_vdw
                 E_intra_qq  = E_intra_qq + Eij_qq
@@ -1452,12 +1451,11 @@ CONTAINS
     INTEGER  :: ispecies, imolecule, this_box, this_locate
     
     REAL(DP) :: Eij_vdw, Eij_qq
-    REAL(DP) :: eps
     REAL(DP) :: rcom, rx, ry, rz
 
-    REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-    REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-    REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
+    !REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
+    !REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
+    !REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
 
     LOGICAL :: get_interaction
 
@@ -1557,7 +1555,7 @@ CONTAINS
   !------------------------------------------------------------------------------------------
   !------------------------------------------------------------------------------------------
   SUBROUTINE Pair_Energy &
-       (rxij,ryij,rzij,rijsq,is,im,ia,js,jm,ja,get_vdw,get_qq,Eij_vdw,Eij_qq)
+       (rijsq,is,im,ia,js,jm,ja,get_vdw,get_qq,Eij_vdw,Eij_qq)
 
 !FSL Added Hydration Energy here, which will be added to the Eij_vdw energy. Using interaction table.
     ! LJ potential: Eij = 4*epsilon(i,j) * [ (sigma(i,j)/rij)^12 - (sigma(i,j)/rij)^6 ]
@@ -1573,7 +1571,8 @@ CONTAINS
     !        Ewald_Real
   !------------------------------------------------------------------------------------------
     ! Passed to
-    REAL(DP) :: rxij,ryij,rzij,rijsq
+    REAL(DP) :: rijsq
+    !REAL(DP) :: rxij,ryij,rzij,rijsq
     INTEGER :: is,im,ia,js,jm,ja,ibox
     LOGICAL :: get_vdw,get_qq
 
@@ -1585,12 +1584,12 @@ CONTAINS
     REAL(DP) :: eps,sig,SigOverRsq,SigOverR6,SigOverR12
     REAL(DP) :: SigOverRsq_shift,SigOverR6_shift,SigOverR12_shift
     REAL(DP) :: roffsq_rijsq, roffsq_rijsq_sq, factor2, fscale
-    REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff, rij,  mie_n, mie_m, rij_shift
+    REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff, rij,  mie_n, mie_m
     REAL(DP) :: SigOverR_shift, SigOverRn_shift, SigOverRm_shift, rcut_vdw
 !    REAL(DP) :: Eij_vdw_check
     Real(DP) :: qi,qj, qsc
-    REAL(DP) :: this_lambda, RsqOverSig, R6OverSig, factorLJ
-    REAL(DP) :: RsqOverSig_Shift, RsqOverSig6_Shift, factorLJ_Shift
+    REAL(DP) :: this_lambda
+    !REAL(DP) :: RsqOverSig_Shift, RsqOverSig6_Shift, factorLJ_Shift
 
     LOGICAL :: fraction
 
@@ -2459,7 +2458,7 @@ CONTAINS
 
     ! Local variables
     
-    REAL(DP) :: const_val, stp 
+    REAL(DP) :: const_val
     INTEGER :: i, ia
 
     REAL(DP) :: hdotr_new
@@ -2689,7 +2688,7 @@ CONTAINS
   END SUBROUTINE Compute_System_Ewald_Self_Energy
   !********************************************************************************************
 
-  SUBROUTINE Compute_Ewald_Self_Energy_Difference(im,is,this_box,move_flag,V_self_difference)
+  SUBROUTINE Compute_Ewald_Self_Energy_Difference(is,this_box,move_flag,V_self_difference)
 
     !*******************************************************************************************
     ! This subroutine calculates the difference in self Ewald energy for the input molecule(s)
@@ -2709,7 +2708,7 @@ CONTAINS
 
     IMPLICIT NONE
 
-    INTEGER, INTENT(IN) :: im, is, this_box
+    INTEGER, INTENT(IN) :: is, this_box
     INTEGER, INTENT(IN) :: move_flag
     
     REAL(DP), INTENT(OUT) :: V_self_difference
@@ -2763,7 +2762,6 @@ CONTAINS
     REAL(DP) :: rcom, rx, ry, rz
     REAL(DP) :: E_inter_vdw, E_inter_qq
     REAL(DP) :: v_selfrf, v_molecule_selfrf
-    REAL(DP) :: rijsq
     REAL(DP) :: v_bond, v_angle, v_dihedral, v_intra, v_intra_vdw, v_intra_qq, v_improper
     
     LOGICAL :: overlap, get_interaction,intra_overlap
@@ -3119,7 +3117,7 @@ CONTAINS
           ENDIF 
           IF (get_vdw .OR. get_qq) THEN 
 
-             CALL Pair_Energy(rxij,ryij,rzij,rijsq,is_1,im_1,ia,is_2,im_2,ja,&
+             CALL Pair_Energy(rijsq,is_1,im_1,ia,is_2,im_2,ja,&
                   get_vdw,get_qq,Eij_vdw,Eij_qq)
 
              vlj_pair = vlj_pair + Eij_vdw
@@ -3593,7 +3591,7 @@ CONTAINS
     !        Ewald_Real
   !------------------------------------------------------------------------------------------
     ! Passed to
-    REAL(DP) :: rxij,ryij,rzij,rijsq
+    REAL(DP) :: rijsq
     INTEGER :: is,im,ia,js,jm,ja,ibox
     LOGICAL :: get_vdw,get_qq, fraction
 

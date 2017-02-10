@@ -565,9 +565,18 @@ MODULE Type_Definitions
     INTEGER, DIMENSION(3) :: n_species_type
 
     ! cluster finding variables
-    REAL(DP) :: clusmax, n_cluster
+    REAL(DP) :: n_cluster, Mave
+    INTEGER  :: clusmax
     INTEGER, DIMENSION(:), ALLOCATABLE :: N, M, M_olig
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: clabel
+
+    ! cluster kinetics
+    INTEGER  :: mic_life, n_mic_death, clabel_life_max
+    INTEGER, DIMENSION(:), ALLOCATABLE :: N_prev, lifetime, n_clus_birth, n_clus_death
+    INTEGER, DIMENSION(:), ALLOCATABLE :: clabel_life, clabel_life_prev
+    INTEGER, DIMENSION(:,:), ALLOCATABLE :: clabel_prev, age
+    CHARACTER(24), DIMENSION(:), ALLOCATABLE :: c_name, c_name_prev
+    CHARACTER(24), DIMENSION(12) :: names
 
     ! oligomer nearest-neighbor distance variables
     REAL(DP), DIMENSION(:), ALLOCATABLE :: com_x, com_y, com_z

@@ -441,8 +441,7 @@ CONTAINS
        CALL Compute_Ewald_Reciprocal_Energy_Difference(alive(is),alive(is),is,this_box, &
              int_insertion,E_reciprocal_move)
 
-       CALL Compute_Ewald_Self_Energy_Difference(alive(is),is,this_box, &
-             int_insertion,E_self_move)
+       CALL Compute_Ewald_Self_Energy_Difference(is,this_box,int_insertion,E_self_move)
 
         delta_e = delta_e + E_self_move + E_reciprocal_move - energy(this_box)%ewald_reciprocal
 

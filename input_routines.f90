@@ -5103,6 +5103,16 @@ SUBROUTINE Get_Start_Type
                  xyz_config_file(i) = TRIM(ADJUSTL(line_array(1)))
                  
               END DO
+              tot_natoms = 0
+              DO is = 1, nspecies
+                 tot_natoms = tot_natoms + (nmolecules(is) * natoms(is))
+              END DO
+              ALLOCATE( ia_atoms(tot_natoms))
+              ALLOCATE( im_atoms(tot_natoms))
+              ALLOCATE( is_atoms(tot_natoms))
+              ia_atoms = 0
+              im_atoms = 0
+              is_atoms = 0
               EXIT inputLOOP
            ELSE IF (line_array(1) == 'read_gro') THEN
               ! in this case we will read in the information of coordinates from
@@ -5633,7 +5643,7 @@ SUBROUTINE Get_Frequency_Info
 
   INTEGER :: ierr, line_nbr, nbr_entries, ibox, is
   CHARACTER(240) :: line_string, line_array(80),movie_header_file, &
-                     movie_xyz_file
+                     movie_xyz_file, movie_clus_xyz_file
 
   REWIND(inputunit)
 
@@ -5766,6 +5776,22 @@ SUBROUTINE Get_Frequency_Info
                                                 ' as a function of clusters will be calculated/written at every', &
                                                 nalphaclus_freq, ' MC steps.'
 
+              ELSE IF (line_array(1) == 'Ncluslifefreq') THEN
+
+                 ncluslife_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'Micelle lifetime will be calculated/written at every', &
+                                                ncluster_freq, ' MC steps.'
+
+                 IF (ncoord_freq /= 0) THEN
+                     DO ibox = 1, nbr_boxes
+                        movie_clus_xyz_file = TRIM(run_name) // '_cluster' // '.box' // TRIM(Int_To_String(ibox)) // '.xyz'
+                        WRITE(logunit,'(A,T30,I1,A,T40,A)') 'movie_cluster_XYZ file for box ', ibox ,' is', TRIM(movie_clus_xyz_file)
+                        OPEN(unit=movie_clus_xyz_unit+ibox,file=movie_clus_xyz_file)
+                     END DO
+                 END IF
+
               ELSE IF (line_array(1) == 'Noligdistfreq') THEN
 
                  noligdist_freq = String_To_Int(line_array(2))
@@ -5882,6 +5908,12 @@ SUBROUTINE Get_Frequency_Info
                     WRITE(logunit,'(A,T30,I1,A,T40,A)') 'movie_XYZ file for box ', ibox ,' is', TRIM(movie_xyz_file)
                     OPEN(unit=movie_header_unit+ibox,file=movie_header_file)
                     OPEN(unit=movie_xyz_unit+ibox,file=movie_xyz_file)
+                    IF (ncluslife_freq /= 0) THEN
+                        movie_clus_xyz_file = TRIM(run_name) // '_cluster' // '.box' // TRIM(Int_To_String(ibox)) // '.xyz'
+                        WRITE(logunit,'(A,T30,I1,A,T40,A)') 'movie_cluster_XYZ file for box ', ibox ,' is', TRIM(movie_clus_xyz_file)
+                        OPEN(unit=movie_clus_xyz_unit+ibox,file=movie_clus_xyz_file)
+                    END IF
+
                  END DO
 
               ELSE IF (line_array(1) == 'MCsteps') THEN
@@ -6246,9 +6278,10 @@ SUBROUTINE Get_Clustering_Info
   !***************************************************************************************************
 
   INTEGER :: ierr, line_nbr, nbr_entries, i, is, js, ia, ja, itype
-  INTEGER :: imax_nmol, max_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
+  INTEGER :: imax_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
   CHARACTER(240) :: line_string, line_array(80)
   REAL(8) :: distance
+  CHARACTER(24), DIMENSION(12) :: names
 
   REWIND(inputunit)
 
@@ -6584,6 +6617,33 @@ EnLoop: DO ientry = 1, n_entries
         cluster%M = 0
         cluster%N = 0
         cluster%clabel(:,:) = 0
+
+        IF ( ncluslife_freq /= 0 ) THEN
+            ALLOCATE( cluster%clabel_prev(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
+            ALLOCATE( cluster%age(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
+            ALLOCATE( cluster%N_prev(max_nmol) )
+            ALLOCATE( cluster%c_name(max_nmol), cluster%c_name_prev(max_nmol) )
+            ALLOCATE( cluster%clabel_life(max_nmol), cluster%clabel_life_prev(max_nmol) )
+            ALLOCATE( cluster%lifetime(max_nmol), cluster%n_clus_birth(max_nmol), cluster%n_clus_death(max_nmol) )
+            cluster%N_prev = 0
+            cluster%clabel_prev(:,:) = 0
+            cluster%clabel_life      = 0
+            cluster%clabel_life_prev = 0
+            cluster%clabel_life_max  = 0
+            cluster%lifetime = 0
+            cluster%n_clus_birth = 0
+            cluster%n_clus_death = 0
+            i = 1
+            cluster%names = (/ 'A', 'E', 'F', 'G', 'J', 'L', 'M', 'Q', 'R', 'T', 'V', 'W' /)
+            IF (max_nmol < 12) THEN
+                cluster%c_name(1:max_nmol) = names(1:max_nmol)
+            ELSE
+                cluster%c_name(1:12) = names 
+            END IF
+    
+            cluster%age(:,:) = 0
+        END IF
+
         ! Now get the Oligomer_Cutoff_Info
         CALL Get_Oligomer_Cutoff_Info
         EXIT
@@ -7325,7 +7385,7 @@ SUBROUTINE Get_VACF_Info
   ierr = 0
 
   WRITE(logunit,*) 
-  WRITE(logunit,*) '**** Reading Mean-squared Displacement calculation information ****** '
+  WRITE(logunit,*) '**** Reading velocity autocorrelation calculation information ****** '
   
   line_nbr = 0
   DO

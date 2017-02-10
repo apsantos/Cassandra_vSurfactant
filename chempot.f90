@@ -162,7 +162,7 @@ SUBROUTINE Chempot(this_box,is)
 
   IF ( int_charge_sum_style(this_box) == charge_ewald .AND. has_charge(is)) THEN
      CALL Compute_Ewald_Reciprocal_Energy_Difference(alive,alive,is,this_box,int_insertion,E_reciprocal_move)
-     CALL Compute_Ewald_Self_Energy_Difference(alive,is,this_box,int_insertion,E_self_move)
+     CALL Compute_Ewald_Self_Energy_Difference(is,this_box,int_insertion,E_self_move)
      delta_e = delta_e + (E_reciprocal_move-energy(this_box)%ewald_reciprocal) + E_self_move
   END IF
 

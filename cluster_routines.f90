@@ -59,7 +59,6 @@ CONTAINS
     !*********************************************************************************
 
     INTEGER :: this_box
-    LOGICAL, ALLOCATABLE, DIMENSION(:) :: neigh_list
     ! Arguments
   
     ! Local declarations
@@ -83,10 +82,10 @@ CONTAINS
     REAL(DP) :: E_vdw, E_qq, E_vdw_move, E_qq_move, E_reciprocal_move
     REAL(DP) :: rcut_small
   
-    LOGICAL :: inter_overlap, overlap, accept, accept_or_reject
+    LOGICAL :: inter_overlap, accept, accept_or_reject
   
     ! Pair_Energy arrays and Ewald implementation
-    INTEGER :: position
+    !INTEGER :: position
     REAL(DP), ALLOCATABLE :: cos_mol_old(:,:), sin_mol_old(:,:)
 
     reject_type = 0
@@ -461,8 +460,8 @@ CONTAINS
     !*********************************************************************************
 
     INTEGER, INTENT(IN) :: this_box, count_or_move
-    INTEGER :: imol, jmol, iatom, i, im, jm, ic
-    INTEGER :: is, js, is_clus, js_clus, start, N
+    INTEGER :: imol, jmol, im, jm
+    INTEGER :: is, js, is_clus, js_clus, start
     LOGICAL, ALLOCATABLE, DIMENSION(:) :: neigh_list
 
     cluster%clusmax = 0
@@ -553,6 +552,9 @@ CONTAINS
     INTEGER, INTENT(IN) :: count_or_move
     INTEGER :: is, ic, is_clus
 
+    cluster%Mave = 0
+    cluster%n_mic_clus = 0
+    cluster%n_olig_clus = 0
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
         ic = 1
@@ -565,18 +567,20 @@ CONTAINS
                 ! Tally up the Nmols of oligomers and clustered
                 IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
                     cluster%n_oligomers = cluster%n_oligomers + cluster%N(ic)
+                    cluster%n_olig_clus = cluster%n_olig_clus + 1
                 ELSE
                     cluster%n_clusters = cluster%n_clusters + cluster%N(ic)
+                    cluster%Mave = cluster%Mave + cluster%N(ic)
+                    cluster%n_mic_clus = cluster%n_mic_clus + 1
                 END IF
             END IF
     
             ic = ic + 1
+            IF ( ic > max_nmol) EXIT
+
         END DO
     END DO
-    !write(*,*) 'N', cluster%N(1:200)
-    !write(*,*) 'clabel', cluster%clabel(1:500, 1)
-    !write(*,*) 'M', cluster%M
-    !write(*,*) 'olig, clus', cluster%n_oligomers, cluster%n_clusters
+    cluster%Mave = cluster%Mave / float(cluster%n_mic_clus)
 
   END SUBROUTINE Update_Cluster_Counters
 
@@ -643,7 +647,7 @@ CONTAINS
                 cluster%clusmax = cluster%clusmax + 1
                 cluster%clabel(imol, is) = cluster%clusmax
                 iclus = cluster%clusmax
-                cluster%N(INT(cluster%clusmax)) = 1
+                cluster%N(cluster%clusmax) = 1
             END IF
 
             cluster%clabel(ineigh, js) = iclus
@@ -659,7 +663,7 @@ CONTAINS
     IF (cluster%clabel(imol, is) == 0) THEN
         cluster%clusmax = cluster%clusmax + 1
         cluster%clabel(imol, is) = cluster%clusmax
-        cluster%N(INT(cluster%clusmax)) = 1
+        cluster%N(cluster%clusmax) = 1
     END IF
 
   END SUBROUTINE Update_Labels
@@ -675,8 +679,8 @@ CONTAINS
 
     LOGICAL :: Neighbor
     INTEGER, INTENT(IN) :: test_part, cur_part, test_type, cur_type, count_or_move
-    REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
-    INTEGER :: test_atom, cur_atom, n_accept
+    REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp, n_accept
+    INTEGER :: test_atom, cur_atom
 
     Neighbor = .FALSE.
 
@@ -800,8 +804,6 @@ CONTAINS
 
     INTEGER, INTENT(IN) :: this_box, c_or_m
     INTEGER :: i, j, as, am, cm, cs, as_clus, nclus
-    INTEGER :: ierr, line_nbr, nbr_entries
-    REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
 
     cluster%criteria(c_or_m, int_com) = .FALSE.
     cluster%criteria(c_or_m, int_type) = .TRUE.
@@ -1092,9 +1094,7 @@ CONTAINS
     ! 9/26/16 : Andrew P. Santos
     !*********************************************************************************
     INTEGER, INTENT(IN) :: this_cluster, count_or_move, this_box
-    LOGICAL, ALLOCATABLE, DIMENSION(:) :: olig_count
     INTEGER :: is, is_clus, imol, im
-    INTEGER :: max_clus, min_clus
 
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
@@ -1128,6 +1128,298 @@ CONTAINS
 
   END SUBROUTINE Cluster_COM
 
+  SUBROUTINE Update_Cluster_Life(this_box)
+
+    INTEGER, INTENT(IN) :: this_box
+    INTEGER :: is, ic, jc, nc, is_clus, imol
+    INTEGER :: itrue
+    INTEGER, ALLOCATABLE, DIMENSION(:,:) :: N_match, o_age, N_split
+    INTEGER, ALLOCATABLE, DIMENSION(:) :: lab_c_to_p
+    LOGICAL, ALLOCATABLE, DIMENSION(:) :: N_split_double
+    INTEGER :: cn_index, max_N_split, max_nmolecules, half_N
+
+    max_nmolecules = MAXVAL(nmolecules(:))
+    ! connects the previous cluster's clabel if it has essentiall changed
+    ALLOCATE( lab_c_to_p(max_nmolecules) )
+    lab_c_to_p = 0
+    ! keeps track of the number of molecules from the previous-label cluster
+    ! in the different new-label clusters
+    !                 previous-label    new-label
+    !                       |               |
+    ALLOCATE( N_split(max_nmolecules, max_nmolecules) )
+    N_split = 0
+    ! keeps track of  whether a cluster has equally contributing previous clusters
+    ALLOCATE( N_split_double(max_nmolecules) )
+    N_split_double = .false.
+  
+    is_clus = cluster%species_type(1, 1)
+
+    ! Figure out which clusters the molecules from each cluster
+    ! in the previous frame are now
+    ! loop over all previous clusters
+    ic = 1
+    split_loop: DO WHILE ( cluster%N_prev(ic) /= 0 )
+        itrue = 0
+
+        ! loop over all molecules and see which were in cluster 'ic'
+        mol_loop: DO imol = 1, nmols(is_clus,1)
+            IF ( ic == cluster%clabel_prev(imol, is_clus) ) THEN
+                nc = cluster%clabel(imol, is_clus)
+                N_split(ic, nc) = N_split(ic, nc) + 1
+
+                ! If we have gone through all the molecules in cluster 'ic'
+                ! in the previous frame
+                itrue = itrue + 1
+                IF (itrue == cluster%N_prev(ic)) THEN
+                    EXIT mol_loop
+                END IF
+
+             END IF
+        END DO mol_loop
+
+        ic = ic + 1
+        IF ( ic > max_nmol) EXIT
+    END DO split_loop
+
+    ! Loop over all the new clusters (nc) and see which previous cluster (ic) it came from
+    nc = 1
+    DO WHILE ( cluster%N(nc) /= 0 )
+        itrue = 0
+        max_N_split = MAXVAL(N_split(:,nc))
+        half_N = CEILING(cluster%N(nc) / 2.0)
+        DO ic = 1, max_nmolecules
+            IF (N_split(ic, nc) /= 0) THEN
+                itrue = itrue + N_split(ic, nc)
+
+                ! It is the same cluster
+                IF (N_split(ic, nc) == cluster%N(nc))  THEN
+                    ! The size of the cluster is unchanged
+                    IF (N_split(ic, nc) == cluster%N_prev(ic))  THEN
+                        lab_c_to_p(nc) = ic
+
+                    ! As many molecules left as joined the cluster
+                    ELSE IF ( N_split(ic, nc) == MAXVAL( N_split(ic, :) ) ) THEN
+                        lab_c_to_p(nc) = -ic
+                    END IF 
+                    EXIT
+
+                ! Is the part from ic (one of) the largest piece in the nc cluster
+                ! or if the cluster grew
+                ELSE IF (N_split(ic, nc) == max_N_split) THEN
+
+                    ! The ic part may be the majority of the nc cluster,
+                    ! but if this is not the majority of the previous cluster,
+                    ! then the nc's previous cluster is not ic
+                    IF ( N_split(ic, nc) == MAXVAL( N_split(ic, :) ) ) THEN
+
+                        ! IF nc has already been reassigned,
+                        ! i.e. there are more than one N_split(:,nc)==max_N_split
+                        IF (lab_c_to_p(nc) /= 0) THEN
+    
+                            jc = -lab_c_to_p(nc)
+
+                            ! IF the there are chunks come from previous clusters of the different size
+                            ! choose the smaller one,  because it had a bigger contribution from the previous one
+                            IF (cluster%N_prev(ic) < cluster%N_prev(jc)) THEN
+                                lab_c_to_p(nc) = -ic
+                                N_split_double(nc) = .false.
+
+                            ! 2 or more ic clusters contribute equally to nc
+                            ELSE IF (cluster%N_prev(ic) == cluster%N_prev(jc)) THEN
+                                N_split_double(nc) = .true.
+                            END IF 
+
+                        ! Either this is the only ic cluster that contributes max_N_split to the nc
+                        ! or it is the first
+                        ELSE
+                            lab_c_to_p(nc) = -ic
+                        END IF 
+                    END IF 
+                END IF 
+
+                IF (itrue == cluster%N(nc)) EXIT
+
+            END IF 
+        END DO 
+
+        ! 2 or more ic clusters contribute equally to nc so it is has no origin
+        IF ( N_split_double(nc) ) THEN
+            lab_c_to_p(nc) = 0
+        END IF 
+
+        ! Each nc cluster cannot have come from the same cluster as another nc cluster
+        ! set all matching ones to 0
+        IF (lab_c_to_p(nc) < 0) THEN
+            N_split_double(nc) = .false.
+            DO jc = 1, nc - 1
+                IF ( lab_c_to_p(jc) == lab_c_to_p(nc) ) THEN
+                    lab_c_to_p(jc) = 0
+                    N_split_double(nc) = .true.
+                END IF
+            END DO
+            IF ( N_split_double(nc) ) THEN
+                lab_c_to_p(nc) = 0
+            END IF 
+        END IF
+            
+
+        nc = nc + 1
+        IF ( nc > max_nmol) EXIT
+    END DO 
+
+    DEALLOCATE( N_split, N_split_double )
+
+    ! Update order of the ages of the different living clusters and reset the others to 0
+    ! Update the names of these clusters so that they can written and visualized
+    ALLOCATE( o_age(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
+    o_age = cluster%age
+    cluster%age = 0
+    ! IF this is not the first time the routine was called
+    nc = 1
+    IF (cluster%clabel_prev(1, is_clus) /= 0) THEN
+
+        ! there may have been a net total clusters created or destroyed
+        ! loop over both previous and current 
+        DO WHILE ( cluster%N(nc) /= 0 )
+            IF ( cluster%N(nc) > 0 ) THEN
+                ic = lab_c_to_p(nc)
+                ! The cluster has not changed
+                IF (ic > 0) THEN
+                    cluster%c_name(nc) = cluster%c_name_prev(ic)
+                    cluster%clabel_life(nc) = cluster%clabel_life_prev(ic)
+                    IF ( cluster%n_clus_birth(cluster%N(nc)) > 0 ) THEN
+                        cluster%age( nc, is_clus) = o_age(ic, is_clus) + 1
+                        cluster%lifetime(cluster%N_prev(ic)) = cluster%lifetime(cluster%N_prev(ic)) + 1
+                    END IF
+
+                ! The cluster grew or shrunk
+                ELSE IF (ic < 0) THEN
+                    cluster%n_clus_death(cluster%N_prev(-ic)) = cluster%n_clus_death(cluster%N_prev(-ic)) + 1
+                    cluster%n_clus_birth(cluster%N(nc)) = cluster%n_clus_birth(cluster%N(nc)) + 1
+                    cluster%c_name(nc) = cluster%c_name_prev(-ic)
+                    cluster%clabel_life(nc) = cluster%clabel_life_prev(-ic)
+
+                ! Cluster was created
+                ELSE 
+                    cluster%n_clus_birth(cluster%N(nc)) = cluster%n_clus_birth(cluster%N(nc)) + 1
+                    cn_index = 1 + INT(rranf() * 11)
+                    cluster%c_name(nc) = cluster%names(cn_index)
+                    cluster%clabel_life_max = cluster%clabel_life_max + 1
+                    cluster%clabel_life(nc) = cluster%clabel_life_max
+                END IF
+
+                ! IF the nc cluster does not appear in the lab_c_to_p it has died
+                ! A cluster also could have died
+                IF ( (.not. ANY( lab_c_to_p ==  nc )) .and. &
+                     (.not. ANY( lab_c_to_p == -nc )) ) THEN
+                     IF ( cluster%N_prev(ABS(nc)) > 0) THEN
+                        cluster%n_clus_death(cluster%N_prev(ABS(nc))) = cluster%n_clus_death(cluster%N_prev(ABS(nc))) + 1
+                     END IF
+                END IF
+    
+                IF (cluster%N(nc) <= cluster%M_olig(is_clus)) THEN
+                    cluster%c_name(nc) = 'Z'
+                END IF
+            END IF
+
+            nc = nc + 1
+            IF ( nc > max_nmol) EXIT
+        END DO
+
+        ! There are fewer clusters now than before: a cluster died
+        !DO WHILE ( cluster%N_prev(nc) /= 0 )
+        DO ic = nc, max_nmol
+            IF ( cluster%N_prev(ic) > 0 ) THEN
+                IF ( (.not. ANY( lab_c_to_p ==  ic )) .and. &
+                     (.not. ANY( lab_c_to_p == -ic )) ) THEN
+                    cluster%n_clus_death(cluster%N_prev(ic)) = cluster%n_clus_death(cluster%N_prev(ic)) + 1
+                END IF
+            END IF
+
+            IF ( cluster%N_prev(ic) /= 0 ) EXIT
+        END DO
+
+    ! First time the routine was called
+    ELSE
+        ! loop over the current clusters and set up the names and ages
+        DO WHILE ( cluster%N(nc) /= 0)
+            IF (cluster%N(nc) > 0) THEN
+                cn_index = MOD(nc, MIN(SUM(nmolecules),12)) + 1
+                cluster%c_name(nc) = cluster%names(cn_index)
+                cluster%clabel_life_max = cluster%clabel_life_max + 1
+                cluster%clabel_life(nc) = cluster%clabel_life_max
+
+                IF (cluster%N(nc) <= cluster%M_olig(is_clus)) THEN
+                    cluster%c_name(nc) = 'Z'
+                END IF
+            END IF
+            nc = nc + 1
+            IF ( nc > max_nmol) EXIT
+        END DO
+    END IF
+
+    !print*, 'lab_c_to_p'
+    !print*, lab_c_to_p(:)
+    !print*, 'N'
+    !print*, cluster%N
+    !print*, 'clab'
+    !print*, cluster%clabel
+    !print*, 'cname'
+    !print*, cluster%c_name
+    !print*, 'ages', cluster%age(:, 1)
+    !print*, 'lifetimes', cluster%lifetime
+    !print*, 'nlife', cluster%n_clus_birth
+    !print*, 'ndeath', cluster%n_clus_death
+    DEALLOCATE( lab_c_to_p )
+
+    ! Update labels
+    cluster%clabel_prev = cluster%clabel
+    cluster%N_prev = cluster%N
+    cluster%c_name_prev = cluster%c_name
+    cluster%clabel_life_prev = cluster%clabel_life
+
+  END SUBROUTINE Update_Cluster_Life
+
+  SUBROUTINE Write_Cluster_Color(this_box)
+
+    USE Simulation_Properties
+
+    INTEGER, INTENT(IN) :: this_box
+    INTEGER :: M_XYZ_unit, Num_Atoms
+    INTEGER :: nmolecules_is, is, im, this_im, ia
+
+    !-- Number of molecules of each of the species
+    Num_Atoms = 0
+    DO is = 1, nspecies
+       CALL Get_Nmolecules_Species(this_box,is,nmolecules_is)
+       Num_Atoms = Num_Atoms + nmolecules_is*natoms(is)
+    END DO
+
+    !--- Write the coordinates of molecules in this box
+    ! c_name are the letter names associated with a cluster for
+    ! visualization purposes
+    M_XYZ_unit = movie_clus_xyz_unit + this_box
+    WRITE(M_XYZ_unit,*) Num_Atoms
+    WRITE(M_XYZ_unit,*)
+    DO is = 1,nspecies
+       DO im = 1,nmolecules(is)
+          this_im = locate(im,is)
+          IF(molecule_list(this_im,is)%live  .AND. &
+             molecule_list(this_im,is)%which_box == this_box ) THEN
+             DO ia = 1, natoms(is)
+                WRITE(M_XYZ_unit,'(A3,F20.13,F20.13,F20.13,I5,I5,I8)') &
+                     cluster%c_name(cluster%clabel(this_im, is)), &
+                     atom_list(ia,this_im,is)%rxp, &
+                     atom_list(ia,this_im,is)%ryp, &
+                     atom_list(ia,this_im,is)%rzp, &
+                     is, cluster%clabel(this_im, is), cluster%clabel_life(cluster%clabel(this_im, is))
+             END DO
+          END IF
+       END DO
+    END DO
+
+  END SUBROUTINE Write_Cluster_Color
+
   SUBROUTINE Calculate_Oligomer_NN_Distance(this_box)
 
     !*********************************************************************************
@@ -1139,7 +1431,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: this_box
     REAL(DP) :: rxij, ryij, rzij, rij, rijmin, rxijp, ryijp, rzijp
     REAL(DP) :: max_length
-    INTEGER :: is, is_clus, ic, jc
+    INTEGER :: is_clus, ic, jc
 
     ic = 1
     is_clus = cluster%species_type(1, 1)
@@ -1168,6 +1460,7 @@ CONTAINS
 
                 jc = jc + 1
                 IF (jc == ic) jc = ic + 1
+                IF ( jc > max_nmol) EXIT
             END DO
             cluster%olig_nn_dist = cluster%olig_nn_dist +  &
                                    rijmin
@@ -1175,6 +1468,7 @@ CONTAINS
             cluster%n_olig_dist = cluster%n_olig_dist + 1
         END IF
         ic = ic + 1
+        IF ( ic > max_nmol) EXIT
     END DO
 
     IF (cluster%n_olig_dist /= 0) THEN

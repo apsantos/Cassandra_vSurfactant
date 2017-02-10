@@ -338,7 +338,7 @@ SUBROUTINE GEMC_Particle_Transfer(box_in, box_out)
      CALL Compute_Ewald_Reciprocal_Energy_Difference(alive,alive,this_species,box_in, &
           int_insertion,E_reciprocal_move_in)
 
-     CALL Compute_Ewald_Self_Energy_Difference(alive,this_species,box_in,int_insertion, &
+     CALL Compute_Ewald_Self_Energy_Difference(this_species,box_in,int_insertion, &
           E_self_move_in)
      delta_e_in = delta_e_in + E_self_move_in
      delta_e_in = delta_e_in + E_reciprocal_move_in - energy(box_in)%ewald_reciprocal
@@ -478,7 +478,7 @@ SUBROUTINE GEMC_Particle_Transfer(box_in, box_out)
 
      CALL Compute_Ewald_Reciprocal_Energy_Difference(alive,alive,this_species &
           ,box_out,int_deletion,E_reciprocal_move_out)
-     CALL Compute_Ewald_Self_Energy_Difference(alive,this_species,box_out, &
+     CALL Compute_Ewald_Self_Energy_Difference(this_species,box_out, &
           int_deletion,E_self_move_out)
 
      delta_e_out = delta_e_out - E_self_move_out

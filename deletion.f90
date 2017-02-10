@@ -360,7 +360,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
      CALL Compute_Ewald_Reciprocal_Energy_Difference(alive(is),alive(is),is,this_box, &
         int_insertion,E_reciprocal_move)
     endif
-     CALL Compute_Ewald_Self_Energy_Difference(alive(is),is,this_box, &
+     CALL Compute_Ewald_Self_Energy_Difference(is,this_box, &
              int_deletion,E_self_move)
 
      f_reciprocal = f_reciprocal + E_reciprocal_move
