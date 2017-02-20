@@ -7633,11 +7633,8 @@ END SUBROUTINE Get_Dipole_Moment_Info
 SUBROUTINE Get_Virial_Info
   !***************************************************************************************************
   ! 
-  ! Dipole moment information
   ! 
   !***************************************************************************************************
-
-  !USE Transport_Properties
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
   CHARACTER(240) :: line_string, line_array(80) !filename

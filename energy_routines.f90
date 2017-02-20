@@ -1754,10 +1754,24 @@ CONTAINS
                 eps = eps * vdw_intra_scale(ia,ja,is)
 
              ENDIF
-             IF (rijsq < rcut_vdwsq(ibox)) THEN
-                rij = SQRT(rijsq)
-                Eij_vdw = Eij_vdw + eps * exp(-kappa * rij)/rij
+ 
+             IF (int_vdw_sum_style(ibox) == vdw_cut .OR. &
+                 int_vdw_sum_style(ibox) == vdw_cut_tail) THEN
+                  
+                 rij = SQRT(rijsq)
+                 Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij)
+ 
+             ELSEIF (int_vdw_sum_style(ibox) == vdw_cut_shift) THEN
+                 
+                 rij = SQRT(rijsq)
+                 rcut_vdw = SQRT(rcut_vdwsq(ibox))
+                 Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij) &
+                         - (eps * exp(-kappa * rcut_vdw)/rcut_vdw)
+             ELSE
+                 rij = SQRT(rijsq)
+                 Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij)
              ENDIF
+ 
 
           ENDIF Yukawa_calculation
 
@@ -2993,6 +3007,7 @@ CONTAINS
                 CALL Check_Interaction(this_im_1,is_1,this_im_2,is_2,get_interaction,rcom,rx,ry,rz)
 !                rijsq = rcom * rcom
 
+                print*, 'can we kick it?', get_interaction
                 IF (.NOT. get_interaction ) CYCLE imLOOP4
 
                 ! Note that this call will modify the pair interaction energies
