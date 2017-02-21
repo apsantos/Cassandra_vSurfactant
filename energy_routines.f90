@@ -3007,7 +3007,6 @@ CONTAINS
                 CALL Check_Interaction(this_im_1,is_1,this_im_2,is_2,get_interaction,rcom,rx,ry,rz)
 !                rijsq = rcom * rcom
 
-                print*, 'can we kick it?', get_interaction
                 IF (.NOT. get_interaction ) CYCLE imLOOP4
 
                 ! Note that this call will modify the pair interaction energies
