@@ -150,8 +150,11 @@ subroutine virialMC_Driver
                     END IF
                     mcvirial%coefficient(idist) = mcvirial%coefficient(idist) + dexp(-1.0_DP * energy(1)%total * beta(1))
                     mcvirial%effective(idist) = mcvirial%effective(idist) + energy(1)%total
-                    !if (e_max < energy(1)%total) e_max = energy(1)%total
-                    !if (e_min > energy(1)%total) e_min = energy(1)%total
+                    if (e_max < energy(1)%total) then
+                        e_max = energy(1)%total
+                        CALL Write_Coords(1)
+                    endif
+                    if (e_min > energy(1)%total) e_min = energy(1)%total
                     n_pos = n_pos+1
     
                     CALL Rotate_Molecule_Eulerian(1,js)
@@ -163,7 +166,7 @@ subroutine virialMC_Driver
         END DO
     END DO 
     
-    write(991,"(3F20.7)") dist, mcvirial%effective(idist) * atomic_to_kJmol / total_n, mcvirial%coefficient(idist) / total_n
+    write(991,"(3F20.7)") dist, mcvirial%effective(idist) * atomic_to_kJmol / total_n, mcvirial%coefficient(idist) / total_n!, e_max, e_min
 
     dist = dist - mcvirial%dist_step
 
