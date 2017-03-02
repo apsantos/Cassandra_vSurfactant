@@ -382,9 +382,6 @@ CONTAINS
 
     END IF
 
-    ! update the cluster counters in anycase so that the clusters don't have to be found twice
-    CALL Update_Cluster_Counters(2)
-
     IF ( .not. accept ) THEN
         ! reset the cluster parameters and positions
         cluster%clusmax = old_clusmax
