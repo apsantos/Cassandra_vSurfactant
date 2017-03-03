@@ -5439,6 +5439,7 @@ SUBROUTINE Get_Frequency_Info
   n_mcsteps = 0
   n_equilsteps = 0
   ncluster_freq = 0
+  histogram_freq = 0
 
   DO
      line_nbr = line_nbr + 1
@@ -5551,7 +5552,12 @@ SUBROUTINE Get_Frequency_Info
                  WRITE(logunit,*) 
                  WRITE(logunit, '(A,I10)') 'Number of equilibrium steps', n_equilsteps
                  
-
+              ELSE IF (line_array(1) == 'NEhistfreq') THEN
+                 
+                 histogram_freq = String_To_Int(line_array(2))
+                 WRITE(logunit,*) 
+                 WRITE(logunit, '(A,I10)') 'Histogram will be updated every ', histogram_freq, ' MC steps.'
+                 
               ELSE IF (line_array(2) == 'Done_Frequency_Info') THEN
               
                  WRITE(logunit,*)
@@ -6281,6 +6287,59 @@ SUBROUTINE Get_Oligomer_Cutoff_Info
   END DO
 
 END SUBROUTINE Get_Oligomer_Cutoff_Info
+
+SUBROUTINE Get_Histogram_Info
+  !***************************************************************************************************
+  ! 
+  !***************************************************************************************************
+
+  USE Cluster_Routines
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is
+  CHARACTER(120) :: line_string, line_array(20) !filename
+
+  REWIND(inputunit)
+
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Histogram writing information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Histogram_Info')
+     END IF
+
+     IF(line_string(1:22) == '# Histogram_Info') THEN
+        line_nbr = line_nbr + 1
+        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+        IF ( nbr_entries /= 2 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Only need the number of energy bins and the energy bin width'
+            CALL Clean_Abort(err_msg,'Get_Histogram_Info')
+        END IF
+        n_energy_hist = String_To_Int(line_array(1))
+        energy_hist_width = String_To_Double(line_array(2))
+
+        ALLOCATE( energy_hist(nspecies, -2:n_energy_hist, 0:MAXVAL(nmolecules)) )
+        energy_hist = 0.0
+        EXIT
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+        err_msg = ''
+        err_msg(1) = 'Histogram_Info must be given with Clustering'
+        CALL Clean_Abort(err_msg,'Get_Histogram_Info')
+        EXIT
+     END IF
+  END DO
+
+END SUBROUTINE Get_Histogram_Info
 
 SUBROUTINE Copy_Inputfile
 

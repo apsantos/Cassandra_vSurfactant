@@ -307,6 +307,16 @@ SUBROUTINE GCMC_Driver
            
         END IF
         
+        IF ( MOD(i,histogram_freq) == 0 ) THEN
+           
+           DO ibox = 1, nbr_boxes
+              
+              CALL Write_Histogram(ibox)
+              
+           END DO
+           
+        END IF
+
         IF ( MOD(i,ncoord_freq) == 0 ) THEN
            
            DO ibox = 1, nbr_boxes

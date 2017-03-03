@@ -167,4 +167,7 @@ CHARACTER(FILENAME_LEN) :: lattice_file
 INTEGER :: cluster_file_unit = 919
 CHARACTER(FILENAME_LEN) :: cluster_file
 
+INTEGER :: histogram_file_unit = 609
+CHARACTER(FILENAME_LEN) :: histogram_file
+
 END MODULE File_Names

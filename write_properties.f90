@@ -480,7 +480,7 @@ SUBROUTINE Write_Cluster(this_box)
 
   cluster_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.clu'
   box_unit = cluster_file_unit + this_box
-  OPEN(unit=cluster_file_unit+this_box, file=cluster_file)
+  OPEN(unit=box_unit, file=cluster_file)
 
   WRITE(box_unit,*) '#   M    pop'
   
@@ -489,8 +489,86 @@ SUBROUTINE Write_Cluster(this_box)
         WRITE(box_unit,'(I6, I10)') iM, cluster%M(iM)
      END IF
   END DO
-  CLOSE(unit=cluster_file_unit+this_box)
+  CLOSE(unit=box_unit)
  
 END SUBROUTINE Write_Cluster
 
+SUBROUTINE Write_Histogram(this_box)
+  !************************************************************************************
+  ! The subroutine writes the cluster vists in the simulation box
+  !
+  ! CALLED BY
+  !
+  !        *_driver
+  !
+  !************************************************************************************
 
+  USE Run_Variables
+  USE File_Names
+  USE Cluster_Routines
+  USE IO_Utilities
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: this_box
+  INTEGER             :: this_unit, is, imol, istart, iend, i, namph, hist_index
+  REAL(DP)            :: e_total
+
+  e_total = energy(this_box)%total
+
+  DO is = 1, nspecies
+
+      namph = nmols(is,this_box)
+      if (energy_hist(is,-2,namph) == energy_hist(is,0,namph)) then    ! first energy observed for this namph - set
+                                                              ! at mid-point
+          energy_hist(is,0,namph) = energy_hist_width*int(e_total/energy_hist_width - n_energy_hist/2)
+          energy_hist(is,-2,namph) = energy_hist(is,0,namph) - energy_hist_width*(int((energy_hist(is,0,namph)-e_total)/energy_hist_width)+1)
+          energy_hist(is,-1,namph) = energy_hist(is,0,namph) + energy_hist_width*(int((-energy_hist(is,0,namph)+e_total)/energy_hist_width)+1)
+      endif
+
+      if (e_total < energy_hist(is,-2,namph)) then    ! found lower value than min
+          energy_hist(is,-2,namph) = energy_hist(is,0,namph) - energy_hist_width*(int((energy_hist(is,0,namph)-e_total)/energy_hist_width)+1)
+          if (energy_hist(is,-2,namph) <= energy_hist(is,0,namph) + energy_hist_width ) then
+              write (logunit,*) 'Maximum width of energy histograms exceeded (low)'
+              write (logunit,*) 'namph, energy(-2),energy(-1),energy(0),e_total', namph,energy_hist(is,-2:0,namph),e_total
+              stop
+          endif
+
+      else if (e_total > energy_hist(is,-1,namph)) then    ! found greater value than max
+          energy_hist(is,-1,namph) = energy_hist(is,0,namph) + energy_hist_width*(int((-energy_hist(is,0,namph)+e_total)/energy_hist_width)+1)
+          if (energy_hist(is,-1,namph) > energy_hist(is,0,namph)+energy_hist_width*(n_energy_hist-2)) then
+              write (logunit,*) 'Maximum width of energy histograms exceeded (high)'
+              write (logunit,*) 'namph, energy(-2),energy(-1),energy(0),e_total', namph,energy_hist(is,-2:0,namph),e_total
+              stop
+          endif
+
+      endif
+      ! value ok
+      hist_index = int((e_total-energy_hist(is,0,namph))/energy_hist_width + 0.5) 
+      energy_hist(is,hist_index,namph) = energy_hist(is,hist_index,namph) + 1
+
+      this_unit = histogram_file_unit + is 
+      histogram_file = 'his_'//TRIM(run_name)// '.spec' // TRIM(Int_To_String(is)) //'.dat'
+      OPEN(unit=this_unit, file=histogram_file)
+
+      WRITE (this_unit,'(A)') '    T       mu          width     x- y- z-dim  '
+      WRITE (this_unit,'(3f7.4,3f8.3)') 1./beta, species_list(is)%chem_potential, energy_hist_width, &
+                                        box_list(this_box)%length(1,1), &
+                                        box_list(this_box)%length(2,2), &
+                                        box_list(this_box)%length(3,3)
+
+      DO imol = 1, nmolecules(is)
+          istart = (energy_hist(is, -2,imol) - energy_hist(is, 0, imol)) / energy_hist_width
+          iend   = (energy_hist(is, -1,imol) - energy_hist(is, 0, imol)) / energy_hist_width
+
+          IF (istart /= iend) THEN 
+              WRITE (this_unit,'(2i7,f13.5)') imol, iend-istart+1, energy_hist(is, -2,imol)
+              WRITE (this_unit,'(8f9.0)') (energy_hist(is, i, imol), i = istart, iend)
+          ENDIF
+
+      END DO
+
+      CLOSE (this_unit) 
+  END DO
+
+END SUBROUTINE Write_Histogram

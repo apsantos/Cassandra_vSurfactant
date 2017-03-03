@@ -476,7 +476,7 @@ USE Type_Definitions
   !*********************************************************************************************************
   ! Information on the output of data
 
-  INTEGER :: nthermo_freq, ncoord_freq, ncluster_freq, n_mcsteps, n_equilsteps, this_mcstep
+  INTEGER :: nthermo_freq, ncoord_freq, histogram_freq, ncluster_freq, n_mcsteps, n_equilsteps, this_mcstep
  
   INTEGER,DIMENSION(:),ALLOCATABLE :: nbr_prop_files
 
@@ -574,6 +574,15 @@ INTEGER :: n_lat_atoms
 !!!!de Broglie of pair
 LOGICAL :: store_sum
   
+! histogram writing variables
+INTEGER               :: n_energy_hist      ! number of points for energy discretization
+REAL(DP)              :: energy_hist_width  ! width of energy histograms; should take into account interactions
+REAL(SP), ALLOCATABLE :: energy_hist(:,:,:) ! element 0 of this matrix contains the
+                                            ! starting value of energy for the bins at that amph. number. 
+                                            ! element -2 is the min value of energy for non-zero observations
+                                            ! element -1 is the max value of energy for non-zero observations
+                                            ! this arrary takes up a LOT of memory
+
 !*********************************************************************************************************
 ! Post Processing
 !*********************************************************************************************************
