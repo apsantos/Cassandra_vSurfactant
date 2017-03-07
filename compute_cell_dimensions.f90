@@ -46,7 +46,7 @@ SUBROUTINE Compute_Cell_Dimensions(box_nbr)
 
   IMPLICIT NONE
 
-  INTEGER :: box_nbr, i, j
+  INTEGER :: box_nbr
   REAL(DP) :: axb1, axb2, axb3
   REAL(DP) :: bxc1, bxc2, bxc3
   REAL(DP) :: cxa1, cxa2, cxa3

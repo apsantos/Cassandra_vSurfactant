@@ -31,7 +31,7 @@ SUBROUTINE precalculate
     IMPLICIT NONE
     
     
-    INTEGER :: i, ibox
+    INTEGER :: ibox
     ! Determine the direct sum maximum cutoff distances squared, beyond 
     ! which we ingore pairwise interactions. 
     ! Will need to alter when neighborlist added.

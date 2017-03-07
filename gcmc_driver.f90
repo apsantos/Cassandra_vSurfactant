@@ -307,14 +307,16 @@ SUBROUTINE GCMC_Driver
            
         END IF
         
-        IF ( MOD(i,histogram_freq) == 0 ) THEN
+        IF ( histogram_freq /= 0 ) THEN
+           IF ( MOD(i,histogram_freq) == 0 ) THEN
            
-           DO ibox = 1, nbr_boxes
+              DO ibox = 1, nbr_boxes
               
-              CALL Write_Histogram(ibox)
+                 CALL Write_Histogram(ibox)
               
-           END DO
+              END DO
            
+           END IF
         END IF
 
         IF ( MOD(i,ncoord_freq) == 0 ) THEN
@@ -377,7 +379,8 @@ SUBROUTINE GCMC_Driver
   write(logunit,*) '***** Insertion efficiency *****************'
   DO ibox = 1, nbr_boxes
      DO is = 1, nspecies
-        write(logunit,'(A40,2X,I2,2X,A2,2X,I10)') 'Total number of insertions for species', is , 'is', ntrials(is,this_box)%insertion
+        write(logunit,'(A40,2X,I2,2X,A2,2X,I10)') 'Total number of insertions for species', is , 'is',&
+                                                   ntrials(is,this_box)%insertion
         write(logunit,*) 'Successful insertions', nsuccess(is,this_box)%insertion
      END DO
      write(logunit,*)

@@ -70,7 +70,7 @@ SUBROUTINE Participation
 
   IMPLICIT NONE
 
-  INTEGER :: ispecies, iatom, jatom, tot_bonds, ibonds, atom1, atom2, i ,j, k
+  INTEGER :: ispecies, iatom, jatom, tot_bonds, ibonds, atom1, atom2, i ,j
   INTEGER :: atom3, atom4, idihedral, tot_dihedral, tot_angles
   INTEGER :: iangles, ndisp_atoms, is, ia, this_atom, this_bond, frag_no, ia_nangles
   INTEGER :: this_angle, first_atom, third_atom, anchor_atom, ifrag, atom_j
@@ -218,7 +218,9 @@ SUBROUTINE Participation
 
         DO ibonds = 1, bondpart_list(iatom,ispecies)%nbonds
            WRITE(logunit,*) 'species, atom, local bond nbr, global bond nbr, atom bonded '
-           WRITE(logunit,'(3X,I2,7X,I3,5X,I3,10X,I3,15X,I3)') ispecies,iatom,ibonds,bondpart_list(iatom,ispecies)%bond_num(ibonds), bondpart_list(iatom,ispecies)%atom(ibonds)
+           WRITE(logunit,'(3X,I2,7X,I3,5X,I3,10X,I3,15X,I3)') ispecies, iatom, ibonds, &
+                                                              bondpart_list(iatom,ispecies)%bond_num(ibonds), &
+                                                              bondpart_list(iatom,ispecies)%atom(ibonds)
         ENDDO
         WRITE(logunit,*)
      ENDDO
@@ -779,13 +781,12 @@ SUBROUTINE Participation
      
      END DO
      !Amir To Jindal: It the 3rd # format should be 11.7 otherwise it would generate errors. 10/12/12
-	 
+
 100  FORMAT(I5,2X,A4,2X,A4,F11.7,2X,F11.7,2X,A5,2X,F11.7, 2X, F11.7)
 101  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F10.3,2X,F8.5)
 102  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F8.5)
 103  FORMAT(I5,2X,I5,2X,I5,2X,I5,2X,A9,2X,F10.3,2X,F10.5)
 104  FORMAT(I5,2X,I5,2X,I5,2X,I5,2X,A9,2X,F10.5)
-105  FORMAT(A,2X,I5,2X,A2,2X,6(I3,2X))
      
   END IF
 

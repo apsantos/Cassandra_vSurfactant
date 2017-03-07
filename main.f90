@@ -89,31 +89,23 @@ PROGRAM Main
 !  !$ include 'omp_lib.h'
 
   INTEGER(4) :: count
-  INTEGER :: i, j, is, im, ia, this_im, ibox, nmol_is, this_box, int_phi
-  INTEGER :: alive, t_num
+  INTEGER :: i, is, im, ia, this_im, ibox, nmol_is, this_box
 
   INTEGER :: nyears, nmonths, ndays, nhours, nmin, nsec, nms
   CHARACTER(120) :: version
   CHARACTER(120) filename1
   CHARACTER(80) :: name
 
-  LOGICAL :: overlap, cbmc_overlap, superbad, inside_ch
+  LOGICAL :: overlap
 
-  REAL(DP) :: attempt_prob, phi
-  REAL(DP) :: E_st_vdw, E_st_qq, W_st_vdw, W_st_qq, e_lrc, w_lrc
   REAL(DP) :: q_tot_sys, q_mol
 
   REAL(DP) :: month_time, day_time, hour_time, min_time, sec_time, ms_time
 
-  TYPE(Energy_Class) :: inrg, e_start
-
   INTEGER :: IARGC
-
-  INTEGER, ALLOCATABLE, DIMENSION(:) :: frag_order
 !********************************************************************************
 ! Code name and version. Change as updates are made.
   version = 'Cassandra 1.0'
-  e_start%inter_vdw = 0.0_DP
 ! Get starting time information (intrinsic function)
   CALL DATE_AND_TIME(date,time,zone,begin_values)
   CALL cpu_time(start_time)
@@ -227,7 +219,7 @@ PROGRAM Main
 
   IF( int_run_style == run_test ) THEN
 
-             testname = molfile_name(1)
+             testname = TRIM( molfile_name(1) )
              IF(testname(:1) == 'c') testname = 'methane'
              IF(testname(:2) == 'pr') testname = 'propane'
              IF(testname(:7) == 'pentane') testname = 'pentane'
@@ -428,7 +420,7 @@ PROGRAM Main
         ! overlap was detected between two atoms so abort the program
         err_msg = ''
         err_msg(1) = 'Overlap detected in the starting structure'
-        err_msg(2) = 'Start type '//start_type
+        err_msg(2) = 'Start type '//TRIM(start_type)
         CALL Clean_Abort(err_msg,'Main')
      END IF
   END DO
@@ -561,12 +553,6 @@ PROGRAM Main
 
   !***************************************************************************
   ! let us check if at the end of the simulation, the energies are properly updated
-!$OMP PARALLEL
-
-!  t_num = omp_get_thread_num()
-!  write(logunit,*) 'Thread',t_num,"reporting for duty!"
-
-!$OMP END PARALLEL
 
   write(logunit,*) '*********** Ending simulation *****************'
   write(logunit,*)

@@ -113,7 +113,7 @@ SUBROUTINE Save_Old_Internal_Coordinates(im,is)
 
   IMPLICIT NONE
 
-  INTEGER :: im, is, i, max_index
+  INTEGER :: im, is, i
 
   internal_coord_list_old(:)%bond_length_angstrom = 0.0_DP
   internal_coord_list_old(:)%bond_angle_degrees = 0.0_DP

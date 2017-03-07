@@ -63,10 +63,8 @@ SUBROUTINE NVT_MC_Fragment_Driver
   IMPLICIT NONE
 
   INTEGER :: is, im, this_box, i, rand_atom, naccept, ia
-  INTEGER :: naverage
 
-  REAL(DP) :: e_angle_old, e_angle_new, delta_e_angle, p_acc, old_coord, new_coord
-  REAL(DP) :: area_o, area_n
+  REAL(DP) :: e_angle_old, e_angle_new, delta_e_angle, p_acc
   REAL(DP) :: e_improper_n, e_improper_o, delta_e_improper, delta_e, e_total_o
   REAL(DP) :: ac_frag_energy, zig_over_omega
 

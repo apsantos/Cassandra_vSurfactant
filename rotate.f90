@@ -77,15 +77,12 @@ SUBROUTINE Rotate(this_box)
   REAL(DP) :: delta_e, ln_pacc, success_ratio
   REAL(DP) :: E_vdw, E_qq, E_vdw_move, E_qq_move, E_reciprocal_move
 
-  LOGICAL :: inter_overlap, overlap, accept, accept_or_reject
+  LOGICAL :: inter_overlap, accept, accept_or_reject
 
   ! Pair_Energy arrays and Ewald implementation
   INTEGER :: position
   REAL(DP), ALLOCATABLE :: cos_mol_old(:), sin_mol_old(:)
 
-  ! Framework energy related variables
-  REAL(DP) :: E_framework, E_framework_move, E_correction_move
-  LOGICAL :: framework_overlap
 
 ! Done with that section
 
@@ -317,7 +314,8 @@ SUBROUTINE Rotate(this_box)
            max_rot(is,this_box) = MIN(PI,1.05_DP*max_rot(is,this_box))
 
         END IF
-        WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, rotation of species ', is,' in box ', this_box, ' : ', max_rot(is,this_box)
+        WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, rotation of species ', is, &
+                                            ' in box ', this_box, ' : ', max_rot(is,this_box)
         
      END IF
      
@@ -445,7 +443,7 @@ CONTAINS
     REAL(DP) :: theta, phi, psi, rot11, rot12, rot13, rot21, rot22, rot23
     REAL(DP) :: rot31, rot32, rot33, rxpnew, rypnew, rzpnew
     
-    INTEGER :: i, ia
+    INTEGER :: ia
 
     ! Pick random eulerians
     

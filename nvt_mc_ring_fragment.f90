@@ -72,7 +72,7 @@ SUBROUTINE NVT_MC_Ring_Fragment
 
   REAL(DP) :: rand_no, zig_by_omega
 
-  LOGICAL :: overlap, accept
+  LOGICAL :: accept
 
   is = 1
   im = locate(1,is)
@@ -172,7 +172,7 @@ SUBROUTINE Flip_Move(im,is,this_box,accept)
 
   IMPLICIT NONE
 
-  INTEGER :: atom_num, this_atom, i, angle_id, atom1, atom2, is, im, this_box, j
+  INTEGER :: atom_num, this_atom, i, angle_id, atom1, atom2, is, im, this_box
   INTEGER :: natoms_to_move, atom_i
   INTEGER, DIMENSION(:), ALLOCATABLE :: atoms_to_move
 
@@ -395,9 +395,8 @@ SUBROUTINE Atom_Displacement_Move(im,is,this_box,accept)
 
   INTEGER :: this_atom, branch_atom, i
 
-  REAL(DP) :: old_coord, new_coord, area_o, area_n
   REAL(DP) :: delta_e, delta_angle, delta_dihed, delta_intra, e_angle_n, e_dihed_n
-  REAL(DP) :: e_improper_n, e_improper_o, delta_improper
+  REAL(DP) :: e_improper_n, delta_improper
   REAL(DP) :: E_intra_vdw, E_intra_qq, factor, e_recip_diff
 
   LOGICAL ::  accept_or_reject, theta_bound,intra_overlap

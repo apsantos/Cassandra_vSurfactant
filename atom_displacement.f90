@@ -71,7 +71,7 @@ SUBROUTINE Atom_Displacement(this_box)
 
   INTEGER, INTENT(OUT) :: this_box
 
-  INTEGER :: ibox, total_mols_ibox, nmolecule_species, ndisp_species, is, im
+  INTEGER :: ibox, total_mols_ibox, ndisp_species, is, im
   INTEGER :: alive, this_atom, iatom, ref_atom, nmolecules_species
 
   INTEGER, DIMENSION(:), ALLOCATABLE :: total_mols, species_id

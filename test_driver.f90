@@ -44,10 +44,7 @@ SUBROUTINE TEST_Driver
 
 !  !$ include 'omp_lib.h'
 
-  INTEGER :: i, this_box, is, which_step, nfailure, ntests
-
-  REAL(DP) :: rand_no
-  REAL(DP) :: time_start, now_time
+  INTEGER :: this_box, nfailure, ntests
 
   LOGICAL :: overlap, get_energy
 
@@ -74,11 +71,9 @@ SUBROUTINE TEST_Driver
   CALL Test_Update_Labels(nfailure)
 
   CALL Test_Compute_Cluster_Nonbond_Inter_Energy(nfailure)
-  CALL Test_Compute_Cluster_Ewald_Reciprocal_Energy_Difference(nfailure)
-  CALL Test_Micelle_Association(nfailure)
 
   ! let us check if at the end of the simulation, the energies are properly updated
-  write(*,'(A,I,A,I)') 'nfailures', nfailure , ' out of ntests', ntests
+  write(*,'(A,I6,A,I6)') 'nfailures', nfailure , ' out of ntests', ntests
 
   IF (get_energy ) THEN
      CALL Compute_Total_System_Energy(this_box,.TRUE.,overlap)
@@ -89,8 +84,11 @@ SUBROUTINE TEST_Driver
      write(*,'(A)') '          bond                angle                  dihedral            improper'
      write(*,'(4F20.3)') energy(this_box)%bond, energy(this_box)%angle, energy(this_box)%dihedral, energy(this_box)%improper
      write(*,'(A)') ''
-     write(*,'(A)') '          Inter-vdw          longrange-corr           inter-elec           reci-elec         self-ewald'
-     write(*,'(5F20.3)') energy(this_box)%inter_vdw, energy(this_box)%lrc, energy(this_box)%inter_q, energy(this_box)%ewald_reciprocal, energy(this_box)%ewald_self
+     write(*,'(A)') '          Inter-vdw          longrange-corr      '
+     write(*,'(2F20.3)') energy(this_box)%inter_vdw, energy(this_box)%lrc
+     write(*,'(A)') ''
+     write(*,'(A)') '          inter-elec           reci-elec         self-ewald'
+     write(*,'(3F20.3)') energy(this_box)%inter_q, energy(this_box)%ewald_reciprocal, energy(this_box)%ewald_self
   END IF
 
 END SUBROUTINE TEST_Driver
@@ -194,7 +192,6 @@ SUBROUTINE Test_Find_Cluster(nfailure)
   IMPLICIT NONE
 
   INTEGER :: i, this_box
-  LOGICAL :: overlap
   INTEGER, INTENT(INOUT) :: nfailure
 
   this_box = 1
@@ -311,7 +308,6 @@ SUBROUTINE Test_Neighbor_Cluster(nfailure)
   IMPLICIT NONE
 
   INTEGER :: i, this_box
-  LOGICAL :: overlap
   INTEGER, INTENT(INOUT) :: nfailure
 
   this_box = 1
@@ -414,8 +410,6 @@ SUBROUTINE Test_Update_Labels(nfailure)
 
   IMPLICIT NONE
 
-  INTEGER :: i, this_box
-  LOGICAL :: overlap
   LOGICAL, DIMENSION(nmolecules(1)) :: neigh_list
   INTEGER, INTENT(INOUT) :: nfailure
 
@@ -581,26 +575,3 @@ SUBROUTINE Test_Compute_Cluster_Nonbond_Inter_Energy(nfailure)
 
 END SUBROUTINE Test_Compute_Cluster_Nonbond_Inter_Energy
 
-SUBROUTINE Test_Compute_Cluster_Ewald_Reciprocal_Energy_Difference(nfailure)
-  USE Run_Variables
-  USE Energy_Routines
-  USE Cluster_Routines
-
-  IMPLICIT NONE
-
-  INTEGER :: i, this_box
-  INTEGER, INTENT(INOUT) :: nfailure
-
-END SUBROUTINE Test_Compute_Cluster_Ewald_Reciprocal_Energy_Difference
-
-SUBROUTINE Test_Micelle_Association(nfailure)
-  USE Run_Variables
-  USE Energy_Routines
-  USE Cluster_Routines
-
-  IMPLICIT NONE
-
-  INTEGER :: i, this_box
-  INTEGER, INTENT(INOUT) :: nfailure
-
-END SUBROUTINE Test_Micelle_Association

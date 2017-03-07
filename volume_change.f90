@@ -20,7 +20,7 @@
 !*******************************************************************************
 
 
-SUBROUTINE Volume_Change(this_box,this_step)
+SUBROUTINE Volume_Change(this_box)
   !*****************************************************************************
   ! The subroutine performs a volume perturbation move. Presently, the routine
   ! is set up to perform volume changes in cubic simulation box. Extension
@@ -70,48 +70,34 @@ SUBROUTINE Volume_Change(this_box,this_step)
 !  !$ include 'omp_lib.h'
 
   INTEGER :: is, im, alive, this_box, i, total_molecules, nvecs_old, ibox
-  INTEGER :: nvecs_max, k, iatom, this_step
+  INTEGER :: nvecs_max
 
-  INTEGER :: ia
-
-  REAL(DP) :: random_displacement, s(3), delta_volume, ln_pacc, delta_e, success_ratio
+  REAL(DP) :: s(3), delta_volume, ln_pacc, delta_e, success_ratio
   REAL(DP) :: this_volume
   REAL(DP), DIMENSION(maxk) :: hx_old, hy_old, hz_old, Cn_old
 
-  REAL(DP) :: dx, dy, dz, rijsq
-  REAL(DP) :: E_vol_vdw, E_vol_qq, e_lrc
-  REAL(DP) :: E_tot, E_vdw, E_lrc_old
-  REAL(DP) :: pres_id
-  REAL(DP) :: W_vol_vdw, W_vol_qq
-
-  LOGICAL :: accept, allocation_cos_sin, overlap, xz_change, accept_or_reject
+  LOGICAL :: accept, allocation_cos_sin, overlap, accept_or_reject
 
   TYPE(Box_Class) :: box_list_old
 
-  TYPE(Energy_Class) :: energy_old, virial_old
+  TYPE(Energy_Class) :: energy_old
 
   REAL(DP), ALLOCATABLE :: pair_nrg_vdw_old(:,:), pair_nrg_qq_old(:,:)
 
-  INTEGER, ALLOCATABLE :: my_species_id(:), my_locate_id(:), my_position_id(:)
   INTEGER :: position, my_box
 
   REAL(DP), ALLOCATABLE :: cos_mol_old(:,:), sin_mol_old(:,:)
 
-  REAL(DP) :: rcut_vdw_old, rcut_coul_old, rcut3_old, rcut9_old, alpha_ewald_old
+  REAL(DP) :: rcut_vdw_old, rcut_coul_old, rcut3_old, rcut9_old
   REAL(DP) :: h_ewald_cut_old, rcut_vdwsq_old, rcut_coulsq_old, rcut_vdw3_old
   REAL(DP) :: rcut_vdw6_old, rcut_max_old
 
-  REAL(DP) :: time1,time0
  
   ! Framework related stuff
-
-  REAL(DP) :: pore_width_old, ratio_width, area, half_pore_width_old
 
   ! Done with that section
 
   ! Randomly choose a box for volume perturbation
-
-
 
      this_box = INT ( rranf() * nbr_boxes ) + 1
 
@@ -163,8 +149,6 @@ SUBROUTINE Volume_Change(this_box,this_step)
      total_molecules = total_molecules + igas_num
      
   END IF
-  
-  !  call cpu_time(time0)
   
   IF (l_pair_nrg) THEN
      
@@ -246,7 +230,6 @@ SUBROUTINE Volume_Change(this_box,this_step)
         
         IF( int_charge_sum_style(this_box) == charge_ewald ) THEN
            
-           !           alpha_ewald_old = alpha_ewald(this_box)
            h_ewald_cut_old = h_ewald_cut(this_box)
            
         END IF
@@ -265,7 +248,6 @@ SUBROUTINE Volume_Change(this_box,this_step)
         
         IF ( int_charge_sum_style(this_box) == charge_ewald) THEN
            
-!           alpha_ewald(this_box) = ewald_p_sqrt(this_box) / rcut_coul(this_box)
            h_ewald_cut(this_box) = 2.0_DP * ewald_p(this_box) / rcut_coul(this_box)
            
         END IF
@@ -511,8 +493,6 @@ SUBROUTINE Volume_Change(this_box,this_step)
 
               ! cos_mol
               
-              !              CALL cpu_time(time0)
-              
               DO is = 1, nspecies
                  DO im = 1, nmolecules(is)
                     alive = locate(im,is)
@@ -657,7 +637,6 @@ SUBROUTINE Volume_Change(this_box,this_step)
          
          IF( int_charge_sum_style(this_box) == charge_ewald ) THEN
             
-            !           alpha_ewald(this_box) = alpha_ewald_old
            h_ewald_cut(this_box) = h_ewald_cut_old
            
         END IF

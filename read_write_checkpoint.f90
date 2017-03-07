@@ -149,19 +149,17 @@ SUBROUTINE Read_Checkpoint
 
    INTEGER :: this_mc_step
 
-    INTEGER :: ibox, is, ii, jj, im, this_im, ia, nmolecules_is, this_box, mols_this, sp_nmoltotal(nspecies)
-    INTEGER :: this_species, nfrac_global, i, this_rxnum, j, m, alive
-    INTEGER :: this_unit, i_lambda
+    INTEGER :: ibox, is, ii, jj, im, this_im, ia, this_box, mols_this, sp_nmoltotal(nspecies)
+    INTEGER :: this_species
+    INTEGER :: this_unit
 
     INTEGER, DIMENSION(:), ALLOCATABLE :: total_molecules, n_int
 
-    REAL(DP) :: this_lambda, E_self, xcom_old, ycom_old, zcom_old
+    REAL(DP) :: this_lambda, xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
 
-    LOGICAL :: f_checkpoint, f_read_old, overlap, cfc_defined
+    LOGICAL :: f_checkpoint, f_read_old
     LOGICAL :: lopen
-
-    TYPE(Energy_Class) :: inrg
 
     ALLOCATE(total_molecules(nspecies))
     ALLOCATE(n_int(nspecies))
@@ -441,20 +439,15 @@ SUBROUTINE Read_Checkpoint
     
     IMPLICIT NONE
     
-    INTEGER :: ibox, is, im, ia, nstart, nend, this_im, mols_this, nfrac_global, i, alive, j, this_rxnum
-    INTEGER :: alive_new, counter, m, i_lambda
+    INTEGER :: ibox, is, im, ia, this_im, mols_this, nfrac_global
     
     INTEGER, DIMENSION(:), ALLOCATABLE ::  total_molecules_this
     INTEGER, DIMENSION(:), ALLOCATABLE :: n_int
     
     REAL(DP) :: this_lambda
-    REAL(DP) :: E_recip, E_self, E_intra
-    REAL(DP) :: E_old, xcom_old, ycom_old, zcom_old
+    REAL(DP) :: xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
-    LOGICAL :: overlap
     
-    Type(Energy_Class) :: inrg
-  
     ! Loop over total number of boxes to read in the atomic coordinates
 
     ALLOCATE(total_molecules_this(nspecies))
@@ -598,7 +591,7 @@ SUBROUTINE Write_Trials_Success
 
   IMPLICIT NONE
 
-  INTEGER :: ibox, is, ifrag, ireac
+  INTEGER :: ibox, is, ifrag
 
   WRITE(logunit,*)
   WRITE(logunit,*)

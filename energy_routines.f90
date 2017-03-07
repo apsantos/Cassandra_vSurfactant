@@ -976,23 +976,16 @@ CONTAINS
     REAL(DP), INTENT(OUT) :: E_intra_vdw,E_inter_vdw,E_intra_qq,E_inter_qq
     REAL(DP) :: E_intra_vdw_new,E_inter_vdw_new,E_intra_qq_new,E_inter_qq_new
     LOGICAL, INTENT(OUT) :: overlap   
-    INTEGER :: this_box,is,im,js,ia, mol_is, itype, jtype, rinteraction, vdw_in
-    REAL(DP) :: rxij,ryij,rzij,rijsq,rxijp,ryijp,rzijp
+    INTEGER :: this_box, is, im, ia, mol_is, itype, jtype, vdw_in
+    REAL(DP) :: rxij,ryij,rzij,rijsq,rxijp,ryijp,rzijp, rinteraction
     REAL(DP) :: Eij_vdw,Eij_qq
     REAL(DP) :: eps, sig, SigOverRsq, SigOverR6, SigOverR12
-    REAL(DP) :: qi, qj, rij, erf_val, erfc_val, qsc
-    REAL(DP) :: T, x, xsq, TP
+    REAL(DP) :: qi, qj, rij, erf_val, qsc
     REAL(DP) :: rcom,rx,ry,rz
     REAL(DP) :: rcut, rcutsq
     REAL(DP) :: this_lambda_lj
-    REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff,  mie_n, mie_m
  
     LOGICAL :: get_vdw,get_qq, f_intra_nrg, get_interaction
-
-    REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-    REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-    REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
-
 
     !----------------------------------------------------------------------------------------------              
     E_inter_vdw = 0.0_DP
@@ -1052,7 +1045,7 @@ CONTAINS
        DO is=1,nspecies
           
           !$OMP PARALLEL DO DEFAULT(SHARED) &
-          !$OMP PRIVATE(im,mol_is,rxijp,ryijp,rzijp,rijsq,rinteraction,T,x,xsq,TP,erfc_val,ia,f_intra_nrg) &
+          !$OMP PRIVATE(im,mol_is,rxijp,ryijp,rzijp,rijsq,rinteraction,ia,f_intra_nrg) &
           !$OMP PRIVATE(itype,jtype,eps,sig,SigOverRsq,SigOverR6,SigOverR12,rij,erf_val,Eij_vdw,Eij_qq,qsc) &
           !$OMP SCHEDULE(DYNAMIC) &
           !$OMP REDUCTION(+:E_inter_vdw,E_inter_qq,E_intra_vdw,E_intra_qq)
@@ -1167,15 +1160,8 @@ CONTAINS
                       SigOverR12 = SigOverR6 * SigOverR6
                       Eij_vdw = 4.0_DP * eps * (SigOverR12 - SigOverR6)
                       
-              x = alpha_ewald(this_box) * rij
-                      T = 1.0_DP / (1.0_DP + P*x)
-                      xsq = x*x
-                      TP = T * (A1 + T * (A2 + T * (A3 + T * (A4 + T * A5))))
-                      erfc_val = TP * EXP(-xsq)
-                      
-                      erf_val = 1.0_DP - erfc_val
-                      
-                      Eij_qq = (qi*qj/rij)*(qsc-erf_val)*charge_factor(this_box)
+                      erf_val = 1.0_DP - erfc(alpha_ewald(this_box) * rij)
+                      Eij_qq = (qi * qj / rij) * (qsc - erf_val) * charge_factor(this_box)
                       
                       
                       IF (f_intra_nrg) THEN
@@ -1282,7 +1268,7 @@ CONTAINS
                    ! Compute vdw and q-q energy using if required
                    IF (get_vdw .OR. get_qq) THEN 
                       
-                      CALL Pair_Energy(rxij,ryij,rzij,rijsq,is,im,ia,this_species,this_molecule,this_atom,&
+                      CALL Pair_Energy(rijsq,is,im,ia,this_species,this_molecule,this_atom,&
                            get_vdw,get_qq,Eij_vdw,Eij_qq)
                       
                       IF (f_intra_nrg) THEN
@@ -1349,10 +1335,6 @@ CONTAINS
     REAL(DP) :: Eij_vdw, Eij_qq
     REAL(DP), OPTIONAL :: E_self
     
-    REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-    REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-    REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
-
     LOGICAL :: get_vdw, get_qq, intra_overlap
 
     E_intra_vdw = 0.0_DP
@@ -1402,7 +1384,7 @@ CONTAINS
              ! Compute vdw and q-q energy using if required
              IF (get_vdw .OR. get_qq) THEN 
                 
-                CALL Pair_Energy(rxij,ryij,rzij,rijsq,is,im,ia,is,im,ja,get_vdw,get_qq,Eij_vdw,Eij_qq)
+                CALL Pair_Energy(rijsq,is,im,ia,is,im,ja,get_vdw,get_qq,Eij_vdw,Eij_qq)
                 
                 E_intra_vdw = E_intra_vdw + Eij_vdw
                 E_intra_qq  = E_intra_qq + Eij_qq
@@ -1452,12 +1434,7 @@ CONTAINS
     INTEGER  :: ispecies, imolecule, this_box, this_locate
     
     REAL(DP) :: Eij_vdw, Eij_qq
-    REAL(DP) :: eps
     REAL(DP) :: rcom, rx, ry, rz
-
-    REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-    REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-    REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
 
     LOGICAL :: get_interaction
 
@@ -1557,7 +1534,7 @@ CONTAINS
   !------------------------------------------------------------------------------------------
   !------------------------------------------------------------------------------------------
   SUBROUTINE Pair_Energy &
-       (rxij,ryij,rzij,rijsq,is,im,ia,js,jm,ja,get_vdw,get_qq,Eij_vdw,Eij_qq)
+       (rijsq,is,im,ia,js,jm,ja,get_vdw,get_qq,Eij_vdw,Eij_qq)
 
 !FSL Added Hydration Energy here, which will be added to the Eij_vdw energy. Using interaction table.
     ! LJ potential: Eij = 4*epsilon(i,j) * [ (sigma(i,j)/rij)^12 - (sigma(i,j)/rij)^6 ]
@@ -1573,7 +1550,7 @@ CONTAINS
     !        Ewald_Real
   !------------------------------------------------------------------------------------------
     ! Passed to
-    REAL(DP) :: rxij,ryij,rzij,rijsq
+    REAL(DP) :: rijsq
     INTEGER :: is,im,ia,js,jm,ja,ibox
     LOGICAL :: get_vdw,get_qq
 
@@ -1585,11 +1562,12 @@ CONTAINS
     REAL(DP) :: eps,sig,SigOverRsq,SigOverR6,SigOverR12
     REAL(DP) :: SigOverRsq_shift,SigOverR6_shift,SigOverR12_shift
     REAL(DP) :: roffsq_rijsq, roffsq_rijsq_sq, factor2, fscale
-    REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff, rij,  mie_n, mie_m, rij_shift, SigOverR_shift, SigOverRn_shift, SigOverRm_shift, rcut_vdw
+    REAL(DP) :: SigOverR, SigOverRn, SigOverRm
+    REAL(DP) :: SigOverR_shift, SigOverRn_shift, SigOverRm_shift, rcut_vdw
+    REAL(DP) :: mie_coeff, rij,  mie_n, mie_m
 !    REAL(DP) :: Eij_vdw_check
     Real(DP) :: qi,qj, qsc
-    REAL(DP) :: this_lambda, RsqOverSig, R6OverSig, factorLJ
-    REAL(DP) :: RsqOverSig_Shift, RsqOverSig6_Shift, factorLJ_Shift
+    REAL(DP) :: this_lambda
 
     LOGICAL :: fraction
 
@@ -1884,9 +1862,6 @@ CONTAINS
     ! May need to protect against very small rijsq
     erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
     Eij = (qi*qj/rij)*(qsc - erf_val)*charge_factor(ibox)
-!                   IF(en_flag) THEN
-!                      WRITE(60,"(4I4,2F8.5,F24.12)") ia, ja, jm, js, qi,qj, Eij
-!                   END IF
 
 !FSL QQ Cor start
     QQ_cor_calculation: IF(vdw_param8_table(itype,jtype) /= 0) THEN
@@ -1902,30 +1877,6 @@ CONTAINS
 
     Eij = Eij + E_qqcor
 !FSL QQ Cor end    
-!------------------------------------------------------------------------------
-  CONTAINS
-
-    FUNCTION erfc(x)
-      !**************************************************************************
-      !                                                                         *
-      ! Calculate the complementary error function for  a number
-      !                                                                         *
-      !**************************************************************************
-
-      REAL(DP) :: erfc
-      REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-      REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-      REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
-      REAL(DP) :: T, x, xsq, TP
-
-      T = 1.0_DP / (1.0_DP + P*x)
-      xsq = x*x
-
-      TP = T * (A1 + T * (A2 + T * (A3 + T * (A4 + T * A5))))
-
-      erfc = TP * EXP(-xsq)
-
-    END FUNCTION erfc
 !------------------------------------------------------------------------------
 
   END SUBROUTINE Ewald_Real
@@ -2448,7 +2399,7 @@ CONTAINS
 
     ! Local variables
     
-    REAL(DP) :: const_val, stp 
+    REAL(DP) :: const_val
     INTEGER :: i, ia
 
     REAL(DP) :: hdotr_new
@@ -2678,7 +2629,7 @@ CONTAINS
   END SUBROUTINE Compute_System_Ewald_Self_Energy
   !********************************************************************************************
 
-  SUBROUTINE Compute_Ewald_Self_Energy_Difference(im,is,this_box,move_flag,V_self_difference)
+  SUBROUTINE Compute_Ewald_Self_Energy_Difference(is,this_box,move_flag,V_self_difference)
 
     !*******************************************************************************************
     ! This subroutine calculates the difference in self Ewald energy for the input molecule(s)
@@ -2698,7 +2649,7 @@ CONTAINS
 
     IMPLICIT NONE
 
-    INTEGER, INTENT(IN) :: im, is, this_box
+    INTEGER, INTENT(IN) :: is, this_box
     INTEGER, INTENT(IN) :: move_flag
     
     REAL(DP), INTENT(OUT) :: V_self_difference
@@ -2752,7 +2703,6 @@ CONTAINS
     REAL(DP) :: rcom, rx, ry, rz
     REAL(DP) :: E_inter_vdw, E_inter_qq
     REAL(DP) :: v_selfrf, v_molecule_selfrf
-    REAL(DP) :: rijsq
     REAL(DP) :: v_bond, v_angle, v_dihedral, v_intra, v_intra_vdw, v_intra_qq, v_improper
     
     LOGICAL :: overlap, get_interaction,intra_overlap
@@ -3108,7 +3058,7 @@ CONTAINS
           ENDIF 
           IF (get_vdw .OR. get_qq) THEN 
 
-             CALL Pair_Energy(rxij,ryij,rzij,rijsq,is_1,im_1,ia,is_2,im_2,ja,&
+             CALL Pair_Energy(rijsq,is_1,im_1,ia,is_2,im_2,ja,&
                   get_vdw,get_qq,Eij_vdw,Eij_qq)
 
              vlj_pair = vlj_pair + Eij_vdw
@@ -3582,7 +3532,7 @@ CONTAINS
     !        Ewald_Real
   !------------------------------------------------------------------------------------------
     ! Passed to
-    REAL(DP) :: rxij,ryij,rzij,rijsq
+    REAL(DP) :: rijsq
     INTEGER :: is,im,ia,js,jm,ja,ibox
     LOGICAL :: get_vdw,get_qq, fraction
 
@@ -3600,6 +3550,7 @@ CONTAINS
 
   !------------------------------------------------------------------------------------------
 
+    Eij_vdw = 0.0_DP
     Wij_vdw = 0.0_DP
     Wij_qq = 0.0_DP
     fraction = .false.
@@ -3786,30 +3737,6 @@ CONTAINS
        ENDIF qq_calculation
 
     ENDIF ExistCheck
-!------------------------------------------------------------------------------
-  CONTAINS
-
-    FUNCTION erfc(x)
-      !**************************************************************************
-      !                                                                         *
-      ! Calculate the complementary error function for  a number
-      !                                                                         *
-      !**************************************************************************
-
-      REAL(DP) :: erfc
-      REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-      REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-      REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
-      REAL(DP) :: T, x, xsq, TP
-
-      T = 1.0_DP / (1.0_DP + P*x)
-      xsq = x*x
-
-      TP = T * (A1 + T * (A2 + T * (A3 + T * (A4 + T * A5))))
-
-      erfc = TP * EXP(-xsq)
-
-    END FUNCTION erfc
 !------------------------------------------------------------------------------
 
   END SUBROUTINE Pair_Force

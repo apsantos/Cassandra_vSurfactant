@@ -122,7 +122,7 @@ SUBROUTINE Zig_By_Omega
           ELSE
 
              lambda_for_cut = molecule_list(alive,is)%cfc_lambda
-             CALL Cut_Regrow(alive,is,frag_start,frag_end,frag_order,frag_total,lambda_for_cut, &
+             CALL Cut_Regrow(alive,is,frag_start,frag_end,frag_order,frag_total, &
                      e_prev,P_seq,P_bias, nrg_ring_frag_forward, cbmc_overlap, del_overlap)
 
 

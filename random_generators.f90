@@ -56,8 +56,8 @@ IMPLICIT NONE
 INTEGER (KIND=8), INTENT(IN) :: i1, i3
 s1 = i1
 s3 = i3
-IF (IAND(s1,      -2) == 0) s1 = i1 - 8388607
-IF (IAND(s3,   -4096) == 0) s3 = i3 - 8388607
+IF (IAND(s1,    INT(-2,8)) == 0) s1 = INT(i1 - 8388607, KIND=8)
+IF (IAND(s3, INT(-4096,8)) == 0) s3 = i3 - 8388607
 RETURN
 END SUBROUTINE init_seeds
 
@@ -76,15 +76,15 @@ REAL(DP) :: rranf
 INTEGER (KIND=8) :: b
 
 b  = ISHFT( IEOR( ISHFT(s1,1), s1), -53)
-s1 = IEOR( ISHFT( IAND(s1,-2), 10), b)
+s1 = IEOR( ISHFT( IAND(s1,INT(-2,8)), 10), b)
 b  = ISHFT( IEOR( ISHFT(s2,24), s2), -50)
-s2 = IEOR( ISHFT( IAND(s2,-512), 5), b)
+s2 = IEOR( ISHFT( IAND(s2,INT(-512,8)), 5), b)
 b  = ISHFT( IEOR( ISHFT(s3,3), s3), -23)
-s3 = IEOR( ISHFT( IAND(s3,-4096), 29), b)
+s3 = IEOR( ISHFT( IAND(s3,INT(-4096,8)), 29), b)
 b  = ISHFT( IEOR( ISHFT(s4,5), s4), -24)
-s4 = IEOR( ISHFT( IAND(s4,-131072), 23), b)
+s4 = IEOR( ISHFT( IAND(s4,INT(-131072,8)), 23), b)
 b  = ISHFT( IEOR( ISHFT(s5,3), s5), -33)
-s5 = IEOR( ISHFT( IAND(s5,-8388608), 8), b)
+s5 = IEOR( ISHFT( IAND(s5,INT(-8388608,8)), 8), b)
 
 ! pconst is the reciprocal of (2^64 - 1)
 rranf = IEOR( IEOR( IEOR( IEOR(s1,s2), s3), s4), s5) *5.4210108624275221E-20_DP + 0.5_DP
@@ -102,8 +102,8 @@ END FUNCTION rranf
       ! LOCAL
       INTEGER :: ib, ia, ibc, ida, isum, iff, ie, ix, iy, ix2, ix1
 
-      ib= iseed/65536
-      ia= iseed - ib*65536
+      ib= INT( iseed/65536, 4)
+      ia= INT( iseed - ib*65536, 4)
       ibc= ib*63253
       ida= ia*24301
       isum= ibc - 2147483647 + ida
@@ -129,7 +129,7 @@ END FUNCTION rranf
           iseed = iseed - 1
       ENDIF
 
-      rranint = iseed
+      rranint = INT(iseed, 4)
   END FUNCTION rranint
 
   INTEGER FUNCTION random_range(low, high)
@@ -177,7 +177,7 @@ END FUNCTION rranf
     !----------------------------------------------------------------------------
 
     USE Type_Definitions, ONLY : DP
-    USE Run_Variables, ONLY : iseed, twoPI
+    USE Run_Variables, ONLY : twoPI
 
     IMPLICIT NONE
 

@@ -60,17 +60,14 @@ SUBROUTINE NVTMC_Driver
 
 !  !$ include 'omp_lib.h'
 
-  INTEGER :: i,j, this_box, ibox, ireac, which_step, is, im
-  INTEGER :: alive1, alive2, im1
-  INTEGER, ALLOCATABLE, DIMENSION(:) :: n_inside_old
+  INTEGER :: i,j, this_box, ibox, which_step, is
 
   REAL(DP) :: rand_no
   REAL(DP) :: time_start, now_time, thermo_time, coord_time
 
-  LOGICAL :: overlap, aok, write_flag, complete, inside_ch
+  LOGICAL :: overlap, write_flag, complete
   LOGICAL, DIMENSION(:), ALLOCATABLE :: next_write, next_rdf_write
 
-  INTEGER :: o_vdw, o_q, o_ewald_self, o_ewald_reciprocal
   CHARACTER(4) :: o_m_type
 
   ! The total number of trial move array may not have been set if this
@@ -247,25 +244,6 @@ SUBROUTINE NVTMC_Driver
 
      END IF
 
-     ! check energy
-!     o_vdw = energy(this_box)%inter_vdw
-!     o_q = energy(this_box)%inter_q
-!     o_ewald_reciprocal = energy(this_box)%ewald_reciprocal
-!     o_ewald_self = energy(this_box)%ewald_self
-!     CALL Compute_Total_System_Energy(this_box,.TRUE., overlap)
-!     IF (1 < (o_vdw /= energy(this_box)%inter_vdw) ) THEN 
-!        print*, i, o_m_type, ' vdw', energy(this_box)%inter_vdw - o_vdw
-!     END IF
-!     IF (1 < (o_q /= energy(this_box)%inter_q) ) THEN 
-!        print*, i, o_m_type, ' qq', energy(this_box)%inter_q - o_q
-!     END IF
-!     IF (1 < (o_q - energy(this_box)%inter_q) ) THEN 
-!        print*, i, o_m_type, ' recip', energy(this_box)%ewald_reciprocal - o_ewald_reciprocal
-!     END IF
-!     IF (1 < (o_ewald_self /= energy(this_box)%ewald_self) ) THEN 
-!        print*, i, o_m_type, ' self', energy(this_box)%ewald_self - o_ewald_self
-!     END IF
-     
      ! Accumulate averages
 
      IF(cpcollect) THEN

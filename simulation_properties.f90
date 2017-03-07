@@ -225,7 +225,7 @@ CONTAINS
 
     INTEGER, INTENT(IN) :: this_box
 
-    INTEGER :: is, im, alive, ia, ia_type, ia_rxnum
+    INTEGER :: is, im, alive, ia, ia_type
 
 
     

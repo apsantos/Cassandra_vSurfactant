@@ -59,7 +59,6 @@ CONTAINS
     !*********************************************************************************
 
     INTEGER :: this_box
-    LOGICAL, ALLOCATABLE, DIMENSION(:) :: neigh_list
     ! Arguments
   
     ! Local declarations
@@ -83,10 +82,9 @@ CONTAINS
     REAL(DP) :: E_vdw, E_qq, E_vdw_move, E_qq_move, E_reciprocal_move
     REAL(DP) :: rcut_small
   
-    LOGICAL :: inter_overlap, overlap, accept, accept_or_reject
+    LOGICAL :: inter_overlap, accept, accept_or_reject
   
     ! Pair_Energy arrays and Ewald implementation
-    INTEGER :: position
     REAL(DP), ALLOCATABLE :: cos_mol_old(:,:), sin_mol_old(:,:)
 
     reject_type = 0
@@ -310,7 +308,8 @@ CONTAINS
                sin_mol_old(:,:) = sin_mol(1:nvecs(this_box),:)
                !$OMP END PARALLEL WORKSHARE
        
-               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(iclus_N, iclus_mol, iclus_is, int_cluster, this_box, E_reciprocal_move)
+               CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(iclus_N, iclus_mol, iclus_is, &
+                                                                       int_cluster, this_box, E_reciprocal_move)
                
             END IF
             
@@ -414,7 +413,8 @@ CONTAINS
        END IF
   
        WRITE(logunit,*)
-       WRITE(logunit,'(A,I3,A,I1,A,F8.5)')'Success ratio, cluster translation of species ', is , ' in box ', this_box, ' : ', success_ratio
+       WRITE(logunit,'(A,I3,A,I1,A,F8.5)')'Success ratio, cluster translation of species ', is , &
+                                          ' in box ', this_box, ' : ', success_ratio
   
        IF ( int_run_style == run_equil ) THEN
   
@@ -434,7 +434,8 @@ CONTAINS
                max_clus_disp(is,this_box) = MIN(rcut_small,2.0_DP*success_ratio*max_clus_disp(is,this_box))
            END IF
   
-           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is,' in box ', this_box, ' : ', max_clus_disp(is,this_box)
+           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is, &
+                                                ' in box ', this_box, ' : ', max_clus_disp(is,this_box)
           
        END IF
   
@@ -455,8 +456,8 @@ CONTAINS
     !*********************************************************************************
 
     INTEGER, INTENT(IN) :: this_box, count_or_move
-    INTEGER :: imol, jmol, iatom, i, im, jm, ic
-    INTEGER :: is, js, is_clus, js_clus, start, N
+    INTEGER :: imol, jmol, im, jm
+    INTEGER :: is, js, is_clus, js_clus, start
     LOGICAL, ALLOCATABLE, DIMENSION(:) :: neigh_list
 
     cluster%clusmax = 0
@@ -510,7 +511,7 @@ CONTAINS
         END DO
     END DO
 
-    IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE. ) CALL Micelle_Association(this_box, count_or_move)
+    IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE. ) CALL Micelle_Association(count_or_move)
 
     !write(*,*) 'c/m', count_or_move
     !write(*,*) 'N', cluster%N(1:200)
@@ -669,8 +670,9 @@ CONTAINS
 
     LOGICAL :: Neighbor
     INTEGER, INTENT(IN) :: test_part, cur_part, test_type, cur_type, count_or_move
-    REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
-    INTEGER :: test_atom, cur_atom, n_accept
+    INTEGER :: test_atom, cur_atom
+    REAL(DP) :: rxijp, ryijp, rzijp, rijsq, rxij, ryij, rzij
+    REAL(DP) :: n_accept
 
     Neighbor = .FALSE.
 
@@ -783,7 +785,7 @@ CONTAINS
 
   END FUNCTION Neighbor
 
-  SUBROUTINE Micelle_Association(this_box, c_or_m)
+  SUBROUTINE Micelle_Association(c_or_m)
 
     !*********************************************************************************
     !
@@ -792,10 +794,8 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box, c_or_m
+    INTEGER, INTENT(IN) :: c_or_m
     INTEGER :: i, j, as, am, cm, cs, as_clus, nclus
-    INTEGER :: ierr, line_nbr, nbr_entries
-    REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
 
     cluster%criteria(c_or_m, int_com) = .FALSE.
     cluster%criteria(c_or_m, int_type) = .TRUE.

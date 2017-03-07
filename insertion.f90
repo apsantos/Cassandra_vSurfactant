@@ -19,7 +19,7 @@
 !   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !*******************************************************************************
 
-SUBROUTINE Insertion(this_box,mcstep,randno)
+SUBROUTINE Insertion(this_box)
 
   !*****************************************************************************
   ! 
@@ -61,15 +61,13 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
 
   ! Arguments
   INTEGER :: this_box ! attempt to insert a molecule in this_box
-  INTEGER :: mcstep   ! not used
-  REAL(DP) :: randno  ! not used
 
   ! Local declarations
   INTEGER :: i, i_type               ! atom indices
   INTEGER :: ifrag                   ! fragment indices
-  INTEGER :: im, alive(2)               ! molecule indices
+  INTEGER :: alive(2)               ! molecule indices
   INTEGER :: is, is_rand, is_counter ! species indices
-  INTEGER :: kappa_tot, which_anchor
+  INTEGER :: kappa_tot
   INTEGER, ALLOCATABLE :: frag_order(:)
   INTEGER :: rand_igas, tot_mols
   INTEGER :: tn1, tn2, n1, n2, nplocal, npair, dn
@@ -312,7 +310,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
         ! local environment. The conformations are sampled according to their 
         ! Boltzmann weight. Read one in at random:
 
-        rand_igas = (rranf() * n_igas(is)) + 1
+        rand_igas = INT(rranf() * n_igas(is)) + 1
 
         molecule_list(alive(is),is)%xcom = molecule_list_igas(rand_igas,is)%xcom
         molecule_list(alive(is),is)%ycom = molecule_list_igas(rand_igas,is)%ycom
@@ -510,7 +508,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
              int_insertion,E_reciprocal_move)
     endif
 
-     CALL Compute_Ewald_Self_Energy_Difference(alive(is),is,this_box, &
+     CALL Compute_Ewald_Self_Energy_Difference(is,this_box, &
              int_insertion,E_self_move)
 
      f_reciprocal = f_reciprocal + E_reciprocal_move

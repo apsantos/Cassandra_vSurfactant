@@ -42,8 +42,7 @@ SUBROUTINE Write_Properties(this_mc_step,this_box)
   IMPLICIT NONE
 
   CHARACTER(24) :: write_str
-  INTEGER :: i, this_box, this_unit, this_mc_step, is, n_start, n_end
-  INTEGER :: ifrac, my_ifrac
+  INTEGER :: i, this_box, this_unit, this_mc_step
 
 
   DO i = 1, nbr_prop_files(this_box)
@@ -75,8 +74,8 @@ CONTAINS
     IMPLICIT NONE
 
     INTEGER :: file_number, ii
-    CHARACTER*120 :: prop_to_write
-    CHARACTER*120, ALLOCATABLE :: prop_unit(:)
+    CHARACTER(120) :: prop_to_write
+    CHARACTER(120), ALLOCATABLE :: prop_unit(:)
 
     IF (block_average) THEN
        WRITE(this_unit,'(A)') '# Block averages'
@@ -172,12 +171,10 @@ CONTAINS
 
    USE Simulation_Properties
    
-   INTEGER :: file_number, ii, is, is_dens, is_cp, is_lambda, total_frac
+   INTEGER :: file_number, ii, is, is_dens, is_cp, is_lambda
    REAL(DP),DIMENSION(:), ALLOCATABLE :: write_buff
    CHARACTER(FILENAME_LEN) :: prop_written
 
-   REAL(DP) :: temp_pres
-   
    ALLOCATE(write_buff(prop_per_file(file_number,this_box)+1))
 
    write_buff(1) = this_mc_step
@@ -521,13 +518,16 @@ SUBROUTINE Write_Histogram(this_box)
       namph = nmols(is,this_box)
       if (energy_hist(is,-2,namph) == energy_hist(is,0,namph)) then    ! first energy observed for this namph - set
                                                               ! at mid-point
-          energy_hist(is,0,namph) = energy_hist_width*int(e_total/energy_hist_width - n_energy_hist/2)
-          energy_hist(is,-2,namph) = energy_hist(is,0,namph) - energy_hist_width*(int((energy_hist(is,0,namph)-e_total)/energy_hist_width)+1)
-          energy_hist(is,-1,namph) = energy_hist(is,0,namph) + energy_hist_width*(int((-energy_hist(is,0,namph)+e_total)/energy_hist_width)+1)
+          energy_hist(is,0,namph) = REAL( energy_hist_width * int(e_total/energy_hist_width - n_energy_hist/2), SP)
+          energy_hist(is,-2,namph) = REAL( energy_hist(is,0,namph) - &
+                                     energy_hist_width * (int((energy_hist(is,0,namph)-e_total)/energy_hist_width)+1), SP)
+          energy_hist(is,-1,namph) = REAL( energy_hist(is,0,namph) + &
+                                     energy_hist_width * (int((-energy_hist(is,0,namph)+e_total)/energy_hist_width)+1), SP)
       endif
 
       if (e_total < energy_hist(is,-2,namph)) then    ! found lower value than min
-          energy_hist(is,-2,namph) = energy_hist(is,0,namph) - energy_hist_width*(int((energy_hist(is,0,namph)-e_total)/energy_hist_width)+1)
+          energy_hist(is,-2,namph) = REAL( energy_hist(is,0,namph) - &
+                                     energy_hist_width * (int((energy_hist(is,0,namph)-e_total)/energy_hist_width)+1), SP)
           if (energy_hist(is,-2,namph) <= energy_hist(is,0,namph) + energy_hist_width ) then
               write (logunit,*) 'Maximum width of energy histograms exceeded (low)'
               write (logunit,*) 'namph, energy(-2),energy(-1),energy(0),e_total', namph,energy_hist(is,-2:0,namph),e_total
@@ -535,7 +535,8 @@ SUBROUTINE Write_Histogram(this_box)
           endif
 
       else if (e_total > energy_hist(is,-1,namph)) then    ! found greater value than max
-          energy_hist(is,-1,namph) = energy_hist(is,0,namph) + energy_hist_width*(int((-energy_hist(is,0,namph)+e_total)/energy_hist_width)+1)
+          energy_hist(is,-1,namph) = REAL( energy_hist(is,0,namph) + &
+                                     energy_hist_width * (int((-energy_hist(is,0,namph)+e_total)/energy_hist_width)+1), SP)
           if (energy_hist(is,-1,namph) > energy_hist(is,0,namph)+energy_hist_width*(n_energy_hist-2)) then
               write (logunit,*) 'Maximum width of energy histograms exceeded (high)'
               write (logunit,*) 'namph, energy(-2),energy(-1),energy(0),e_total', namph,energy_hist(is,-2:0,namph),e_total
@@ -558,8 +559,8 @@ SUBROUTINE Write_Histogram(this_box)
                                         box_list(this_box)%length(3,3)
 
       DO imol = 1, nmolecules(is)
-          istart = (energy_hist(is, -2,imol) - energy_hist(is, 0, imol)) / energy_hist_width
-          iend   = (energy_hist(is, -1,imol) - energy_hist(is, 0, imol)) / energy_hist_width
+          istart = INT( (energy_hist(is, -2,imol) - energy_hist(is, 0, imol)) / energy_hist_width )
+          iend   = INT( (energy_hist(is, -1,imol) - energy_hist(is, 0, imol)) / energy_hist_width )
 
           IF (istart /= iend) THEN 
               WRITE (this_unit,'(2i7,f13.5)') imol, iend-istart+1, energy_hist(is, -2,imol)

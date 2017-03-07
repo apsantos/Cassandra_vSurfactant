@@ -61,13 +61,12 @@ SUBROUTINE GEMC_Particle_Transfer(box_in, box_out)
 
   INTEGER :: box_in, box_out, i, this_species, i_type
 
-  INTEGER :: nmols_sorbate, nsorbate, is, ibox, im ,alive, which_anchor
+  INTEGER :: nmols_sorbate, nsorbate, is, ibox, im ,alive
   INTEGER :: rand_igas 
 
   INTEGER, ALLOCATABLE :: sorbate_id(:), frag_order(:)
 
   REAL(DP), ALLOCATABLE :: sorbate_x(:)
-  REAL(DP), ALLOCATABLE :: dx(:), dy(:), dz(:)
 
   REAL(DP) :: pick_species, delta_e_out, delta_e_out_pacc, e_bond_out, e_angle_out, e_dihed_out
   REAL(DP) :: E_intra_vdw_out, E_intra_qq_out
@@ -338,7 +337,7 @@ SUBROUTINE GEMC_Particle_Transfer(box_in, box_out)
      CALL Compute_Ewald_Reciprocal_Energy_Difference(alive,alive,this_species,box_in, &
           int_insertion,E_reciprocal_move_in)
 
-     CALL Compute_Ewald_Self_Energy_Difference(alive,this_species,box_in,int_insertion, &
+     CALL Compute_Ewald_Self_Energy_Difference(this_species,box_in,int_insertion, &
           E_self_move_in)
      delta_e_in = delta_e_in + E_self_move_in
      delta_e_in = delta_e_in + E_reciprocal_move_in - energy(box_in)%ewald_reciprocal
@@ -478,7 +477,7 @@ SUBROUTINE GEMC_Particle_Transfer(box_in, box_out)
 
      CALL Compute_Ewald_Reciprocal_Energy_Difference(alive,alive,this_species &
           ,box_out,int_deletion,E_reciprocal_move_out)
-     CALL Compute_Ewald_Self_Energy_Difference(alive,this_species,box_out, &
+     CALL Compute_Ewald_Self_Energy_Difference(this_species,box_out, &
           int_deletion,E_self_move_out)
 
      delta_e_out = delta_e_out - E_self_move_out
@@ -691,7 +690,7 @@ SUBROUTINE New_Positions(this_box,alive,is,rand_igas)
 
   IMPLICIT NONE
   
-  INTEGER :: this_box,alive,is, rand_igas, i
+  INTEGER :: this_box,alive,is, rand_igas
   REAL(DP) :: dx,dy,dz, this_x, this_y, this_z
 
 
@@ -734,7 +733,7 @@ SUBROUTINE New_Positions(this_box,alive,is,rand_igas)
      
      ! obtain a ranom configuratio from the file
 
-     rand_igas = (rranf() * n_igas(is)) + 1
+     rand_igas = INT(rranf() * n_igas(is)) + 1
 
      molecule_list(alive,is)%xcom = molecule_list_igas(rand_igas,is)%xcom
      molecule_list(alive,is)%ycom = molecule_list_igas(rand_igas,is)%ycom

@@ -56,8 +56,8 @@ USE Type_Definitions
 !*********************************************************************************
   ! This section contains global variables used by many routines during the run.
 
-  CHARACTER(120) :: run_name,start_type
-  CHARACTER(80) :: err_msg(10)
+  CHARACTER(120) :: run_name, start_type
+  CHARACTER(120) :: err_msg(10)
 
   ! error handling variables
   INTEGER :: AllocateStatus, OpenStatus, DeAllocateStatus
@@ -575,7 +575,7 @@ INTEGER :: n_lat_atoms
 LOGICAL :: store_sum
   
 ! histogram writing variables
-INTEGER               :: n_energy_hist      ! number of points for energy discretization
+INTEGER(8)            :: n_energy_hist      ! number of points for energy discretization
 REAL(DP)              :: energy_hist_width  ! width of energy histograms; should take into account interactions
 REAL(SP), ALLOCATABLE :: energy_hist(:,:,:) ! element 0 of this matrix contains the
                                             ! starting value of energy for the bins at that amph. number. 

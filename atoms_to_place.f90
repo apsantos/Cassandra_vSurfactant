@@ -89,7 +89,7 @@ CONTAINS
     IMPLICIT NONE
     
     INTEGER :: ibonds, atom1, atom2, ispecies
-    INTEGER :: alive_atoms, atomplaced, iatoms,k, i, j
+    INTEGER :: alive_atoms, iatoms
    
     ALLOCATE(atoms_to_place_list(MAXVAL(natoms)))
     ALLOCATE(alive(MAXVAL(natoms)))
@@ -228,7 +228,7 @@ CONTAINS
     
     IMPLICIT NONE
     
-    INTEGER :: ispecies, iangles, alive_atoms, atom1, atom2, atom3, ia, k, i, j
+    INTEGER :: ispecies, iangles, alive_atoms, atom1, atom2, atom3, ia, i
     
     ALLOCATE(atoms_to_place_list(MAXVAL(natoms)))
     ALLOCATE(alive(MAXVAL(natoms)))
@@ -384,8 +384,8 @@ CONTAINS
     
     IMPLICIT NONE
 
-    INTEGER :: ispecies, idihedrals, atom1, atom2, atom3, atom4, iatoms
-    INTEGER :: alive_atoms, k, i, j
+    INTEGER :: ispecies, idihedrals, atom1, atom2, atom3, atom4, iatoms, i, j
+    INTEGER :: alive_atoms
     
 
     ALLOCATE(alive(MAXVAL(natoms)))

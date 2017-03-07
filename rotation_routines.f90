@@ -61,7 +61,7 @@ CONTAINS
    REAL(DP) :: theta, phi, psi, rot11, rot12, rot13, rot21, rot22, rot23
    REAL(DP) :: rot31, rot32, rot33, rxpnew, rypnew, rzpnew
    
-   INTEGER :: i, ia
+   INTEGER :: ia
    
    ! Pick random eulerians
    
@@ -126,7 +126,7 @@ CONTAINS
  END SUBROUTINE Rotate_Molecule_Eulerian
 
 
- SUBROUTINE Rotate_XYZ_Axes(alive,is,frag_start,lx,ly,lz,mtype) 
+ SUBROUTINE Rotate_XYZ_Axes(alive,is,frag_start) 
     
     !*********************************************************************************
     ! takes in the identity of the molecule and rotates the molecule with random
@@ -143,9 +143,8 @@ CONTAINS
     
    IMPLICIT NONE
 
-   INTEGER, INTENT(IN) :: alive, is,frag_start,  mtype
+   INTEGER, INTENT(IN) :: alive, is,frag_start
    INTEGER :: atom_orig
-   LOGICAL :: lx, ly,lz
    REAL(DP) :: theta, phi, psi, rot11, rot12, rot13, rot21, rot22, rot23
    REAL(DP) :: rot31, rot32, rot33, rxpnew, rypnew, rzpnew
    

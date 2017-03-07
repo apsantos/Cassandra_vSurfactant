@@ -560,7 +560,8 @@ MODULE Type_Definitions
     INTEGER, DIMENSION(2) :: n_species_type
 
     ! cluster finding variables
-    REAL(DP) :: clusmax, n_cluster
+    REAL(DP) :: n_cluster
+    INTEGER  :: clusmax
     INTEGER, DIMENSION(:), ALLOCATABLE :: N, M, M_olig
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: clabel
 
