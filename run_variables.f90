@@ -96,6 +96,7 @@ USE Type_Definitions
   CHARACTER(15), DIMENSION(:), ALLOCATABLE :: vdw_style, charge_style, vdw_sum_style, charge_sum_style
   INTEGER :: int_mix_rule, int_run_style
   INTEGER, DIMENSION(:), ALLOCATABLE :: int_vdw_style, int_vdw_sum_style
+  LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: int_vdw_style_mix ! the length of the 3rd dimesnio is the largest vdw_type
   INTEGER, DIMENSION(:), ALLOCATABLE :: int_charge_style, int_charge_sum_style
   INTEGER, PARAMETER :: run_equil = 0
   INTEGER, PARAMETER :: run_prod = 1
@@ -109,6 +110,13 @@ USE Type_Definitions
   INTEGER, PARAMETER :: vdw_charmm = 6
   INTEGER, PARAMETER :: vdw_cut_switch = 7
   INTEGER, PARAMETER :: vdw_mie = 8
+  INTEGER, PARAMETER :: vdw_lj124 = 9
+  INTEGER, PARAMETER :: vdw_lj96 = 10
+  INTEGER, PARAMETER :: vdw_wca = 11
+  INTEGER, PARAMETER :: vdw_hydra = 12
+  INTEGER, PARAMETER :: vdw_corr = 13
+  INTEGER, PARAMETER :: vdw_yukawa = 14
+  INTEGER, PARAMETER :: vdw_sw = 15
 
   INTEGER, PARAMETER :: charge_none = 0
   INTEGER, PARAMETER :: charge_coul = 1

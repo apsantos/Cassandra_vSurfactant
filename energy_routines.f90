@@ -1651,7 +1651,7 @@ CONTAINS
 !End WCA calculation
        ELSE
 
-          LJ_12_6_calculation: IF (int_vdw_style(1) == vdw_lj) THEN
+          LJ_calculation: IF (int_vdw_style(1) == vdw_lj) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
@@ -1739,7 +1739,7 @@ CONTAINS
              ENDIF
              
              
-          ENDIF LJ_12_6_calculation
+          ENDIF LJ_calculation
 
           Yukawa_calculation: IF (vdw_param9_table(itype,jtype) /= 0) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table

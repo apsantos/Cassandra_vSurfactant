@@ -432,7 +432,25 @@ SUBROUTINE Get_Pair_Style
            WRITE(logunit,'(A,2x,A,A,I3)') '   VDW style used is: ',vdw_style(ibox), 'in box:', ibox
 
            IF (vdw_style(ibox) /= 'NONE') THEN
-              int_vdw_style(ibox) = vdw_lj
+              IF (vdw_style(ibox) == 'LJ' .or. vdw_style(ibox) == 'LJ126') THEN
+                 int_vdw_style(ibox) = vdw_lj
+                 int_vdw_style_mix(:, :, vdw_lj) = .true.
+              ELSE IF (vdw_style(ibox) == 'MIE') THEN
+                 int_vdw_style(ibox) = vdw_mie
+                 int_vdw_style_mix(:, :, vdw_mie) = .true.
+              ELSE IF (vdw_style(ibox) == 'LJ124') THEN
+                 int_vdw_style(ibox) = vdw_lj124
+                 int_vdw_style_mix(:, :, vdw_lj124) = .true.
+              ELSE IF (vdw_style(ibox) == 'LJ96') THEN
+                 int_vdw_style(ibox) = vdw_lj96
+                 int_vdw_style_mix(:, :, vdw_lj96) = .true.
+              ELSE IF (vdw_style(ibox) == 'YUKAWA') THEN
+                 int_vdw_style(ibox) = vdw_yukawa
+                 int_vdw_style_mix(:, :, vdw_yukawa) = .true.
+              ELSE IF (vdw_style(ibox) == 'SW') THEN
+                 int_vdw_style(ibox) = vdw_sw
+                 int_vdw_style_mix(:, :, vdw_sw) = .true.
+              END IF
               vdw_sum_style(ibox) = line_array(2)
               WRITE(logunit,'(A,2x,A,A,I3)') '   VDW sum style is: ',vdw_sum_style(ibox), 'in box:', ibox
 
@@ -513,7 +531,7 @@ SUBROUTINE Get_Pair_Style
 
               ELSEIF (vdw_sum_style(ibox) == 'mie') THEN
                  int_vdw_sum_style(ibox) = vdw_mie
-		 rcut_vdw(ibox) = String_To_Double(line_array(3))
+                 rcut_vdw(ibox) = String_To_Double(line_array(3))
                  WRITE(logunit,'(A,2x,F7.3, A)') '    rcut = ',rcut_vdw(ibox), '   Angstrom'
                  WRITE(logunit,'(A)') 'Mie potential used for VDW'
 
@@ -530,7 +548,7 @@ SUBROUTINE Get_Pair_Style
                      err_msg(3) = Int_To_String(ibox)
                      CALL Clean_Abort(err_msg,'Get_Pairstyle')
 
-    	      ENDIF
+              ENDIF
 
 
 
@@ -2130,9 +2148,9 @@ SUBROUTINE Get_Dihedral_Info(is)
               dihedral_list(idihed,is)%dihedral_param(3) = (PI/180.0_DP)* dihedral_list(idihed,is)%dihedral_param(3)
               
               nbr_dihedral_params = 3
-			  
-!AV: AMBER style for dihedral multiplicity, cf. Zhong et al. JpcB, 115, 10027, 2011.
-!Note that I assumed the maximum # of dihedral multiplicity is 3 and tried to avoide a 2-dimensional arrays.
+
+           !AV: AMBER style for dihedral multiplicity, cf. Zhong et al. JpcB, 115, 10027, 2011.
+           !Note that I assumed the maximum # of dihedral multiplicity is 3 and tried to avoide a 2-dimensional arrays.
            ELSE IF (dihedral_list(idihed,is)%dihedral_potential_type == 'AMBER') THEN
               IF(species_list(is)%int_species_type == int_sorbate) zig_calc = .TRUE.
               dihedral_list(idihed,is)%int_dipot_type = int_amber
@@ -2145,11 +2163,11 @@ SUBROUTINE Get_Dihedral_Info(is)
               dihedral_list(idihed,is)%dihedral_param(7) = String_To_Double(line_array(13))
               dihedral_list(idihed,is)%dihedral_param(8) = String_To_Double(line_array(14))
               dihedral_list(idihed,is)%dihedral_param(9) = String_To_Double(line_array(15))
-			  !AV: commented out b/c 3 terms is usually enough.
-			  !dihedral_list(idihed,is)%dihedral_param(10) = String_To_Double(line_array(16))
-			  !dihedral_list(idihed,is)%dihedral_param(11) = String_To_Double(line_array(17))
-			  !dihedral_list(idihed,is)%dihedral_param(12) = String_To_Double(line_array(18))
-			  
+              !AV: commented out b/c 3 terms is usually enough.
+              !dihedral_list(idihed,is)%dihedral_param(10) = String_To_Double(line_array(16))
+              !dihedral_list(idihed,is)%dihedral_param(11) = String_To_Double(line_array(17))
+              !dihedral_list(idihed,is)%dihedral_param(12) = String_To_Double(line_array(18))
+              
               !
               WRITE(logunit,'(A,T25,F10.4)') ' a01, kJ/mol:', &
                    dihedral_list(idihed,is)%dihedral_param(1)
@@ -2174,14 +2192,14 @@ SUBROUTINE Get_Dihedral_Info(is)
               ! Convert to molecular units amu A^2/ps^2 and the delta
               ! parameter to radians
               dihedral_list(idihed,is)%dihedral_param(1) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(1)
-			  dihedral_list(idihed,is)%dihedral_param(4) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(4)
-			  dihedral_list(idihed,is)%dihedral_param(7) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(7)
+              dihedral_list(idihed,is)%dihedral_param(4) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(4)
+              dihedral_list(idihed,is)%dihedral_param(7) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(7)
               dihedral_list(idihed,is)%dihedral_param(3) = (PI/180.0_DP)* dihedral_list(idihed,is)%dihedral_param(3)
-			  dihedral_list(idihed,is)%dihedral_param(6) = (PI/180.0_DP)* dihedral_list(idihed,is)%dihedral_param(6)
-			  dihedral_list(idihed,is)%dihedral_param(9) = (PI/180.0_DP)* dihedral_list(idihed,is)%dihedral_param(9)
+              dihedral_list(idihed,is)%dihedral_param(6) = (PI/180.0_DP)* dihedral_list(idihed,is)%dihedral_param(6)
+              dihedral_list(idihed,is)%dihedral_param(9) = (PI/180.0_DP)* dihedral_list(idihed,is)%dihedral_param(9)
               
               nbr_dihedral_params = 9
-			  
+              
 
            ELSE IF (dihedral_list(idihed,is)%dihedral_potential_type == 'harmonic') THEN
               IF(species_list(is)%int_species_type == int_sorbate) zig_calc = .TRUE.
@@ -3606,6 +3624,8 @@ SUBROUTINE Get_Box_Info
   ALLOCATE(vdw_sum_style(nbr_boxes) , charge_sum_style(nbr_boxes))
 
   ALLOCATE(int_vdw_style(nbr_boxes) , int_vdw_sum_style(nbr_boxes))
+  ALLOCATE(int_vdw_style_mix(nspecies, nspecies, 15))
+  int_vdw_style_mix = .false.
   ALLOCATE(int_charge_style(nbr_boxes) , int_charge_sum_style(nbr_boxes))
 
   ALLOCATE(rcut_CBMC(nbr_boxes))
@@ -7970,8 +7990,8 @@ SUBROUTINE Get_Mie_Nonbond
 
      IF (line_string(1:13) == '# Mie_Nonbond') THEN
         ! create symmetric matrix for index of species (e.g. for 3 species it will create
-	! the following matrix [1,2,3;2,4,5;3,5,6]; This matrix is used to identify
-	! the specified mie_n and mie_m exponents for a given species type.
+        ! the following matrix [1,2,3;2,4,5;3,5,6]; This matrix is used to identify
+        ! the specified mie_n and mie_m exponents for a given species type.
         DO Mi = 1, nspecies
            DO Mj = Mi, nspecies
               mie_Matrix(Mi,Mj) = Mk
