@@ -144,18 +144,18 @@ subroutine virialMC_Driver
                     CALL Compute_Max_COM_Distance(im,is)
              
                     CALL Compute_Total_System_Energy(1,.TRUE.,overlap)
-                    IF (overlap .eqv. .TRUE.) THEN
-                        WRITE(logunit,*) 'Overlaping atoms at', dist, 'stopping computation'
-                        EXIT dist_loop
+                    IF (overlap .eqv. .FALSE.) THEN
+                        mcvirial%coefficient(idist) = mcvirial%coefficient(idist) + dexp(-1.0_DP * energy(1)%total * beta(1))
+                        mcvirial%effective(idist) = mcvirial%effective(idist) + energy(1)%total
+                        if (e_max < energy(1)%total) then
+                            e_max = energy(1)%total
+                            CALL Write_Coords(1)
+                        endif
+                        if (e_min > energy(1)%total) e_min = energy(1)%total
+                        n_pos = n_pos+1
+                        !WRITE(logunit,*) 'Overlaping atoms at', dist, 'stopping computation'
+                        !EXIT dist_loop
                     END IF
-                    mcvirial%coefficient(idist) = mcvirial%coefficient(idist) + dexp(-1.0_DP * energy(1)%total * beta(1))
-                    mcvirial%effective(idist) = mcvirial%effective(idist) + energy(1)%total
-                    if (e_max < energy(1)%total) then
-                        e_max = energy(1)%total
-                        CALL Write_Coords(1)
-                    endif
-                    if (e_min > energy(1)%total) e_min = energy(1)%total
-                    n_pos = n_pos+1
     
                     CALL Rotate_Molecule_Eulerian(1,js)
                 
