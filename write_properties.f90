@@ -442,8 +442,8 @@ SUBROUTINE Write_Coords(this_box)
            molecule_list(this_im,is)%which_box == this_box ) THEN
            DO ia = 1, natoms(is)
 !FSL Write is and im values           
-              WRITE(M_XYZ_unit,'(A3,F20.13,F20.13,F20.13,I5,I5)') &
-              nonbond_list(ia,is)%element, &
+              WRITE(M_XYZ_unit,'(A3,F20.13,F20.13,F20.13,I6,I6)') &
+              nonbond_list(ia,is)%atom_name, & !element, &
                    atom_list(ia,this_im,is)%rxp, &
                    atom_list(ia,this_im,is)%ryp, &
                    atom_list(ia,this_im,is)%rzp, &
@@ -558,7 +558,7 @@ SUBROUTINE Write_Histogram(this_box)
                                         box_list(this_box)%length(2,2), &
                                         box_list(this_box)%length(3,3)
 
-      DO imol = 1, nmolecules(is)
+      DO imol = 0, nmolecules(is)
           istart = INT( (energy_hist(is, -2,imol) - energy_hist(is, 0, imol)) / energy_hist_width )
           iend   = INT( (energy_hist(is, -1,imol) - energy_hist(is, 0, imol)) / energy_hist_width )
 
