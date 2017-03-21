@@ -645,6 +645,7 @@ SUBROUTINE Participation
                        this_l = bond_list(this_bond,is)%bond_param(1)
                     
                     END IF
+
                     IF ( i == 2) THEN
                        ! this is the first bond and hence the second atom, it will be placed along 
                        ! the x-axis
