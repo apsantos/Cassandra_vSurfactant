@@ -66,7 +66,7 @@ SUBROUTINE Participation
   USE Run_Variables
   USE IO_Utilities
   USE File_Names
-  USE Random_Generators, ONLY : Generate_Random_Sphere
+  USE Random_Generators, ONLY : Generate_Random_Sphere, r8_normal_ab
 
   IMPLICIT NONE
 
@@ -82,8 +82,6 @@ SUBROUTINE Participation
 
   CHARACTER(120) :: file_name, car_file, xyz_file
   CHARACTER(120) :: line_string
-
-  
 
   ! allocate memory for bondpart_list. 
   ALLOCATE(bondpart_list(MAXVAL(natoms),nspecies))
@@ -537,7 +535,8 @@ SUBROUTINE Participation
               
               WRITE(201,*) bondpart_list(ia,is)%nbonds + 1
               WRITE(201,100) anchor_atom, nonbond_list(ia,is)%atom_name, nonbond_list(ia,is)%element, &
-                   nonbond_list(ia,is)%mass, nonbond_list(ia,is)%charge, 'NONE', &
+                   nonbond_list(ia,is)%mass, nonbond_list(ia,is)%charge, &
+                   nonbond_list(ia,is)%vdw_potential_type, &
                    (nonbond_list(ia,is)%vdw_param(1))/kboltz, nonbond_list(ia,is)%vdw_param(2)
               
               ! write the 'read_old' file for the fragment
@@ -558,7 +557,8 @@ SUBROUTINE Participation
                  this_atom = frag_list(ifrag,is)%atoms(i)
                  
                  WRITE(201,100) i, nonbond_list(this_atom,is)%atom_name, nonbond_list(this_atom,is)%element, &
-                      nonbond_list(this_atom,is)%mass, nonbond_list(this_atom,is)%charge, 'NONE', &
+                      nonbond_list(this_atom,is)%mass, nonbond_list(this_atom,is)%charge, &
+                      nonbond_list(this_atom,is)%vdw_potential_type, &
                       (nonbond_list(this_atom,is)%vdw_param(1))/kboltz, nonbond_list(this_atom,is)%vdw_param(2)
                  
               END DO
@@ -625,20 +625,26 @@ SUBROUTINE Participation
                     
                  END IF
                  
-                 IF (bond_list(this_bond,is)%int_bond_type == int_harmonic) THEN
+                 IF (bond_list(this_bond,is)%int_bond_type == int_harmonic .or.
+                     bond_list(this_bond,is)%int_bond_type == int_none) THEN
+
+                    IF (bond_list(this_bond,is)%int_bond_type == int_harmonic) THEN
+                       
+                       WRITE(201,101) i-1, anchor_atom, i, "harmonic", bond_list(this_bond,is)%bond_param(1) /kboltz, &
+                            bond_list(this_bond,is)%bond_param(2)
+                       
+                       this_l = ABS( r8_normal_ab( bond_list(this_bond,is)%bond_param(2), &
+                                                  (2.0_DP * bond_list(this_bond,is)%bond_param(1))**(-0.5) ) )
+                    ELSE IF (bond_list(this_bond,is)%int_bond_type == int_none) THEN
+                       ! it is a fixed bond
+                       
+                       WRITE(201,102) i-1, anchor_atom, i, "fixed", bond_list(this_bond,is)%bond_param(1)
+                       
+                       ! for a fixed bond length system, generate points of this atom on a unit sphere
+                       
+                       this_l = bond_list(this_bond,is)%bond_param(1)
                     
-                    WRITE(201,101) i-1, anchor_atom, i, "harmonic", bond_list(this_bond,is)%bond_param(1) /kboltz, &
-                         bond_list(this_bond,is)%bond_param(2)
-                    
-                 ELSE IF (bond_list(this_bond,is)%int_bond_type == int_none) THEN
-                    ! it is a fixed bond
-                    
-                    WRITE(201,102) i-1, anchor_atom, i, "fixed", bond_list(this_bond,is)%bond_param(1)
-                    
-                    ! for a fixed bond length system, generate points of this atom on a unit sphere
-                    
-                    this_l = bond_list(this_bond,is)%bond_param(1)
-                 
+                    END IF
                     IF ( i == 2) THEN
                        ! this is the first bond and hence the second atom, it will be placed along 
                        ! the x-axis
@@ -652,8 +658,6 @@ SUBROUTINE Participation
                        CALL Generate_Random_Sphere(x_this,y_this,z_this)
                        
                        ! coordinates of the 'this_atom'
-                       
-                       
                        x_this = this_l * x_this
                        y_this = this_l * y_this
                        z_this = this_l * z_this

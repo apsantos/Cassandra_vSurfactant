@@ -207,6 +207,42 @@ END FUNCTION rranf
 
   END SUBROUTINE Generate_Random_Sphere
 
-
+  function r8_normal_ab ( a, b )
+  !*****************************************************************************
+  !! R8_NORMAL_AB returns a scaled pseudonormal R8.
+  !
+  !  Discussion:
+  !    The normal probability distribution function (PDF) is sampled,
+  !    with mean A and standard deviation B.
+  !
+  !  Licensing:
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !    06 August 2013
+  !
+  !  Author:
+  !    John Burkardt
+  !
+  !  Parameters:
+  !    Input, real ( kind = 8 ) A, the mean of the PDF.
+  !    Input, real ( kind = 8 ) B, the standard deviation of the PDF.
+  !    Output, real ( kind = 8 ) R8_NORMAL_AB, a sample of the normal PDF.
+  !*****************************************************************************
+    USE Type_Definitions, ONLY : DP
+    USE Run_Variables, ONLY : twoPI
+    implicit none
+  
+    REAL(DP) :: a, b
+    REAL(DP) :: r1, r2, x
+    REAL(DP) :: r8_normal_ab
+  
+    r1 = rranf()
+    r2 = rranf()
+    x = sqrt ( - 2.0D+00 * log ( r1 ) ) * cos ( twoPI * r2 )
+  
+    r8_normal_ab = a + b * x
+  
+  end function
 
 end module random_generators
