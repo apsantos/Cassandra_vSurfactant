@@ -625,7 +625,7 @@ SUBROUTINE Participation
                     
                  END IF
                  
-                 IF (bond_list(this_bond,is)%int_bond_type == int_harmonic .or.
+                 IF (bond_list(this_bond,is)%int_bond_type == int_harmonic .or. &
                      bond_list(this_bond,is)%int_bond_type == int_none) THEN
 
                     IF (bond_list(this_bond,is)%int_bond_type == int_harmonic) THEN

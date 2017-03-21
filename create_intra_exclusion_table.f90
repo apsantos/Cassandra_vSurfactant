@@ -244,6 +244,7 @@ SUBROUTINE Read_Intra_Exclusion_Table
     END IF
     i_line = 1
     ALLOCATE(temp_type( SUM(natoms(:)), nspecies ) )
+    temp_type = 0
     DO 
         IF (line_string(1:12) == '# Atom_Types') THEN
             DO is = 1, nspecies

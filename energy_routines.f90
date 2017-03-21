@@ -1649,6 +1649,9 @@ CONTAINS
                     eps  = vdw_in_param1_table(ia,ja,is)
                     sig  = vdw_in_param2_table(ia,ja,is)
                     rcutsq = vdw_in_param3_table(ia,ja,is)
+                    IF (rijsq >= vdw_in_param3_table(ia,ja,is) ) THEN
+                        eps = 0.0
+                    ENDIF
                 ENDIF
              ENDIF
                 
@@ -1721,6 +1724,9 @@ CONTAINS
                     eps = vdw_in_param1_table(ia,ja,is)
                     sig = vdw_in_param2_table(ia,ja,is)
                     rcutsq = vdw_in_param3_table(ia,ja,is)
+                    IF (rijsq >= vdw_in_param3_table(ia,ja,is) ) THEN
+                        eps = 0.0
+                    ENDIF
                 ENDIF
              ENDIF
                 
@@ -1783,6 +1789,9 @@ CONTAINS
                     eps = vdw_in_param1_table(ia,ja,is)
                     sig = vdw_in_param2_table(ia,ja,is)
                     rcutsq = vdw_in_param3_table(ia,ja,is)
+                    IF (rijsq >= vdw_in_param3_table(ia,ja,is) ) THEN
+                        eps = 0.0
+                    ENDIF
                 ENDIF
              ENDIF
                 
@@ -1845,6 +1854,9 @@ CONTAINS
                     eps = vdw_in_param1_table(ia,ja,is)
                     sig = vdw_in_param2_table(ia,ja,is)
                     rcutsq = vdw_in_param3_table(ia,ja,is)
+                    IF (rijsq >= vdw_in_param3_table(ia,ja,is) ) THEN
+                        eps = 0.0
+                    ENDIF
                 ENDIF
              ENDIF
                 
@@ -1879,7 +1891,10 @@ CONTAINS
                     eps = eps * vdw_intra_scale(ia,ja,is)
                 ELSE
                     eps = vdw_in_param9_table(ia,ja,is)
-                    sig = vdw_in_param10_table(ia,ja,is)
+                    kappa = vdw_in_param10_table(ia,ja,is)
+                    IF (rijsq >= vdw_in_param3_table(ia,ja,is) ) THEN
+                        eps = 0.0
+                    ENDIF
                 ENDIF
              ENDIF
                 
@@ -3752,7 +3767,7 @@ CONTAINS
                 ELSE
                     eps = vdw_in_param1_table(ia,ja,is)
                     sig = vdw_in_param2_table(ia,ja,is)
-                    IF (rijsq > vdw_in_param3_table(ia,ja,is) ) THEN
+                    IF (rijsq >= vdw_in_param3_table(ia,ja,is) ) THEN
                         eps = 0.0
                     ENDIF
                     
@@ -3820,7 +3835,7 @@ CONTAINS
                 ELSE
                     eps = vdw_in_param1_table(ia,ja,is)
                     sig = vdw_in_param2_table(ia,ja,is)
-                    IF (rijsq > vdw_in_param3_table(ia,ja,is) ) THEN
+                    IF (rijsq >= vdw_in_param3_table(ia,ja,is) ) THEN
                         eps = 0.0
                     ENDIF
                 ENDIF
@@ -3874,7 +3889,7 @@ CONTAINS
                 ELSE
                     eps = vdw_in_param1_table(ia,ja,is)
                     sig = vdw_in_param2_table(ia,ja,is)
-                    IF (rijsq > vdw_in_param3_table(ia,ja,is) ) THEN
+                    IF (rijsq >= vdw_in_param3_table(ia,ja,is) ) THEN
                         eps = 0.0
                     ENDIF
                 ENDIF
@@ -3927,7 +3942,7 @@ CONTAINS
                    ELSE
                        eps = vdw_in_param1_table(ia,ja,is)
                        sig = vdw_in_param2_table(ia,ja,is)
-                       IF (rijsq > vdw_in_param3_table(ia,ja,is) ) THEN
+                       IF (rijsq >= vdw_in_param3_table(ia,ja,is) ) THEN
                            eps = 0.0
                        ENDIF
                    ENDIF
@@ -3957,7 +3972,10 @@ CONTAINS
                     eps = eps * vdw_intra_scale(ia,ja,is)
                 ELSE
                     eps = vdw_in_param9_table(ia,ja,is)
-                    sig = vdw_in_param10_table(ia,ja,is)
+                    kappa = vdw_in_param10_table(ia,ja,is)
+                    IF (rijsq >= vdw_in_param3_table(ia,ja,is) ) THEN
+                       eps = 0.0
+                    ENDIF
                 ENDIF
              ENDIF
 
