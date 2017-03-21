@@ -57,6 +57,32 @@ SUBROUTINE Create_Intra_Exclusion_Table
   ALLOCATE(vdw_intra_scale(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
   ALLOCATE(charge_intra_scale(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
 
+  ALLOCATE(vdw_in_param1_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param2_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param3_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param4_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param5_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param6_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param7_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param8_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param9_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param10_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param11_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param12_table(MAXVAL(natoms),MAXVAL(natoms),nspecies), Stat=AllocateStatus)
+
+  vdw_in_param1_table = 0.0_DP
+  vdw_in_param2_table = 0.0_DP
+  vdw_in_param3_table = 0.0_DP
+  vdw_in_param4_table = 0.0_DP
+  vdw_in_param5_table = 0.0_DP
+  vdw_in_param6_table = 0.0_DP
+  vdw_in_param7_table = 0.0_DP
+  vdw_in_param8_table = 0.0_DP
+  vdw_in_param9_table = 0.0_DP
+  vdw_in_param10_table = 0.0_DP
+  vdw_in_param11_table = 0.0_DP
+  vdw_in_param12_table = 0.0_DP
+
   IF (AllocateStatus .NE. 0) THEN
      err_msg = ''
      err_msg(1) = ' ERROR: Not enough memory for scaling tables '
@@ -200,13 +226,13 @@ SUBROUTINE Read_Intra_Exclusion_Table
 
   IMPLICIT NONE
 
-  INTEGER :: is,ia,ii,jj,js,ja
+  INTEGER :: is,ia,ii,jj,js,ja, i
   INTEGER :: ierr,nbr_entries, i_line
   INTEGER :: t_atoms
   INTEGER, ALLOCATABLE, DIMENSION(:,:) :: temp_type
 
   CHARACTER(120) :: line_string, line_array(20)
-  CHARACTER(120) :: temp_name
+  CHARACTER(120) :: temp_name, pot_type
 !-----------------------------------------------------------------------------
     ! Open intra scalingfile and find the line where the data begins
     OPEN(UNIT=intrafile_unit,FILE=intrafile_name,STATUS="OLD",IOSTAT=openstatus,ACTION="READ")
@@ -285,6 +311,88 @@ SUBROUTINE Read_Intra_Exclusion_Table
                                 charge_intra_scale(ja,ia,is) = String_To_Double(line_array(3))
                              ENDIF
                           ENDIF
+                       ENDIF
+                    ENDDO
+                 ENDIF
+              ENDDO
+              i_line = i_line + 1
+           ENDDO
+
+           EXIT  
+
+        ELSEIF (line_string(1:15) == '# Mixing_Values') THEN
+           ! read in values
+           DO
+              CALL Parse_String(intrafile_unit, i_line, 2, nbr_entries, line_array, ierr)
+              IF (TRIM(line_array(2)) == 'Done_Mixing_Values') THEN
+                EXIT
+              ENDIF
+   
+              ii = String_To_Int(line_array(1))
+              jj = String_To_Int(line_array(2))
+              t_atoms = 0
+              DO is = 1, nspecies
+                 t_atoms = t_atoms + temp_type(natoms(is),is)
+                 IF ( ii <= t_atoms ) THEN
+                    IF ( jj > t_atoms .OR. jj <= (t_atoms - natoms(is)) ) THEN
+                       err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule."
+                       CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+                    ENDIF
+                    EXIT
+                 ENDIF
+              ENDDO
+
+              DO ia = 1, natoms(is)
+                 IF ( ii == temp_type(ia,is)) THEN
+                    DO ja = 1, natoms(is)
+                       IF ( jj == temp_type(ja,is)) THEN
+                          DO i = 3, SIZE(line_array)
+                              pot_type = line_array(i)
+                  
+                              IF (pot_type == 'LJ' .or. pot_type == 'LJ126' .or. &
+                                  pot_type == 'LJ124' .or. &
+                                  pot_type == 'LJ96') THEN
+                  
+                                  vdw_in_param1_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                  vdw_in_param2_table(ia,ja,is) = String_To_Double(line_array(i+2))
+                                  vdw_in_param1_table(ja,ia,is) = vdw_in_param1_table(ia,ja,is)
+                                  vdw_in_param2_table(ja,ia,is) = vdw_in_param2_table(ia,ja,is)
+                                  vdw_in_param3_table(ia,ja,is) = String_To_Double(line_array(i+3))**2.0
+                                  vdw_in_param3_table(ja,ia,is) = vdw_in_param3_table(ia,ja,is)
+                  
+                              ELSEIF (pot_type == 'WCA') THEN
+                                  vdw_in_param3_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                  vdw_in_param4_table(ia,ja,is) = String_To_Double(line_array(i+2))
+                                  vdw_in_param3_table(ja,ia,is) = vdw_in_param3_table(ia,ja,is)
+                                  vdw_in_param4_table(ja,ia,is) = vdw_in_param4_table(ia,ja,is)
+                  
+                              ELSEIF (pot_type == 'HYDR') THEN
+                                  vdw_in_param5_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                  vdw_in_param6_table(ia,ja,is) = String_To_Double(line_array(i+2))
+                                  vdw_in_param7_table(ia,ja,is) = String_To_Double(line_array(i+3))
+                                  vdw_in_param5_table(ja,ia,is) = vdw_in_param5_table(ia,ja,is)
+                                  vdw_in_param6_table(ja,ia,is) = vdw_in_param6_table(ia,ja,is)
+                                  vdw_in_param7_table(ja,ia,is) = vdw_in_param7_table(ia,ja,is)
+                  
+                              ELSEIF (pot_type == 'CORR') THEN
+                                  vdw_in_param8_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                  vdw_in_param8_table(ja,ia,is) = vdw_in_param8_table(ia,ja,is)
+                  
+                              ELSEIF (pot_type == 'Yukawa') THEN
+                                  vdw_in_param9_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                  vdw_in_param9_table(ja,ia,is) = vdw_in_param9_table(ia,ja,is)
+                                  vdw_in_param10_table(ia,ja,is) = String_To_Double(line_array(i+2))
+                                  vdw_in_param10_table(ja,ia,is) = vdw_in_param10_table(ia,ja,is)
+                  
+                              ELSEIF (pot_type == 'SW') THEN
+                                  vdw_in_param11_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                  vdw_in_param11_table(ja,ia,is) = vdw_in_param11_table(ia,ja,is)
+                                  vdw_in_param12_table(ia,ja,is) = String_To_Double(line_array(i+2))
+                                  vdw_in_param12_table(ja,ia,is) = vdw_in_param12_table(ia,ja,is)
+                  
+                              ENDIF
+                  
+                          ENDDO
                        ENDIF
                     ENDDO
                  ENDIF

@@ -92,6 +92,7 @@ USE Type_Definitions
   CHARACTER(15), DIMENSION(:), ALLOCATABLE :: vdw_style, charge_style, vdw_sum_style, charge_sum_style
   INTEGER :: int_mix_rule, int_run_style
   INTEGER, DIMENSION(:), ALLOCATABLE :: int_vdw_style, int_vdw_sum_style
+  LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: int_vdw_style_mix ! the length of the 3rd dimesnio is the largest vdw_type
   INTEGER, DIMENSION(:), ALLOCATABLE :: int_charge_style, int_charge_sum_style
   INTEGER, PARAMETER :: run_equil = 0
   INTEGER, PARAMETER :: run_prod = 1
@@ -105,7 +106,14 @@ USE Type_Definitions
   INTEGER, PARAMETER :: vdw_charmm = 6
   INTEGER, PARAMETER :: vdw_cut_switch = 7
   INTEGER, PARAMETER :: vdw_mie = 8
-  INTEGER, PARAMETER :: vdw_y = 9
+  INTEGER, PARAMETER :: vdw_lj124 = 9
+  INTEGER, PARAMETER :: vdw_lj96 = 10
+  INTEGER, PARAMETER :: vdw_wca = 11
+  INTEGER, PARAMETER :: vdw_hydra = 12
+  INTEGER, PARAMETER :: vdw_corr = 13
+  INTEGER, PARAMETER :: vdw_yukawa = 14
+  INTEGER, PARAMETER :: vdw_sw = 15
+
 
   INTEGER, PARAMETER :: charge_none = 0
   INTEGER, PARAMETER :: charge_coul = 1
@@ -126,16 +134,20 @@ USE Type_Definitions
  ! Mixing Rules variables :
   CHARACTER(40), DIMENSION(:,:), ALLOCATABLE :: vdw_interaction_table
   INTEGER, DIMENSION(:,:), ALLOCATABLE ::vdw_int_table
-  !LJ
+  ! LJ
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param1_table, vdw_param2_table
-  !WCA
+  ! WCA
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param3_table, vdw_param4_table
-  !HYDR
+  ! HYDR
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param5_table, vdw_param6_table, vdw_param7_table
-  !QQ CORR
+  ! QQ CORR
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param8_table
   ! Yukawa
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param9_table, vdw_param10_table
+  ! Square-Well potential
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param11_table, vdw_param12_table
+
+
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alpha_ewald, h_ewald_cut
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alphal_ewald
   REAL(DP), DIMENSION(:), ALLOCATABLE :: ewald_p_sqrt, ewald_p
@@ -151,6 +163,19 @@ USE Type_Definitions
   ! Dimensions (maxatomtype,maxatomtype,nspecies)
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_intra_scale, charge_intra_scale
   LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: l_bonded
+
+  ! LJ
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param1_table, vdw_in_param2_table
+  ! WCA
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param3_table, vdw_in_param4_table
+  ! HYDR
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param5_table, vdw_in_param6_table, vdw_in_param7_table
+  ! QQ CORR
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param8_table
+  ! Yukawa
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param9_table, vdw_in_param10_table
+  ! Square-Well potential
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param11_table, vdw_in_param12_table
 
   ! How many simulation boxes we have. 
   INTEGER :: nbr_boxes
@@ -170,9 +195,13 @@ USE Type_Definitions
  !***************************************************************
   !Conversion factors and constants
 
-  REAL(DP), PARAMETER :: PI=3.1415926536_DP
+  REAL(DP), PARAMETER :: PI = 3.1415926536_DP
   REAL(DP), PARAMETER :: twoPI = 6.2831853072_DP
   REAL(DP), PARAMETER :: rootPI = 1.7724538509_DP
+
+  !lj parameters
+  REAL(DP), PARAMETER :: lj124pre = 2.5980762114_DP
+  REAL(DP), PARAMETER :: lj96pre = 6.75_DP
 
   !KBOLTZ is Boltzmann's constant in atomic units amu A^2 / (K ps^2)
   REAL(DP), PARAMETER :: kboltz = 0.8314472_DP

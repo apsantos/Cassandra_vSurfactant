@@ -430,7 +430,22 @@ SUBROUTINE Get_Pair_Style
            WRITE(logunit,'(A,2x,A,A,I3)') '   VDW style used is: ',vdw_style(ibox), 'in box:', ibox
 
            IF (vdw_style(ibox) /= 'NONE') THEN
-              int_vdw_style(ibox) = vdw_lj
+              IF (vdw_style(ibox) == 'LJ' .or. vdw_style(ibox) == 'LJ126') THEN
+                 int_vdw_style(ibox) = vdw_lj
+              ELSE IF (vdw_style(ibox) == 'MIE') THEN
+                 int_vdw_style(ibox) = vdw_mie
+              ELSE IF (vdw_style(ibox) == 'LJ124') THEN
+                 int_vdw_style(ibox) = vdw_lj124
+              ELSE IF (vdw_style(ibox) == 'LJ96') THEN
+                int_vdw_style(ibox) = vdw_lj96
+              ELSE IF (vdw_style(ibox) == 'YUKAWA') THEN
+                 int_vdw_style(ibox) = vdw_yukawa
+                 int_vdw_style_mix(:, :, vdw_yukawa) = .true.
+              ELSE IF (vdw_style(ibox) == 'SW') THEN
+                 int_vdw_style(ibox) = vdw_sw
+                 int_vdw_style_mix(:, :, vdw_sw) = .true.
+              END IF
+
               vdw_sum_style(ibox) = TRIM( line_array(2) )
               WRITE(logunit,'(A,2x,A,A,I3)') '   VDW sum style is: ',vdw_sum_style(ibox), 'in box:', ibox
 
@@ -1552,11 +1567,11 @@ SUBROUTINE Get_Atom_Info(is)
 
            ! For now, force all atoms to have the same vdw pair style that was
            ! specified in the input file.  We can relax this restriction later.
-           IF (nonbond_list(ia,is)%vdw_potential_type /= vdw_style(1)) THEN
-              err_msg = ""
-              err_msg(1) = 'vdw_potential type does not equal specified vdw_style'
-              CALL Clean_Abort(err_msg,'Get_Atom_Info')
-           ENDIF
+           !IF (nonbond_list(ia,is)%vdw_potential_type /= vdw_style(1)) THEN
+           !   err_msg = ""
+           !   err_msg(1) = 'vdw_potential type does not equal specified vdw_style'
+           !   CALL Clean_Abort(err_msg,'Get_Atom_Info')
+           !ENDIF
 
            WRITE(logunit,'(A,T25,I3,1x,I3)') 'Species and atom number', is,ia
            WRITE(logunit,'(A,T25,A)') ' atom name:',nonbond_list(ia,is)%atom_name
@@ -1566,7 +1581,11 @@ SUBROUTINE Get_Atom_Info(is)
            WRITE(logunit,'(A,T25,A)') ' vdw type:',nonbond_list(ia,is)%vdw_potential_type
 
            ! Load vdw parameters, specific for each individual type
-           IF (nonbond_list(ia,is)%vdw_potential_type == 'LJ') THEN
+           IF (nonbond_list(ia,is)%vdw_potential_type == 'LJ' .or. &
+               nonbond_list(ia,is)%vdw_potential_type == 'LJ126' .or. &
+               nonbond_list(ia,is)%vdw_potential_type == 'LJ124' .or. &
+               nonbond_list(ia,is)%vdw_potential_type == 'LJ96' .or. &
+               nonbond_list(ia,is)%vdw_potential_type == 'MIE') THEN
               ! epsilon/kB in K read in
               nonbond_list(ia,is)%vdw_param(1) = String_To_Double(line_array(7))
               ! sigma = Angstrom
@@ -1741,7 +1760,7 @@ SUBROUTINE Get_Bond_Info(is)
                    'Harmonic Bond between atoms: ',bond_list(ib,is)%atom1, bond_list(ib,is)%atom2, &
                    ' in species', is
               bond_list(ib,is)%bond_param(2) = String_To_Double(line_array(5))
-              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond length, in A:',bond_list(ib,is)%bond_param(1)
+              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond length, in A:',bond_list(ib,is)%bond_param(2)
               WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond constant, in K/A^2:',String_To_Double(line_array(6))
               bond_list(ib,is)%bond_param(1) = String_To_Double(line_array(6))/atomic_to_K
 
@@ -5004,7 +5023,7 @@ SUBROUTINE Get_Start_Type
                  
                  DO ibox = 1, nbr_boxes
                     nmol_actual(i,ibox) = String_To_Int(line_array(ibox))
-                    WRITE(logunit,'(A41,2x,I2,2X,A7,2X,I2,2X,A2,2X,I6)') 'Starting number of molecules of species', i, &
+                    WRITE(logunit,'(A41,2x,I2,2X,A7,2X,I2,2X,A2,2X,I10)') 'Starting number of molecules of species', i, &
                                                                          ' in box ', ibox, 'is',  nmol_actual(i,ibox)
                  END DO
  
@@ -5018,7 +5037,7 @@ SUBROUTINE Get_Start_Type
                  END IF
 
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A36,2X,I2,2X,A21,2X,I6)') 'Total number of molecules of species ', i , &
+                 WRITE(logunit,'(A36,2X,I2,2X,A21,2X,I10)') 'Total number of molecules of species ', i , &
                                                            ' present initially is', species_list(i)%nmoltotal
 
               END DO
@@ -5071,6 +5090,9 @@ SUBROUTINE Get_Start_Type
                  err_msg = ""
                  err_msg(1) = 'An error in the input line ' // TRIM(Int_to_String(line_nbr)) &
                       // ' of input file.'
+                 err_msg(2) = "Make sure that the characters of the string are alphanumeric with"
+                 err_msg(3) = " a possibility of a . (dot) or _ (dash)."
+                 err_msg(4) = "The first character must be an alphabet"
                  CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
               END IF
               
