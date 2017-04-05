@@ -630,11 +630,12 @@ SUBROUTINE Participation
 
                     IF (bond_list(this_bond,is)%int_bond_type == int_harmonic) THEN
                        
-                       WRITE(201,101) i-1, anchor_atom, i, "harmonic", bond_list(this_bond,is)%bond_param(1) /kboltz, &
-                            bond_list(this_bond,is)%bond_param(2)
+                       WRITE(201,101) i-1, anchor_atom, i, "harmonic", bond_list(this_bond,is)%bond_param(2), &
+                            bond_list(this_bond,is)%bond_param(1) / kboltz
                        
                        this_l = ABS( r8_normal_ab( bond_list(this_bond,is)%bond_param(2), &
                                                   (2.0_DP * bond_list(this_bond,is)%bond_param(1))**(-0.5) ) )
+
                     ELSE IF (bond_list(this_bond,is)%int_bond_type == int_none) THEN
                        ! it is a fixed bond
                        
@@ -788,7 +789,7 @@ SUBROUTINE Participation
      !Amir To Jindal: It the 3rd # format should be 11.7 otherwise it would generate errors. 10/12/12
 
 100  FORMAT(I5,2X,A4,2X,A4,F11.7,2X,F11.7,2X,A5,2X,F11.7, 2X, F11.7)
-101  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F10.3,2X,F8.5)
+101  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F12.4,2X,F12.4)
 102  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F8.5)
 103  FORMAT(I5,2X,I5,2X,I5,2X,I5,2X,A9,2X,F10.3,2X,F10.5)
 104  FORMAT(I5,2X,I5,2X,I5,2X,I5,2X,A9,2X,F10.5)
@@ -879,8 +880,8 @@ CONTAINS
 
        IF (bond_list(this_bond,is)%int_bond_type == int_harmonic) THEN
           WRITE(201,'(I5,2X,I5,2X,I5,2X,A9,2X,F10.3,2X,F8.5)') i, &
-               atom1(i), atom2(i), "harmonic", bond_list(this_bond,is)%bond_param(1)/kboltz, &
-               bond_list(this_bond,is)%bond_param(2)
+               atom1(i), atom2(i), "harmonic", bond_list(this_bond,is)%bond_param(2), &
+               bond_list(this_bond,is)%bond_param(1) / kboltz
 
        ELSE IF (bond_list(this_bond,is)%int_bond_type == int_none) THEN
           WRITE(201,'(I5,2X,I5,2X,I5,2X,A9,2X,F8.5)') i, &

@@ -1760,8 +1760,8 @@ SUBROUTINE Get_Bond_Info(is)
                    'Harmonic Bond between atoms: ',bond_list(ib,is)%atom1, bond_list(ib,is)%atom2, &
                    ' in species', is
               bond_list(ib,is)%bond_param(2) = String_To_Double(line_array(5))
-              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond length, in A:',bond_list(ib,is)%bond_param(2)
-              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond constant, in K/A^2:',String_To_Double(line_array(6))
+              WRITE(logunit,'(A,T25,F12.4)') 'Harmonic bond length, in A:',bond_list(ib,is)%bond_param(2)
+              WRITE(logunit,'(A,T25,F12.4)') 'Harmonic bond constant, in K/A^2:',String_To_Double(line_array(6))
               bond_list(ib,is)%bond_param(1) = String_To_Double(line_array(6))/atomic_to_K
 
               ! Set number of bond parameters
@@ -3921,8 +3921,8 @@ SUBROUTINE Get_Fugacity_Info
         END DO
         !APS
         ! IF the species is inserted as a pair, set the corresponding chemical potential
-        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
         IF (ANY(species_list(:)%pair_insert) .eqv. .TRUE.) THEN
+           CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
            IF (line_array(1) /= 'pair') THEN
               err_msg = ""
               err_msg(1) = 'You must define the pair chemical potentials'
