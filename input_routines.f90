@@ -5807,7 +5807,8 @@ SUBROUTINE Get_Frequency_Info
                  IF (ncoord_freq /= 0) THEN
                      DO ibox = 1, nbr_boxes
                         movie_clus_xyz_file = TRIM(run_name) // '_cluster' // '.box' // TRIM(Int_To_String(ibox)) // '.xyz'
-                        WRITE(logunit,'(A,T30,I1,A,T40,A)') 'movie_cluster_XYZ file for box ', ibox ,' is', TRIM(movie_clus_xyz_file)
+                        WRITE(logunit,'(A,T30,I1,A,T40,A)') 'movie_cluster_XYZ file for box ', ibox ,' is', &
+                                                            TRIM(movie_clus_xyz_file)
                         OPEN(unit=movie_clus_xyz_unit+ibox,file=movie_clus_xyz_file)
                      END DO
                  END IF
@@ -5930,7 +5931,8 @@ SUBROUTINE Get_Frequency_Info
                     OPEN(unit=movie_xyz_unit+ibox,file=movie_xyz_file)
                     IF (ncluslife_freq /= 0) THEN
                         movie_clus_xyz_file = TRIM(run_name) // '_cluster' // '.box' // TRIM(Int_To_String(ibox)) // '.xyz'
-                        WRITE(logunit,'(A,T30,I1,A,T40,A)') 'movie_cluster_XYZ file for box ', ibox ,' is', TRIM(movie_clus_xyz_file)
+                        WRITE(logunit,'(A,T30,I1,A,T40,A)') 'movie_cluster_XYZ file for box ', ibox ,' is', &
+                                                            TRIM(movie_clus_xyz_file)
                         OPEN(unit=movie_clus_xyz_unit+ibox,file=movie_clus_xyz_file)
                     END IF
 
@@ -6300,7 +6302,7 @@ SUBROUTINE Get_Clustering_Info
   INTEGER :: ierr, line_nbr, nbr_entries, i, is, js, ia, ja, itype
   INTEGER :: imax_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
   CHARACTER(240) :: line_string, line_array(80)
-  REAL(8) :: distance
+  REAL(8) :: distance, min_dist, min_dist_sq
   CHARACTER(24), DIMENSION(12) :: names
 
   REWIND(inputunit)
@@ -6308,6 +6310,8 @@ SUBROUTINE Get_Clustering_Info
   WRITE(logunit,*)
   WRITE(logunit,*) '**** Reading Clustering information ****** '
 
+  min_dist = 0.000001
+  min_dist_sq = min_dist * min_dist
   max_nmol = 0
   ierr = 0
   line_nbr = 0
@@ -6410,7 +6414,7 @@ EnLoop: DO ientry = 1, n_entries
 
                     DO js = 1, nspecies
                         distance = String_To_Double(line_array(js))
-                        IF (distance > 0.001) THEN
+                        IF (distance > min_dist) THEN
                             cluster%min_distance_sq(c_or_m, is, js, 0, 0) = distance**2.0_DP
                             WRITE(logunit,*) 'COM clustering between species, ', is, ' and ', js
                         ENDIF
@@ -6446,7 +6450,7 @@ EnLoop: DO ientry = 1, n_entries
                     js = String_To_Int(line_array(3))
                     distance = String_To_Double(line_array(5))
                     ! Figure out the type of the atom from the name, remember could be multiple with the same name
-                    IF (distance > 0.001) THEN
+                    IF (distance > min_dist) THEN
                         DO ia = 1, natoms(is)
                             IF (nonbond_list(ia,is)%atom_name == line_array(2) ) THEN
                                 DO ja = 1, natoms(js)
@@ -6508,7 +6512,7 @@ EnLoop: DO ientry = 1, n_entries
                 DO is = 1, nspecies
                     distance = String_To_Double(line_array(is))
                     cluster%min_distance_sq(c_or_m, is, is, 0, 0) = distance**2.0
-                    IF (distance > 0.001) THEN
+                    IF (distance > min_dist) THEN
                         WRITE(logunit,*) 'COM clustering between species, ', is
                         cluster%micelle_species = is
                     END IF
@@ -6526,7 +6530,7 @@ EnLoop: DO ientry = 1, n_entries
                 js = String_To_Int(line_array(3))
                 distance = String_To_Double(line_array(5))
                 ! Figure out the type of the atom from the name, remember could be multiple with the same name
-                IF (distance > 0.001) THEN
+                IF (distance > min_dist) THEN
                     DO ia = 1, natoms(is)
                         IF (nonbond_list(ia,is)%atom_name == line_array(2) ) THEN
                             DO ja = 1, natoms(js)
@@ -6585,7 +6589,7 @@ EnLoop: DO ientry = 1, n_entries
                     cluster%r3_sq(c_or_m, is,0) = String_To_Double(line_array(3))**2.0
 
                     ! Figure out the type of the atom from the name, remember could be multiple with the same name
-                    IF ((cluster%r1_sq(c_or_m, is,0) + cluster%r2_sq(c_or_m, is,0) + cluster%r3_sq(c_or_m, is,0))> 0.00001) THEN
+                    IF ((cluster%r1_sq(c_or_m, is,0) + cluster%r2_sq(c_or_m, is,0) + cluster%r3_sq(c_or_m, is,0))> min_dist_sq) THEN
                         DO i = 4, nbr_entries
                             DO ia = 1, natoms(is)
                                 IF (nonbond_list(ia,is)%atom_name == line_array(i)) THEN
@@ -6607,8 +6611,8 @@ EnLoop: DO ientry = 1, n_entries
         END DO EnLoop
  
         DO is = 1, nspecies
-            IF ( ANY(cluster%min_distance_sq(c_or_m, is,:,:,:) > 0.000001) .OR. &
-                 ANY(cluster%r3_sq(c_or_m, is,:) > 0.000001) ) THEN
+            IF ( ANY(cluster%min_distance_sq(c_or_m, is,:,:,:) > min_dist_sq) .OR. &
+                 ANY(cluster%r3_sq(c_or_m, is,:) > min_dist_sq) ) THEN
                 cluster%n_species_type(c_or_m) = cluster%n_species_type(c_or_m) + 1
                 imax_nmol = imax_nmol + nmolecules(is)
             END IF
@@ -6622,8 +6626,8 @@ EnLoop: DO ientry = 1, n_entries
         DO c_or_m = 1, 3
             i = 1
             DO is = 1, nspecies
-                IF ( ANY(cluster%min_distance_sq(c_or_m,is,:,:,:) > 0.000001) .OR. &
-                     ANY(cluster%r3_sq(c_or_m, is,:) > 0.000001) ) THEN
+                IF ( ANY(cluster%min_distance_sq(c_or_m,is,:,:,:) > min_dist_sq) .OR. &
+                     ANY(cluster%r3_sq(c_or_m, is,:) > min_dist_sq) ) THEN
                     cluster%species_type(c_or_m, i) = is
                     i = i + 1
                 END IF
