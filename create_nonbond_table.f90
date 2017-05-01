@@ -105,8 +105,14 @@
     vdw_param9_table = 0.0_DP
     vdw_param10_table = 0.0_DP
 
-    ALLOCATE(int_vdw_style_mix(nbr_atomtypes,nbr_atomtypes, 15), Stat=AllocateStatus)
-    int_vdw_style_mix = .false.
+    ALLOCATE(rcut_vdw_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    rcut_vdw_mix(:,:) = rcut_vdw(1)
+    ALLOCATE(rcut_vdwsq_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    rcut_vdwsq_mix(:,:) = 0.0_DP
+    ALLOCATE(int_vdw_style_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    int_vdw_style_mix(:,:) = int_vdw_style(1)
+    ALLOCATE(int_vdw_sum_style_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    int_vdw_sum_style_mix(:,:) = int_vdw_sum_style(1)
 
     ! Allocate memory for total number bead types in each box
     ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
@@ -205,7 +211,7 @@
                 int_vdw_style(1) == vdw_lj124.or. &
                 int_vdw_style(1) == vdw_mie) THEN
                ! There are two vdw parameters
-               int_vdw_style_mix(itype, jtype, int_vdw_style(1)) = .true.
+               int_vdw_style_mix(itype, jtype) = int_vdw_style(1)
 
                ! Set LJ epsilon
                IF ( (temp_param_i(1) <= tiny_number) .OR. (temp_param_j(1) <= tiny_number) ) THEN
@@ -245,7 +251,7 @@
 
             ELSE IF (int_vdw_style(1) == vdw_yukawa) THEN
                ! There are two vdw parameters
-               int_vdw_style_mix(itype, jtype, int_vdw_style(1)) = .true.
+               int_vdw_style_mix(itype, jtype) = int_vdw_style(1)
 
                ! Set LJ epsilon
                IF ( (temp_param_i(1) <= tiny_number) .OR. (temp_param_j(1) <= tiny_number) ) THEN
@@ -285,7 +291,7 @@
 
             ELSE IF (int_vdw_style(1) == vdw_sw) THEN
                ! There are two vdw parameters
-               int_vdw_style_mix(itype, jtype, int_vdw_style(1)) = .true.
+               int_vdw_style_mix(itype, jtype) = int_vdw_style(1)
 
                ! Set LJ epsilon
                IF ( (temp_param_i(1) <= tiny_number) .OR. (temp_param_j(1) <= tiny_number) ) THEN
@@ -494,6 +500,15 @@ SUBROUTINE Read_Nonbond_Table
     vdw_param9_table = 0.0_DP
     vdw_param10_table = 0.0_DP
 
+    ALLOCATE(rcut_vdw_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    rcut_vdw_mix(:,:) = rcut_vdw(1)
+    ALLOCATE(rcut_vdwsq_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    rcut_vdwsq_mix(:,:) = 0.0_DP
+    ALLOCATE(int_vdw_style_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    int_vdw_style_mix(:,:) = int_vdw_style(1)
+    ALLOCATE(int_vdw_sum_style_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    int_vdw_sum_style_mix(:,:) = int_vdw_sum_style(1)
+
     ! Allocate memory for total number bead types in each box
     ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
     
@@ -512,8 +527,6 @@ SUBROUTINE Read_Nonbond_Table
     WRITE(logunit,'(A,T25,A)') 'Mixing rule used is:', mix_rule
     WRITE(logunit,*)
 
-    ALLOCATE(int_vdw_style_mix(nbr_atomtypes,nbr_atomtypes, 15), Stat=AllocateStatus)
-    int_vdw_style_mix = .false.
     REWIND(inputunit)
 
     DO 
@@ -540,14 +553,14 @@ SUBROUTINE Read_Nonbond_Table
                 pot_type == 'LJ96') THEN
 
                 IF (pot_type == 'LJ' .or. pot_type == 'LJ126') THEN
-                    int_vdw_style_mix(itype,jtype,vdw_lj) = .true.
-                    int_vdw_style_mix(jtype,itype,vdw_lj) = .true.
+                    int_vdw_style_mix(itype,jtype) = vdw_lj
+                    int_vdw_style_mix(jtype,itype) = vdw_lj
                 ELSEIF ( pot_type == 'LJ124' ) THEN
-                    int_vdw_style_mix(itype,jtype,vdw_lj124) = .true.
-                    int_vdw_style_mix(jtype,itype,vdw_lj124) = .true.
+                    int_vdw_style_mix(itype,jtype) = vdw_lj124
+                    int_vdw_style_mix(jtype,itype) = vdw_lj124
                 ELSEIF ( pot_type == 'LJ96') THEN
-                    int_vdw_style_mix(itype,jtype,vdw_lj96) = .true.
-                    int_vdw_style_mix(jtype,itype,vdw_lj96) = .true.
+                    int_vdw_style_mix(itype,jtype) = vdw_lj96
+                    int_vdw_style_mix(jtype,itype) = vdw_lj96
                 ENDIF
                 vdw_param1_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param2_table(itype,jtype) = String_To_Double(line_array(i+2))
@@ -555,16 +568,16 @@ SUBROUTINE Read_Nonbond_Table
                 vdw_param2_table(jtype,itype) = vdw_param2_table(itype,jtype)
 
             ELSEIF (pot_type == 'WCA') THEN
-                int_vdw_style_mix(itype,jtype,vdw_wca) = .true.
-                int_vdw_style_mix(jtype,itype,vdw_wca) = .true.
+                int_vdw_style_mix(itype,jtype) = vdw_wca
+                int_vdw_style_mix(jtype,itype) = vdw_wca
                 vdw_param3_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param4_table(itype,jtype) = String_To_Double(line_array(i+2))
                 vdw_param3_table(jtype,itype) = vdw_param3_table(itype,jtype)
                 vdw_param4_table(jtype,itype) = vdw_param4_table(itype,jtype)
 
             ELSEIF (pot_type == 'HYDR') THEN
-                int_vdw_style_mix(itype,jtype,vdw_hydra) = .true.
-                int_vdw_style_mix(jtype,itype,vdw_hydra) = .true.
+                int_vdw_style_mix(itype,jtype) = vdw_hydra
+                int_vdw_style_mix(jtype,itype) = vdw_hydra
                 vdw_param5_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param6_table(itype,jtype) = String_To_Double(line_array(i+2))
                 vdw_param7_table(itype,jtype) = String_To_Double(line_array(i+3))
@@ -573,22 +586,22 @@ SUBROUTINE Read_Nonbond_Table
                 vdw_param7_table(jtype,itype) = vdw_param7_table(itype,jtype)
 
             ELSEIF (pot_type == 'CORR') THEN
-                int_vdw_style_mix(itype,jtype,vdw_corr) = .true.
-                int_vdw_style_mix(jtype,itype,vdw_corr) = .true.
+                int_vdw_style_mix(itype,jtype) = vdw_corr
+                int_vdw_style_mix(jtype,itype) = vdw_corr
                 vdw_param8_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param8_table(jtype,itype) = vdw_param8_table(itype,jtype)
 
             ELSEIF (pot_type == 'Yukawa') THEN
-                int_vdw_style_mix(itype,jtype,vdw_yukawa) = .true.
-                int_vdw_style_mix(jtype,itype,vdw_yukawa) = .true.
+                int_vdw_style_mix(itype,jtype) = vdw_yukawa
+                int_vdw_style_mix(jtype,itype) = vdw_yukawa
                 vdw_param9_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param9_table(jtype,itype) = vdw_param9_table(itype,jtype)
                 vdw_param10_table(itype,jtype) = String_To_Double(line_array(i+2))
                 vdw_param10_table(jtype,itype) = vdw_param10_table(itype,jtype)
 
             ELSEIF (pot_type == 'SW') THEN
-                int_vdw_style_mix(itype,jtype,vdw_sw) = .true.
-                int_vdw_style_mix(jtype,itype,vdw_sw) = .true.
+                int_vdw_style_mix(itype,jtype) = vdw_sw
+                int_vdw_style_mix(jtype,itype) = vdw_sw
                 vdw_param11_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param11_table(jtype,itype) = vdw_param11_table(itype,jtype)
                 vdw_param12_table(itype,jtype) = String_To_Double(line_array(i+2))
@@ -598,6 +611,43 @@ SUBROUTINE Read_Nonbond_Table
 
         ENDDO
     ENDDO
+
+    ! read the vdw sum style and cutoffs if there
+    i_line = 1
+
+    DO 
+        CALL Read_String(mixfile_unit,line_string,ierr)
+        IF (ierr < 0) EXIT
+        IF (line_string(1:11) == '# VDW_Style') THEN
+           ! read in values
+           DO
+              i_line = i_line + 1
+              CALL Parse_String(intrafile_unit, i_line, 2, nbr_entries, line_array, ierr)
+              IF (TRIM(line_array(2)) == 'Done_VDW_Style') THEN
+                EXIT
+              ENDIF
+   
+              itype = String_To_Int( line_array(1) )
+              jtype = String_To_Int( line_array(2) )
+              rcut_vdw_mix(itype,jtype) = String_To_Double(line_array(4))
+              rcut_vdw_mix(jtype,itype) = String_To_Double(line_array(4))
+
+              IF (line_array(3) == 'cut') THEN
+                 int_vdw_sum_style_mix(itype,jtype) = vdw_cut
+              ELSE IF (line_array(3) == 'cut_shift') THEN
+                 int_vdw_sum_style_mix(itype,jtype) = vdw_cut_shift
+              ELSE IF (line_array(3) == 'cut_switch') THEN
+                 int_vdw_sum_style_mix(itype,jtype) = vdw_cut_switch
+              ELSE IF (line_array(3) == 'CHARMM') THEN
+                 int_vdw_sum_style_mix(itype,jtype) = vdw_charmm
+              ENDIF
+              int_vdw_sum_style_mix(jtype,itype) = int_vdw_sum_style_mix(itype,jtype)
+                  
+           ENDDO
+        ENDIF
+        i_line = i_line + 1
+    ENDDO
+
 
     ! Write output
     WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8 9 10'

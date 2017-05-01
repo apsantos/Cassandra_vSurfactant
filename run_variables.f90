@@ -92,7 +92,10 @@ USE Type_Definitions
   CHARACTER(15), DIMENSION(:), ALLOCATABLE :: vdw_style, charge_style, vdw_sum_style, charge_sum_style
   INTEGER :: int_mix_rule, int_run_style
   INTEGER, DIMENSION(:), ALLOCATABLE :: int_vdw_style, int_vdw_sum_style
-  LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: int_vdw_style_mix ! the length of the 3rd dimesnio is the largest vdw_type
+  INTEGER, DIMENSION(:,:), ALLOCATABLE :: int_vdw_style_mix ! the length of the 3rd dimension is the largest vdw_type
+  INTEGER, DIMENSION(:,:), ALLOCATABLE :: int_vdw_sum_style_mix ! type i and j sum style
+  INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: int_in_vdw_style_mix ! the length of the 3rd dimension is the largest vdw_type
+  INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: int_in_vdw_sum_style_mix ! type i and j sum style
   INTEGER, DIMENSION(:), ALLOCATABLE :: int_charge_style, int_charge_sum_style
   INTEGER, PARAMETER :: run_equil = 0
   INTEGER, PARAMETER :: run_prod = 1
@@ -123,6 +126,8 @@ USE Type_Definitions
 
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut_cbmc 
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut_vdw, rcut_coul, ron_charmm, roff_charmm, rcut_max
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: rcut_vdw_mix, rcut_vdwsq_mix
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: rcut_in_vdw_mix, rcut_in_vdwsq_mix
   REAL(DP), DIMENSION(:), ALLOCATABLE :: ron_switch, roff_switch, roff_switch_sq, switch_factor1
   REAL(DP), DIMENSION(:), ALLOCATABLE :: switch_factor2, ron_switch_sq
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut_vdwsq, rcut_coulsq, ron_charmmsq, roff_charmmsq

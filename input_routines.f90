@@ -440,10 +440,8 @@ SUBROUTINE Get_Pair_Style
                 int_vdw_style(ibox) = vdw_lj96
               ELSE IF (vdw_style(ibox) == 'YUKAWA') THEN
                  int_vdw_style(ibox) = vdw_yukawa
-                 int_vdw_style_mix(:, :, vdw_yukawa) = .true.
               ELSE IF (vdw_style(ibox) == 'SW') THEN
                  int_vdw_style(ibox) = vdw_sw
-                 int_vdw_style_mix(:, :, vdw_sw) = .true.
               END IF
 
               vdw_sum_style(ibox) = TRIM( line_array(2) )
