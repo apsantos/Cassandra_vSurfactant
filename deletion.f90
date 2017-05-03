@@ -67,7 +67,7 @@ SUBROUTINE Deletion(this_box)
   ! Local declarations
   INTEGER :: i, i_type               ! atom indices
   INTEGER :: ifrag                   ! fragment indices
-  INTEGER :: im(2), alive(2)               ! molecule indices
+  INTEGER :: im(nspecies), alive(nspecies)               ! molecule indices
   INTEGER :: is, is_rand, is_counter ! species indices
   INTEGER :: kappa_tot
   INTEGER, ALLOCATABLE :: frag_order(:)
@@ -88,7 +88,7 @@ SUBROUTINE Deletion(this_box)
   REAL(DP) :: f_inter_vdw, f_inter_qq, pair_vdw, pair_qq
   REAL(DP) :: f_intra_vdw, f_intra_qq, f_reciprocal, f_self_diff
 
-  LOGICAL :: inter_overlap(2), cbmc_overlap(2), intra_overlap(2)
+  LOGICAL :: inter_overlap(nspecies), cbmc_overlap(nspecies), intra_overlap(nspecies)
   LOGICAL :: accept, accept_or_reject, poverlap, isgas, isfrag
 
   ! Initialize variables

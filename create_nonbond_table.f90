@@ -622,7 +622,7 @@ SUBROUTINE Read_Nonbond_Table
            ! read in values
            DO
               i_line = i_line + 1
-              CALL Parse_String(intrafile_unit, i_line, 2, nbr_entries, line_array, ierr)
+              CALL Parse_String(mixfile_unit, i_line, 2, nbr_entries, line_array, ierr)
               IF (TRIM(line_array(2)) == 'Done_VDW_Style') THEN
                 EXIT
               ENDIF

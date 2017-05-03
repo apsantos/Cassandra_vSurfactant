@@ -51,7 +51,7 @@ SUBROUTINE Create_Intra_Exclusion_Table
 
   IMPLICIT NONE
 
-  INTEGER :: is,ii,jj,kk, max_natoms
+  INTEGER :: is,ii,jj,kk, max_natoms, itype, jtype
 !-----------------------------------------------------------------------------
 
   max_natoms = MAXVAL(natoms)
@@ -185,6 +185,30 @@ SUBROUTINE Create_Intra_Exclusion_Table
   ! Overwrite values if defined by the user
   IF (intrafile_name .NE. "") THEN
      CALL Read_Intra_Exclusion_Table
+  ELSE
+  DO is=1,nspecies
+     DO ii=1,natoms(is)
+        itype = nonbond_list(ii,is)%atom_type_number
+        DO jj = 1,natoms(is)
+           jtype = nonbond_list(jj,is)%atom_type_number
+
+           vdw_in_param1_table(ii,jj,is) = vdw_param1_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param2_table(ii,jj,is) = vdw_param2_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param3_table(ii,jj,is) = vdw_param3_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param4_table(ii,jj,is) = vdw_param4_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param5_table(ii,jj,is) = vdw_param5_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param6_table(ii,jj,is) = vdw_param6_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param7_table(ii,jj,is) = vdw_param7_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param8_table(ii,jj,is) = vdw_param8_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param9_table(ii,jj,is) = vdw_param9_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param10_table(ii,jj,is) = vdw_param10_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param11_table(ii,jj,is) = vdw_param11_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param12_table(ii,jj,is) = vdw_param12_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+
+        ENDDO
+     ENDDO
+  ENDDO
+     
   ENDIF
 
   ! report info to log
@@ -238,7 +262,7 @@ SUBROUTINE Read_Intra_Exclusion_Table
 
   INTEGER :: is,ia,ii,jj,js,ja, i
   INTEGER :: ierr,nbr_entries, i_line
-  INTEGER :: t_atoms
+  INTEGER :: t_atoms, itype, jtype
   INTEGER, ALLOCATABLE, DIMENSION(:,:) :: temp_type
 
   CHARACTER(120) :: line_string, line_array(20)
@@ -477,5 +501,41 @@ SUBROUTINE Read_Intra_Exclusion_Table
         CALL Read_String(intrafile_unit,line_string,ierr)
     ENDDO
     CLOSE(UNIT=intrafile_unit)
+
+    DO is=1,nspecies
+       DO ii=1,natoms(is)
+          itype = nonbond_list(ii,is)%atom_type_number
+          DO jj = 1,natoms(is)
+             jtype = nonbond_list(jj,is)%atom_type_number
+  
+             IF      (vdw_in_param1_table(ii,jj,is) == 0) THEN
+                vdw_in_param1_table(ii,jj,is) = vdw_param1_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param2_table(ii,jj,is) == 0) THEN
+                 vdw_in_param2_table(ii,jj,is) = vdw_param2_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param3_table(ii,jj,is) == 0) THEN
+                 vdw_in_param3_table(ii,jj,is) = vdw_param3_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param4_table(ii,jj,is) == 0) THEN
+                 vdw_in_param4_table(ii,jj,is) = vdw_param4_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param5_table(ii,jj,is) == 0) THEN
+                 vdw_in_param5_table(ii,jj,is) = vdw_param5_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param6_table(ii,jj,is) == 0) THEN
+                 vdw_in_param6_table(ii,jj,is) = vdw_param6_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param7_table(ii,jj,is) == 0) THEN
+                 vdw_in_param7_table(ii,jj,is) = vdw_param7_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param8_table(ii,jj,is) == 0) THEN
+                 vdw_in_param8_table(ii,jj,is) = vdw_param8_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param9_table(ii,jj,is) == 0) THEN
+                 vdw_in_param9_table(ii,jj,is) = vdw_param9_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param10_table(ii,jj,is) == 0) THEN
+                 vdw_in_param10_table(ii,jj,is) = vdw_param10_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param11_table(ii,jj,is) == 0) THEN
+                 vdw_in_param11_table(ii,jj,is) = vdw_param11_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             ELSE IF (vdw_in_param12_table(ii,jj,is) == 0) THEN
+                 vdw_in_param12_table(ii,jj,is) = vdw_param12_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+             END IF
+  
+          ENDDO
+       ENDDO
+    ENDDO
 
 END SUBROUTINE Read_Intra_Exclusion_Table
