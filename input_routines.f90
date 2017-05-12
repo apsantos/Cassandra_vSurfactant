@@ -2452,6 +2452,7 @@ SUBROUTINE Get_Fragment_Anchor_Info(is)
 
   REWIND(molfile_unit)
 
+  frag_list(:,:)%nanchors = 0
   DO
      line_nbr = line_nbr + 1
      CALL Read_String(molfile_unit,line_string,ierr)
@@ -2552,6 +2553,7 @@ SUBROUTINE Get_Fragment_Info(is)
   ierr = 0
   REWIND(molfile_unit)
 
+  frag_list(:,:)%natoms = 0
   DO
      line_nbr = line_nbr + 1
      CALL Read_String(molfile_unit,line_string,ierr)
@@ -3019,6 +3021,7 @@ SUBROUTINE Get_Fragment_File_Info(is)
   frag_list(:,:)%rcut_vdwsq = 0.0_DP
   frag_list(:,:)%rcut_coulsq = 0.0_DP
   frag_list(:,:)%alpha_ewald = 0.0_DP
+  frag_list(:,:)%type = 0
 
   DO
 
