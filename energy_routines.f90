@@ -1579,7 +1579,7 @@ CONTAINS
     LOGICAL :: fraction
 
 !FSL Local Hydration and WCA Parameters
-    REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, E_wca, epswca, rwca, kappa
+    REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, kappa
 
   !------------------------------------------------------------------------------------------
     Eij_vdw = 0.0_DP
@@ -1589,7 +1589,6 @@ CONTAINS
     E_hyd = 0.0_DP
     Preexph = 0.0_DP
     Powerh = 0.0_DP
-    E_wca = 0.0_DP
 
     ibox = molecule_list(im,is)%which_box
 
@@ -3664,7 +3663,7 @@ CONTAINS
   !------------------------------------------------------------------------------------------
     ! Passed to
     REAL(DP) :: rijsq
-    REAL(DP) :: rcut, rcutsq
+    REAL(DP) :: rcutsq
     INTEGER :: is,im,ia,js,jm,ja,ibox
     LOGICAL :: get_vdw,get_qq, fraction
 
