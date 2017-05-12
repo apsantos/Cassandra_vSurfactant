@@ -3710,7 +3710,7 @@ SUBROUTINE Get_Temperature_Info
         DO i = 1, nbr_boxes
            temperature(i) = String_To_Double(line_array(i))
            ! compute inverse temperature
-              beta(i) = 1.0_DP / (kboltz * temperature(i))
+           beta(i) = 1.0_DP / (kboltz * temperature(i))
            ! write to the logunit that temperature is specified for box
            
            write(logunit,'(A30,2X,i3,2x,A2,2X,F7.3,2X,A3)')'Temperature assigned to box ', i, 'is', temperature(i), ' K'

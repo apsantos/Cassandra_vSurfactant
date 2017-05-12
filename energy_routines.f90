@@ -1612,41 +1612,6 @@ CONTAINS
 
        VDW_calculation: IF (get_vdw) THEN
 
-!WCA calculation
-       !IF(vdw_param3_table(itype,jtype) /= 0 ) THEN 
-!       IF(vdw_param3_table(itype,jtype) /= 0 .AND. is /= js & 
-!        .OR. vdw_param3_table(itype,jtype) /= 0 .AND. is == js .AND. &
-!        im /= jm) THEN
-!
-!          sig = vdw_param2_table(itype,jtype)
-!
-!          epswca = vdw_param3_table(itype,jtype)
-!          rwca = vdw_param4_table(itype,jtype)
-!          rij = SQRT(rijsq)
-!
-!             IF (is == js .AND. im == jm) THEN
-!                
-!                ! This controls 1-2, 1-3, and 1-4 interactions
-!                
-!                epswca = epswca * vdw_intra_scale(ia,ja,is)
-!
-!             ENDIF
-!                
-!          IF(rij .GT. rwca) THEN
-!             Eij_vdw = 0.0_DP
-!
-!          ELSE
-!             SigOverRsq = (sig**2) / rijsq
-!             SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
-!             SigOverR12 = SigOverR6 * SigOverR6
-!
-!             Eij_vdw = 4.0_DP * epswca * (SigOverR12 - SigOverR6) + epswca
-!
-!          END IF
-!!End WCA calculation
-!       ELSE
-
-
           LJ_12_6_calculation: IF (i_vdw == vdw_lj) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
@@ -1908,21 +1873,19 @@ CONTAINS
 
           ENDIF Yukawa_calculation
 
-!Closing loop for checking WCA
-!       ENDIF 
        ENDIF VDW_calculation
 !FSL Hydration Energy start
        hydration_calculation: IF (i_vdw == vdw_hydra) THEN
-          Hhyd = vdw_param5_table(itype,jtype)
-          Rhyd = vdw_param6_table(itype,jtype)
-          Shyd = vdw_param7_table(itype,jtype)
+          Hhyd = vdw_param4_table(itype,jtype)
+          Rhyd = vdw_param5_table(itype,jtype)
+          Shyd = vdw_param6_table(itype,jtype)
 
           ! Apply intramolecular scaling if necessary
           IF (is == js .AND. im == jm) THEN
              ! This controls 1-2, 1-3, and 1-4 interactions
-             Hhyd = vdw_in_param5_table(ia,ja,is)
-             Rhyd = vdw_in_param6_table(ia,ja,is)
-             Shyd = vdw_in_param7_table(ia,ja,is)
+             Hhyd = vdw_in_param4_table(ia,ja,is)
+             Rhyd = vdw_in_param5_table(ia,ja,is)
+             Shyd = vdw_in_param6_table(ia,ja,is)
           ENDIF
                 
           rij = SQRT(rijsq)
@@ -1966,9 +1929,7 @@ CONTAINS
        
     ENDIF ExistCheck
 
-  !IF ( vdw_param3_table(itype,jtype) /= 0 .AND. im == jm .AND. is /= js ) THEN
   !writE(*,'(2A,F8.3,X,F11.5,X,F11.5)') nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), Eij_vdw, Eij_qq
-  !END IF
 
   END SUBROUTINE Pair_Energy
 
@@ -2029,10 +1990,10 @@ CONTAINS
     Eij = (qi*qj/rij)*(qsc - erf_val)*charge_factor(ibox)
 
 !FSL QQ Cor start
-    QQ_cor_calculation: IF(vdw_param8_table(itype,jtype) /= 0) THEN
+    QQ_cor_calculation: IF(vdw_param6_table(itype,jtype) /= 0) THEN
 
        Cqqcor = species_list(is)%total_charge*species_list(js)%total_charge
-       Rqqcor = vdw_param8_table(itype,jtype)
+       Rqqcor = vdw_param6_table(itype,jtype)
        Sqqcor = vdw_param7_table(itype,jtype)
 
        tanhqqcor = DTANH((rij - Rqqcor)/Sqqcor)
@@ -3288,7 +3249,6 @@ CONTAINS
           epsij = vdw_param1_table(ia,ja)
           sigij = vdw_param2_table(ia,ja)
 
-
           IF(vdw_param3_table(ia,ja) /= 0) CYCLE
           
           sigij2 = sigij*sigij
@@ -3383,7 +3343,6 @@ CONTAINS
            int_vdw_style(this_box) == vdw_mie   .or. &
            int_vdw_style(this_box) == vdw_yukawa.or. &
            int_vdw_style(this_box) == vdw_hydra .or. &
-           int_vdw_style(this_box) == vdw_wca   .or. &
            int_vdw_style(this_box) == vdw_sw) THEN
       
       IF (CBMC_flag) THEN
@@ -3976,16 +3935,16 @@ CONTAINS
        ENDIF VDW_calculation
 
        hydration_calculation: IF (i_vdw == vdw_hydra) THEN
-          Hhyd = vdw_param5_table(itype,jtype)
-          Rhyd = vdw_param6_table(itype,jtype)
-          Shyd = vdw_param7_table(itype,jtype)
+          Hhyd = vdw_param4_table(itype,jtype)
+          Rhyd = vdw_param5_table(itype,jtype)
+          Shyd = vdw_param6_table(itype,jtype)
 
           ! Apply intramolecular scaling if necessary
           IF (is == js .AND. im == jm) THEN
              ! This controls 1-2, 1-3, and 1-4 interactions
-             Hhyd = vdw_in_param5_table(ia,ja,is)
-             Rhyd = vdw_in_param6_table(ia,ja,is)
-             Shyd = vdw_in_param7_table(ia,ja,is)
+             Hhyd = vdw_in_param4_table(ia,ja,is)
+             Rhyd = vdw_in_param5_table(ia,ja,is)
+             Shyd = vdw_in_param6_table(ia,ja,is)
           ENDIF
                 
           rij = SQRT(rijsq)

@@ -111,11 +111,10 @@ USE Type_Definitions
   INTEGER, PARAMETER :: vdw_mie = 8
   INTEGER, PARAMETER :: vdw_lj124 = 9
   INTEGER, PARAMETER :: vdw_lj96 = 10
-  INTEGER, PARAMETER :: vdw_wca = 11
-  INTEGER, PARAMETER :: vdw_hydra = 12
-  INTEGER, PARAMETER :: vdw_corr = 13
-  INTEGER, PARAMETER :: vdw_yukawa = 14
-  INTEGER, PARAMETER :: vdw_sw = 15
+  INTEGER, PARAMETER :: vdw_hydra = 11
+  INTEGER, PARAMETER :: vdw_corr = 12
+  INTEGER, PARAMETER :: vdw_yukawa = 13
+  INTEGER, PARAMETER :: vdw_sw = 14
 
 
   INTEGER, PARAMETER :: charge_none = 0
@@ -141,16 +140,14 @@ USE Type_Definitions
   INTEGER, DIMENSION(:,:), ALLOCATABLE ::vdw_int_table
   ! LJ
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param1_table, vdw_param2_table
-  ! WCA
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param3_table, vdw_param4_table
   ! HYDR
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param5_table, vdw_param6_table, vdw_param7_table
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param3_table, vdw_param4_table, vdw_param5_table
   ! QQ CORR
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param8_table
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param6_table, vdw_param7_table
   ! Yukawa
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param9_table, vdw_param10_table
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param8_table, vdw_param9_table
   ! Square-Well potential
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param11_table, vdw_param12_table
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param10_table, vdw_param11_table
 
 
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alpha_ewald, h_ewald_cut
@@ -171,16 +168,14 @@ USE Type_Definitions
 
   ! LJ
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param1_table, vdw_in_param2_table
-  ! WCA
-  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param3_table, vdw_in_param4_table
   ! HYDR
-  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param5_table, vdw_in_param6_table, vdw_in_param7_table
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param3_table, vdw_in_param4_table, vdw_in_param5_table
   ! QQ CORR
-  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param8_table
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param6_table, vdw_in_param7_table
   ! Yukawa
-  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param9_table, vdw_in_param10_table
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param8_table, vdw_in_param9_table
   ! Square-Well potential
-  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param11_table, vdw_in_param12_table
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param10_table, vdw_in_param11_table
 
   ! How many simulation boxes we have. 
   INTEGER :: nbr_boxes
