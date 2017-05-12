@@ -553,7 +553,7 @@ SUBROUTINE Write_Histogram(this_box)
       OPEN(unit=this_unit, file=histogram_file)
 
       WRITE (this_unit,'(A)') '    T       mu          width     x- y- z-dim  '
-      WRITE (this_unit,'(3f7.4,3f8.3)') 1./beta, species_list(is)%chem_potential, energy_hist_width, &
+      WRITE (this_unit,'(3f7.4,3f8.3)') 1./beta(this_box), species_list(is)%chem_potential, energy_hist_width, &
                                         box_list(this_box)%length(1,1), &
                                         box_list(this_box)%length(2,2), &
                                         box_list(this_box)%length(3,3)
