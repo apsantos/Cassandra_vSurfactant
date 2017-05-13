@@ -64,7 +64,7 @@
 
     !custom mixing rules
     INTEGER :: ierr,line_nbr,nbr_entries, is_1, is_2, ia_1, ia_2, itype_custom, jtype_custom
-    CHARACTER(240) :: line_string, line_array(80)
+    CHARACTER(120) :: line_string, line_array(20)
 
 
 !********************************************************************************
@@ -95,7 +95,6 @@
     ALLOCATE(vdw_param9_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param10_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param11_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
-    ALLOCATE(vdw_param12_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     vdw_param1_table = 0.0_DP
     vdw_param2_table = 0.0_DP
     vdw_param3_table = 0.0_DP
@@ -107,7 +106,15 @@
     vdw_param9_table = 0.0_DP
     vdw_param10_table = 0.0_DP
     vdw_param11_table = 0.0_DP
-    vdw_param12_table = 0.0_DP
+
+    ALLOCATE(rcut_vdw_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    rcut_vdw_mix(:,:) = rcut_vdw(1)
+    ALLOCATE(rcut_vdwsq_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    rcut_vdwsq_mix(:,:) = 0.0_DP
+    ALLOCATE(int_vdw_style_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    int_vdw_style_mix(:,:) = int_vdw_style(1)
+    ALLOCATE(int_vdw_sum_style_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    int_vdw_sum_style_mix(:,:) = int_vdw_sum_style(1)
 
     ! Allocate memory for total number bead types in each box
     ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
@@ -201,23 +208,25 @@
             ! be created manually and then this routine should be bypassed.
 
 
-            IF (int_vdw_style(1) == vdw_lj) THEN
+            IF (int_vdw_style(1) == vdw_lj   .or. & 
+                int_vdw_style(1) == vdw_lj96 .or. &
+                int_vdw_style(1) == vdw_lj124.or. &
+                int_vdw_style(1) == vdw_mie) THEN
                ! There are two vdw parameters
+               int_vdw_style_mix(itype, jtype) = int_vdw_style(1)
 
                ! Set LJ epsilon
                IF ( (temp_param_i(1) <= tiny_number) .OR. (temp_param_j(1) <= tiny_number) ) THEN
-                  vdw_param1_table(itype,jtype) = 0.0_DP
                ! for parameters with zero, avoid overflow and set to zero
+                  vdw_param1_table(itype,jtype) = 0.0_DP
 
                ELSE
-
                   ! Use specified mixing rule
-
-            ! LB mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = 1/2 (sigmai + sigmaj)
+                  ! LB mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = 1/2 (sigmai + sigmaj)
                   IF (mix_rule == 'LB') &
                        vdw_param1_table(itype,jtype) = dsqrt(temp_param_i(1)*temp_param_j(1))
 
-            ! geometric mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = (sigmai * sigmaj)^(1/2)
+                  ! geometric mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = (sigmai * sigmaj)^(1/2)
                   IF (mix_rule == 'geometric')  &
                        vdw_param1_table(itype,jtype) = dsqrt(temp_param_i(1)*temp_param_j(1))
                 
@@ -236,17 +245,92 @@
 
                ENDIF
 
-            ENDIF
-             
-           IF (int_vdw_style(1) == vdw_lj) THEN
               ! Report parameters to logfile. Format is specific to vdw type. Add others here if 
               ! other than LJ potential is used.
+                WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
+                      atom_type_list(itype), atom_type_list(jtype), &
+                      vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype)
 
-            WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
-                 atom_type_list(itype), atom_type_list(jtype), &
-                 vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype)
+            ELSE IF (int_vdw_style(1) == vdw_yukawa) THEN
+               ! There are two vdw parameters
+               int_vdw_style_mix(itype, jtype) = int_vdw_style(1)
 
-           ENDIF
+               ! Set LJ epsilon
+               IF ( (temp_param_i(1) <= tiny_number) .OR. (temp_param_j(1) <= tiny_number) ) THEN
+               ! for parameters with zero, avoid overflow and set to zero
+                  vdw_param8_table(itype,jtype) = 0.0_DP
+
+               ELSE
+                  ! Use specified mixing rule
+                  ! LB mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = 1/2 (sigmai + sigmaj)
+                  IF (mix_rule == 'LB') &
+                       vdw_param8_table(itype,jtype) = dsqrt(temp_param_i(1)*temp_param_j(1))
+
+                  ! geometric mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = (sigmai * sigmaj)^(1/2)
+                  IF (mix_rule == 'geometric')  &
+                       vdw_param8_table(itype,jtype) = dsqrt(temp_param_i(1)*temp_param_j(1))
+                
+               ENDIF
+
+               ! Set LJ sigma
+               IF ( (temp_param_i(2) <= 1.0E-05) .OR. (temp_param_j(2) <= 1.0E-05) ) THEN
+                  vdw_param9_table(itype,jtype) = 0.0_DP
+
+               ELSE
+
+                  IF (mix_rule == 'LB') &
+                       vdw_param9_table(itype,jtype) = (temp_param_i(2) + temp_param_j(2)) * 0.5
+                  IF (mix_rule == 'geometric') &
+                       vdw_param9_table(itype,jtype) = dsqrt(temp_param_i(2) * temp_param_j(2))
+
+               ENDIF
+
+              ! Report parameters to logfile. Format is specific to vdw type. Add others here if 
+              ! other than LJ potential is used.
+                WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
+                      atom_type_list(itype), atom_type_list(jtype), &
+                      vdw_param9_table(itype,jtype), vdw_param10_table(itype,jtype)
+
+            ELSE IF (int_vdw_style(1) == vdw_sw) THEN
+               ! There are two vdw parameters
+               int_vdw_style_mix(itype, jtype) = int_vdw_style(1)
+
+               ! Set LJ epsilon
+               IF ( (temp_param_i(1) <= tiny_number) .OR. (temp_param_j(1) <= tiny_number) ) THEN
+                  vdw_param10_table(itype,jtype) = 0.0_DP
+               ! for parameters with zero, avoid overflow and set to zero
+
+               ELSE
+                  ! Use specified mixing rule
+                  ! LB mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = 1/2 (sigmai + sigmaj)
+                  IF (mix_rule == 'LB') &
+                       vdw_param10_table(itype,jtype) = dsqrt(temp_param_i(1)*temp_param_j(1))
+
+                  ! geometric mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = (sigmai * sigmaj)^(1/2)
+                  IF (mix_rule == 'geometric')  &
+                       vdw_param10_table(itype,jtype) = dsqrt(temp_param_i(1)*temp_param_j(1))
+                
+               ENDIF
+
+               ! Set LJ sigma
+               IF ( (temp_param_i(2) <= 1.0E-05) .OR. (temp_param_j(2) <= 1.0E-05) ) THEN
+                  vdw_param11_table(itype,jtype) = 0.0_DP
+
+               ELSE
+                  IF (mix_rule == 'LB') &
+                       vdw_param11_table(itype,jtype) = (temp_param_i(2) + temp_param_j(2)) * 0.5
+                  IF (mix_rule == 'geometric') &
+                       vdw_param11_table(itype,jtype) = dsqrt(temp_param_i(2) * temp_param_j(2))
+
+               ENDIF
+
+              ! Report parameters to logfile. Format is specific to vdw type. Add others here if 
+              ! other than LJ potential is used.
+                WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
+                      atom_type_list(itype), atom_type_list(jtype), &
+                      vdw_param10_table(itype,jtype), vdw_param11_table(itype,jtype)
+
+            ENDIF
 
 
           ELSE !custom mixing rule if
@@ -257,44 +341,46 @@
             line_nbr = 0
 
             DO
-               line_nbr = line_nbr + 1
+                line_nbr = line_nbr + 1
 
-               CALL Read_String(inputunit,line_string,ierr)
+                CALL Read_String(inputunit,line_string,ierr)
 
 
-               IF (ierr .NE. 0) THEN
-                  err_msg = ""
-                  err_msg(1) = "Error reading mixing rules1."
-                  CALL Clean_Abort(err_msg,'Get_Mixing_Rules')
-               END IF
+                IF (ierr .NE. 0) THEN
+                    err_msg = ""
+                    err_msg(1) = "Error reading mixing rules1."
+                    CALL Clean_Abort(err_msg,'Get_Mixing_Rules')
+                END IF
 
-               IF (line_string(1:13) == '# Mixing_Rule') THEN
-                  READ(inputunit,*)
-                  ! Assign the first entry on the line to the mixing rule
-                  DO is_1 = 1, nspecies
-                      DO ia_1 = 1, natoms(is_1)
-                          itype_custom = nonbond_list(ia_1,is_1)%atom_type_number
-                          DO is_2 = 1, nspecies
-                              DO ia_2 = 1, natoms(is_2)
-                                 CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-                                 jtype_custom = nonbond_list(ia_2,is_2)%atom_type_number
-                                 !Convert epsilon to atomic units amu A^2/ps^2 
-                                 vdw_param1_table(itype_custom,jtype_custom) = kboltz * String_To_Double(line_array(3))
-                                 vdw_param2_table(itype_custom,jtype_custom) = String_To_Double(line_array(4))
-                                 !line_nbr = line_nbr + 1
-                                 WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
-                                     atom_type_list(itype_custom), atom_type_list(jtype_custom), &
-                                     vdw_param1_table(itype_custom,jtype_custom), vdw_param2_table(itype_custom,jtype_custom)
+                IF (line_string(1:13) == '# Mixing_Rule') THEN
+                    READ(inputunit,*)
+                    ! Assign the first entry on the line to the mixing rule
+                    DO is_1 = 1, nspecies
+                        DO ia_1 = 1, natoms(is_1)
+                            itype_custom = nonbond_list(ia_1,is_1)%atom_type_number
+                            DO is_2 = 1, nspecies
+                                DO ia_2 = 1, natoms(is_2)
+                                    CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+                                    jtype_custom = nonbond_list(ia_2,is_2)%atom_type_number
+                                    !Convert epsilon to atomic units amu A^2/ps^2 
+                                    vdw_param1_table(itype_custom,jtype_custom) = &
+                                                            kboltz * String_To_Double(line_array(3))
+                                    vdw_param2_table(itype_custom,jtype_custom) = &
+                                                            String_To_Double(line_array(4))
+                                    WRITE(logunit,'(A6,5x,A6,2x,T20,f10.4,T50,f10.4)') &
+                                             atom_type_list(itype_custom), atom_type_list(jtype_custom), &
+                                             vdw_param1_table(itype_custom,jtype_custom), &
+                                             vdw_param2_table(itype_custom,jtype_custom)
 
-                              END DO
-                          END DO
-                      END DO
-                  END DO
-                  RETURN
-               END IF
+                                END DO
+                            END DO
+                        END DO
+                    END DO
+                    RETURN
+                END IF
             END DO
-           END IF
-         ENDDO
+          END IF
+       ENDDO
     
    ENDDO
  
@@ -326,17 +412,17 @@ SUBROUTINE Read_Nonbond_Table
     IMPLICIT NONE
 
     INTEGER :: i, is, ia, itype, jtype, tot_natoms, iatom
-    !REAL(DP), DIMENSION(max_nonbond_params) :: temp_param_i, temp_param_j
 
     ! Steele potential
 
     !custom mixing rules
-    INTEGER :: ierr,nbr_entries, i_line, n_params, cur_line
-    CHARACTER(240) :: line_string, line_array(80)
-    CHARACTER(240) :: temp_name
+    INTEGER :: ierr,nbr_entries
+    INTEGER :: i_line, n_params, cur_line
+    CHARACTER(120) :: line_string, line_array(20)
+    CHARACTER(120) :: temp_name
     INTEGER :: temp_type_list(30), temp_type, ncheck
 
-    CHARACTER(240) :: pot_type
+    CHARACTER(120) :: pot_type
   !********************************************************************************
 
 
@@ -366,7 +452,7 @@ SUBROUTINE Read_Nonbond_Table
                     nbr_atomtypes = nbr_atomtypes + 1
                     temp_type_list(nbr_atomtypes) = temp_type
                 END IF
-                !Check which species and atom corresponds to this name
+                !Check which speicies and atom corresponds to this name
                 ncheck = 0
                 DO is = 1, nspecies
                     DO ia = 1, natoms(is)
@@ -390,6 +476,7 @@ SUBROUTINE Read_Nonbond_Table
     ENDDO
 
     ! Create a character array containing the names of each unique atom type, with the index equal
+    ! to the atom type number
 
     ALLOCATE(atom_type_list(nbr_atomtypes), Stat=AllocateStatus)
 
@@ -405,7 +492,6 @@ SUBROUTINE Read_Nonbond_Table
     ALLOCATE(vdw_param9_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param10_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     ALLOCATE(vdw_param11_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
-    ALLOCATE(vdw_param12_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     vdw_param1_table = 0.0_DP
     vdw_param2_table = 0.0_DP
     vdw_param3_table = 0.0_DP
@@ -417,7 +503,15 @@ SUBROUTINE Read_Nonbond_Table
     vdw_param9_table = 0.0_DP
     vdw_param10_table = 0.0_DP
     vdw_param11_table = 0.0_DP
-    vdw_param12_table = 0.0_DP
+
+    ALLOCATE(rcut_vdw_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    rcut_vdw_mix(:,:) = rcut_vdw(1)
+    ALLOCATE(rcut_vdwsq_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    rcut_vdwsq_mix(:,:) = 0.0_DP
+    ALLOCATE(int_vdw_style_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    int_vdw_style_mix(:,:) = int_vdw_style(1)
+    ALLOCATE(int_vdw_sum_style_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
+    int_vdw_sum_style_mix(:,:) = int_vdw_sum_style(1)
 
     ! Allocate memory for total number bead types in each box
     ALLOCATE(nint_beads(nbr_atomtypes,nbr_boxes))
@@ -437,7 +531,6 @@ SUBROUTINE Read_Nonbond_Table
     WRITE(logunit,'(A,T25,A)') 'Mixing rule used is:', mix_rule
     WRITE(logunit,*)
 
-    int_vdw_style_mix = .false.
     REWIND(inputunit)
 
     DO 
@@ -459,79 +552,113 @@ SUBROUTINE Read_Nonbond_Table
         DO i = 3, SIZE(line_array)
             pot_type = line_array(i)
 
-            IF (pot_type == 'LJ126' .or. pot_type == 'LJ124' .or. pot_type == 'LJ96') THEN
-                IF (pot_type == 'LJ126') THEN
-                    int_vdw_style_mix(itype,jtype,vdw_lj) = .true.
-                    int_vdw_style_mix(jtype,itype,vdw_lj) = .true.
+            IF (pot_type == 'LJ' .or. pot_type == 'LJ126' .or. &
+                pot_type == 'LJ124' .or. &
+                pot_type == 'LJ96') THEN
+
+                IF (pot_type == 'LJ' .or. pot_type == 'LJ126') THEN
+                    int_vdw_style_mix(itype,jtype) = vdw_lj
+                    int_vdw_style_mix(jtype,itype) = vdw_lj
                 ELSEIF ( pot_type == 'LJ124' ) THEN
-                    int_vdw_style_mix(itype,jtype,vdw_lj124) = .true.
-                    int_vdw_style_mix(jtype,itype,vdw_lj124) = .true.
+                    int_vdw_style_mix(itype,jtype) = vdw_lj124
+                    int_vdw_style_mix(jtype,itype) = vdw_lj124
                 ELSEIF ( pot_type == 'LJ96') THEN
-                    int_vdw_style_mix(itype,jtype,vdw_lj96) = .true.
-                    int_vdw_style_mix(jtype,itype,vdw_lj96) = .true.
+                    int_vdw_style_mix(itype,jtype) = vdw_lj96
+                    int_vdw_style_mix(jtype,itype) = vdw_lj96
                 ENDIF
                 vdw_param1_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param2_table(itype,jtype) = String_To_Double(line_array(i+2))
                 vdw_param1_table(jtype,itype) = vdw_param1_table(itype,jtype)
                 vdw_param2_table(jtype,itype) = vdw_param2_table(itype,jtype)
 
-            ELSEIF (pot_type == 'WCA') THEN
-                int_vdw_style_mix(itype,jtype,vdw_wca) = .true.
-                int_vdw_style_mix(jtype,itype,vdw_wca) = .true.
+            ELSEIF (pot_type == 'HYDR') THEN
+                int_vdw_style_mix(itype,jtype) = vdw_hydra
+                int_vdw_style_mix(jtype,itype) = vdw_hydra
                 vdw_param3_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param4_table(itype,jtype) = String_To_Double(line_array(i+2))
+                vdw_param5_table(itype,jtype) = String_To_Double(line_array(i+3))
                 vdw_param3_table(jtype,itype) = vdw_param3_table(itype,jtype)
                 vdw_param4_table(jtype,itype) = vdw_param4_table(itype,jtype)
-
-            ELSEIF (pot_type == 'HYDR') THEN
-                int_vdw_style_mix(itype,jtype,vdw_hydra) = .true.
-                int_vdw_style_mix(jtype,itype,vdw_hydra) = .true.
-                vdw_param5_table(itype,jtype) = String_To_Double(line_array(i+1))
-                vdw_param6_table(itype,jtype) = String_To_Double(line_array(i+2))
-                vdw_param7_table(itype,jtype) = String_To_Double(line_array(i+3))
                 vdw_param5_table(jtype,itype) = vdw_param5_table(itype,jtype)
+
+            ELSEIF (pot_type == 'CORR') THEN
+                int_vdw_style_mix(itype,jtype) = vdw_corr
+                int_vdw_style_mix(jtype,itype) = vdw_corr
+                vdw_param6_table(itype,jtype) = String_To_Double(line_array(i+1))
+                vdw_param7_table(itype,jtype) = String_To_Double(line_array(i+1))
                 vdw_param6_table(jtype,itype) = vdw_param6_table(itype,jtype)
                 vdw_param7_table(jtype,itype) = vdw_param7_table(itype,jtype)
 
-            ELSEIF (pot_type == 'CORR') THEN
-                int_vdw_style_mix(itype,jtype,vdw_corr) = .true.
-                int_vdw_style_mix(jtype,itype,vdw_corr) = .true.
-                vdw_param8_table(itype,jtype) = String_To_Double(line_array(i+1))
-                vdw_param8_table(jtype,itype) = vdw_param8_table(itype,jtype)
-
             ELSEIF (pot_type == 'Yukawa') THEN
-                int_vdw_style_mix(itype,jtype,vdw_yukawa) = .true.
-                int_vdw_style_mix(jtype,itype,vdw_yukawa) = .true.
-                vdw_param9_table(itype,jtype) = String_To_Double(line_array(i+1))
+                int_vdw_style_mix(itype,jtype) = vdw_yukawa
+                int_vdw_style_mix(jtype,itype) = vdw_yukawa
+                vdw_param8_table(itype,jtype) = String_To_Double(line_array(i+1))
+                vdw_param9_table(itype,jtype) = String_To_Double(line_array(i+2))
+                vdw_param8_table(jtype,itype) = vdw_param8_table(itype,jtype)
                 vdw_param9_table(jtype,itype) = vdw_param9_table(itype,jtype)
-                vdw_param10_table(itype,jtype) = String_To_Double(line_array(i+2))
-                vdw_param10_table(jtype,itype) = vdw_param10_table(itype,jtype)
 
             ELSEIF (pot_type == 'SW') THEN
-                int_vdw_style_mix(itype,jtype,vdw_sw) = .true.
-                int_vdw_style_mix(jtype,itype,vdw_sw) = .true.
-                vdw_param11_table(itype,jtype) = String_To_Double(line_array(i+1))
+                int_vdw_style_mix(itype,jtype) = vdw_sw
+                int_vdw_style_mix(jtype,itype) = vdw_sw
+                vdw_param10_table(itype,jtype) = String_To_Double(line_array(i+1))
+                vdw_param11_table(itype,jtype) = String_To_Double(line_array(i+2))
+                vdw_param10_table(jtype,itype) = vdw_param10_table(itype,jtype)
                 vdw_param11_table(jtype,itype) = vdw_param11_table(itype,jtype)
-                vdw_param12_table(itype,jtype) = String_To_Double(line_array(i+2))
-                vdw_param12_table(jtype,itype) = vdw_param12_table(itype,jtype)
 
             ENDIF
 
         ENDDO
     ENDDO
 
+    ! read the vdw sum style and cutoffs if there
+    i_line = 1
+
+    DO 
+        CALL Read_String(mixfile_unit,line_string,ierr)
+        IF (ierr < 0) EXIT
+        IF (line_string(1:11) == '# VDW_Style') THEN
+           ! read in values
+           DO
+              i_line = i_line + 1
+              CALL Parse_String(mixfile_unit, i_line, 2, nbr_entries, line_array, ierr)
+              IF (TRIM(line_array(2)) == 'Done_VDW_Style') THEN
+                EXIT
+              ENDIF
+   
+              itype = String_To_Int( line_array(1) )
+              jtype = String_To_Int( line_array(2) )
+              rcut_vdw_mix(itype,jtype) = String_To_Double(line_array(4))
+              rcut_vdw_mix(jtype,itype) = String_To_Double(line_array(4))
+
+              IF (line_array(3) == 'cut') THEN
+                 int_vdw_sum_style_mix(itype,jtype) = vdw_cut
+              ELSE IF (line_array(3) == 'cut_shift') THEN
+                 int_vdw_sum_style_mix(itype,jtype) = vdw_cut_shift
+              ELSE IF (line_array(3) == 'cut_switch') THEN
+                 int_vdw_sum_style_mix(itype,jtype) = vdw_cut_switch
+              ELSE IF (line_array(3) == 'CHARMM') THEN
+                 int_vdw_sum_style_mix(itype,jtype) = vdw_charmm
+              ENDIF
+              int_vdw_sum_style_mix(jtype,itype) = int_vdw_sum_style_mix(itype,jtype)
+                  
+           ENDDO
+        ENDIF
+        i_line = i_line + 1
+    ENDDO
+
+
     ! Write output
-    WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8 9 10 11 12'
+    WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8 9 10 11'
     DO itype = 1, nbr_atomtypes
         DO jtype = itype, nbr_atomtypes
-            WRITE(logunit,'(2I3,12f11.4)') &
+            WRITE(logunit,'(2I3,11f11.4)') &
                  itype, jtype, &
                  vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype), &
                  vdw_param3_table(itype,jtype), vdw_param4_table(itype,jtype), &
                  vdw_param5_table(itype,jtype), vdw_param6_table(itype,jtype), &
                  vdw_param7_table(itype,jtype), vdw_param8_table(itype,jtype), &
                  vdw_param9_table(itype,jtype), vdw_param10_table(itype,jtype), &
-                 vdw_param11_table(itype,jtype), vdw_param12_table(itype,jtype)
+                 vdw_param11_table(itype,jtype)
         ENDDO
     ENDDO
 
