@@ -32,7 +32,7 @@ subroutine virialMC_Driver
 
   IMPLICIT NONE
 
-  INTEGER :: which_step, idist, iconf, jconf, is, js, im, jm, ifrag
+  INTEGER :: idist, iconf, jconf, is, js, im, jm, ifrag
   INTEGER :: ndist, irot, jrot, n_pos
   REAL(DP) :: en_min, dist, b2, e_min, e_max
   LOGICAL :: overlap

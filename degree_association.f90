@@ -35,7 +35,7 @@ MODULE Degree_Association
 
 CONTAINS
 
-  SUBROUTINE Calculate_Degree_Association(this_box)
+  SUBROUTINE Calculate_Degree_Association()
 
     !*********************************************************************************
     !
@@ -44,9 +44,7 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box
     INTEGER :: i, j, am, cm
-    INTEGER :: ierr, line_nbr, nbr_entries
     REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
 
     alpha%n_assoc = 0

@@ -94,7 +94,7 @@ SUBROUTINE Get_Runname
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
 
 ! Assign the first entry on the line to the name of the run
-        run_name = line_array(1)
+        run_name = TRIM( line_array(1) )
         EXIT
 
      ELSEIF (line_string(1:3) == 'END' .or. line_nbr > 10000) THEN
@@ -121,7 +121,7 @@ SUBROUTINE Get_Nspecies
 ! 
 !*************************************************************************************
 
-  INTEGER :: ierr,line_nbr,nbr_entries, i
+  INTEGER :: ierr,line_nbr,nbr_entries
   CHARACTER(240) :: line_string, line_array(80)
 !*************************************************************************************
   REWIND(inputunit)
@@ -314,7 +314,7 @@ SUBROUTINE Get_Sim_Type
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
 
 ! Assign the first entry on the line to simulation type
-        sim_type = line_array(1)
+        sim_type = TRIM( line_array(1) )
 
         line_nbr = line_nbr + 1
    
@@ -323,7 +323,7 @@ SUBROUTINE Get_Sim_Type
            int_sim_type = sim_gcmc
      !     CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
            !     tmmc_update = String_To_Int(line_array(1))
-     !     tmmc_input = line_array(2)
+     !     tmmc_input = TRIM( line_array(2) )
            
         END IF
 
@@ -362,6 +362,8 @@ SUBROUTINE Get_Sim_Type
      int_sim_type = sim_pp
   ELSEIF(sim_type == 'MCF_Gen') THEN
      int_sim_type = sim_mcf
+  ELSEIF(sim_type == 'TEST') THEN
+     int_sim_type = sim_test
   END IF
   
 END SUBROUTINE Get_Sim_Type
@@ -428,30 +430,24 @@ SUBROUTINE Get_Pair_Style
            ! Assign the first entry on the line to the name of the potential, then next to the 
            ! way it will be summed / truncated, and the remaining to parameters associated with
            ! the sum method
-           vdw_style(ibox) = line_array(1)
+           vdw_style(ibox) = TRIM( line_array(1) )
            WRITE(logunit,'(A,2x,A,A,I3)') '   VDW style used is: ',vdw_style(ibox), 'in box:', ibox
 
            IF (vdw_style(ibox) /= 'NONE') THEN
               IF (vdw_style(ibox) == 'LJ' .or. vdw_style(ibox) == 'LJ126') THEN
                  int_vdw_style(ibox) = vdw_lj
-                 int_vdw_style_mix(:, :, vdw_lj) = .true.
               ELSE IF (vdw_style(ibox) == 'MIE') THEN
                  int_vdw_style(ibox) = vdw_mie
-                 int_vdw_style_mix(:, :, vdw_mie) = .true.
               ELSE IF (vdw_style(ibox) == 'LJ124') THEN
                  int_vdw_style(ibox) = vdw_lj124
-                 int_vdw_style_mix(:, :, vdw_lj124) = .true.
               ELSE IF (vdw_style(ibox) == 'LJ96') THEN
                  int_vdw_style(ibox) = vdw_lj96
-                 int_vdw_style_mix(:, :, vdw_lj96) = .true.
               ELSE IF (vdw_style(ibox) == 'YUKAWA') THEN
                  int_vdw_style(ibox) = vdw_yukawa
-                 int_vdw_style_mix(:, :, vdw_yukawa) = .true.
               ELSE IF (vdw_style(ibox) == 'SW') THEN
                  int_vdw_style(ibox) = vdw_sw
-                 int_vdw_style_mix(:, :, vdw_sw) = .true.
               END IF
-              vdw_sum_style(ibox) = line_array(2)
+              vdw_sum_style(ibox) = TRIM( line_array(2) )
               WRITE(logunit,'(A,2x,A,A,I3)') '   VDW sum style is: ',vdw_sum_style(ibox), 'in box:', ibox
 
               IF (vdw_sum_style(ibox) == 'CHARMM') THEN
@@ -580,13 +576,13 @@ SUBROUTINE Get_Pair_Style
            ! Assign the first entry on the line to the name of the way charged interactions are treated
            ! then next is the way the charges are summed. Following that are the parameters associated
            ! with this particular method of summing charges. 
-           charge_style(ibox) = line_array(1)
+           charge_style(ibox) = TRIM( line_array(1) )
            WRITE(logunit,'(A,2x,A,A,I3)') '   Charge style used is: ',charge_style(ibox), 'in box:', ibox
 
            IF (charge_style(ibox) /= 'NONE') THEN
                  int_charge_style(ibox) = charge_coul
 
-                 charge_sum_style(ibox) = line_array(2)
+                 charge_sum_style(ibox) = TRIM( line_array(2) )
                  WRITE(logunit,'(A,2x,A,A,I3)') '    Charge sum style is ',charge_sum_style(ibox), 'in box:', ibox
 
                  IF (charge_sum_style(ibox) == 'cut') THEN
@@ -645,11 +641,11 @@ SUBROUTINE Get_Pair_Style
 
                                         
 
-                    WRITE(logunit,'(X,A,F7.3,A)') '   Ewald real space cutoff is ', &
+                    WRITE(logunit,'(1X,A,F7.3,A)') '   Ewald real space cutoff is ', &
                        rcut_coul(ibox), ' Angstroms.'
-                    WRITE(logunit, '(X,A,F7.3,A)') ' Ewald real space parameter is ', &
+                    WRITE(logunit, '(1X,A,F7.3,A)') ' Ewald real space parameter is ', &
                          alpha_ewald(ibox), ' inverse Angstroms'
-                    WRITE(logunit,'(X,A,F7.4,A)') '   Ewald reciprocal cutoff is ', &
+                    WRITE(logunit,'(1X,A,F7.4,A)') '   Ewald reciprocal cutoff is ', &
                          h_ewald_cut(ibox), ' inverse Angstroms'
  
                
@@ -785,14 +781,14 @@ SUBROUTINE Get_Dielectric_Permitivity
            CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
    
    ! Assign the first entry on the line to the mixing rule
-           permitivity_method = line_array(1)
+           permitivity_method = TRIM( line_array(1) )
            
            IF (permitivity_method == 'fixed' .OR. permitivity_method == 'fix') THEN
               WRITE(logunit,'(A)') 'User-defined dielectric permitivity used'
               static_perm(ibox) = String_To_Double(line_array(2))
            ELSEIF (permitivity_method == 'fit') THEN
               WRITE(logunit,'(A)') 'fit dielectric permitivity to exp. data'
-              solvent = line_array(2)
+              solvent = TRIM( line_array(2) )
               CALL Calculate_Permitivity(ibox, solvent, static_perm(ibox))
            ELSE
               err_msg(1) = 'Dielectric Permitivity method not supported'
@@ -854,7 +850,7 @@ SUBROUTINE Get_Mixing_Rules
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
 
 ! Assign the first entry on the line to the mixing rule
-        mix_rule = line_array(1)
+        mix_rule = TRIM( line_array(1) )
         
         IF (mix_rule == 'LB') THEN
            WRITE(logunit,'(A)') 'Lorentz-Berthelot mixing rule specified'
@@ -864,7 +860,7 @@ SUBROUTINE Get_Mixing_Rules
            WRITE(logunit,'(A)') 'Custom mixing rule specified'
         ! APS
         ELSEIF (mix_rule == 'table') THEN
-           mixfile_name = line_array(2)
+           mixfile_name = TRIM( line_array(2) )
            WRITE(logunit,'(2A)') 'Table of parameters specified in ', mixfile_name
         ELSE
            err_msg(1) = 'Mixing rule not supported'
@@ -905,7 +901,7 @@ SUBROUTINE Get_Molecule_Info
 !********************************************************************************
 
   INTEGER :: ierr,line_nbr,nbr_entries, i, openstatus, is, max_index
-  INTEGER :: mcf_index(5), dummy
+  INTEGER :: mcf_index(5)
   CHARACTER(240) :: line_string, line_array(80)
 
 !********************************************************************************
@@ -953,7 +949,7 @@ SUBROUTINE Get_Molecule_Info
               ! assign the name of the molecular connectivity file, max number
               ! of molecules, and starting number of molecules for this species
 
-              molfile_name(i) = line_array(1)
+              molfile_name(i) = TRIM( line_array(1) )
               nmolecules(i) = String_To_Int(line_array(2))
           
               WRITE(logunit,*)
@@ -1035,7 +1031,7 @@ SUBROUTINE Get_Molecule_Info
                     IF (SUM(mcf_index) .NE. 5) THEN
                        err_msg = ""
                        err_msg(1) =  'Error! In mcf file '
-                       err_msg(2) = molfile_name(i)
+                       err_msg(2) = TRIM( molfile_name(i) )
 
                        IF (mcf_index(1) .NE. 1) err_msg(3) = '   natoms  field not present'
                        IF (mcf_index(2) .NE. 1) err_msg(4) = '   nbonds  field not present'
@@ -1346,7 +1342,7 @@ SUBROUTINE Get_Species_Type(is)
 
   INTEGER, INTENT(IN) :: is
 
-  INTEGER :: ierr,line_nbr,nbr_entries, is_1
+  INTEGER :: ierr,line_nbr,nbr_entries
   CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
@@ -1371,7 +1367,7 @@ SUBROUTINE Get_Species_Type(is)
         CALL Parse_String(molfile_unit,line_nbr,1,nbr_entries,line_array,ierr)
 
 ! Assign the first entry on the line to the type of species
-        species_list(is)%species_type = line_array(1)
+        species_list(is)%species_type = TRIM( line_array(1) )
         IF(species_list(is)%species_type == 'SORBATE') THEN 
            species_list(is)%int_species_type = int_sorbate
         ELSE
@@ -1410,7 +1406,7 @@ SUBROUTINE Get_Insertion_Style(is)
 
   INTEGER, INTENT(IN) :: is
 
-  INTEGER :: ierr,line_nbr,nbr_entries, is_1
+  INTEGER :: ierr,line_nbr,nbr_entries
   CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(molfile_unit)
@@ -1440,7 +1436,7 @@ SUBROUTINE Get_Insertion_Style(is)
         CALL Parse_String(molfile_unit,line_nbr,1,nbr_entries,line_array,ierr)
 
 ! Assign the first entry on the line to the type of species
-        species_list(is)%insert_style = line_array(1)
+        species_list(is)%insert_style = TRIM( line_array(1) )
         IF((species_list(is)%insert_style == 'COM').or.(species_list(is)%insert_style == 'com')) THEN 
            species_list(is)%lcom = .true.
         ELSE IF((species_list(is)%insert_style == 'BEAD').or.(species_list(is)%insert_style == 'bead')) THEN
@@ -1556,12 +1552,12 @@ SUBROUTINE Get_Atom_Info(is)
            ENDIF
            
            ! Assign appropriate values to list elements
-           nonbond_list(ia,is)%atom_name = line_array(2)
-           nonbond_list(ia,is)%element = line_array(3)
+           nonbond_list(ia,is)%atom_name = TRIM( line_array(2) )
+           nonbond_list(ia,is)%element = TRIM( line_array(3) )
            nonbond_list(ia,is)%mass = String_To_Double(line_array(4))
            nonbond_list(ia,is)%charge = String_To_Double(line_array(5))
            IF(nonbond_list(ia,is)%charge .NE. 0.0_DP) has_charge(is) = .TRUE. 
-           nonbond_list(ia,is)%vdw_potential_type = line_array(6)
+           nonbond_list(ia,is)%vdw_potential_type = TRIM( line_array(6) )
 
            species_list(is)%total_charge = species_list(is)%total_charge + &
                 nonbond_list(ia,is)%charge
@@ -1571,11 +1567,11 @@ SUBROUTINE Get_Atom_Info(is)
 
            ! For now, force all atoms to have the same vdw pair style that was
            ! specified in the input file.  We can relax this restriction later.
-           IF (nonbond_list(ia,is)%vdw_potential_type /= vdw_style(1)) THEN
-              err_msg = ""
-              err_msg(1) = 'vdw_potential type does not equal specified vdw_style'
-              CALL Clean_Abort(err_msg,'Get_Atom_Info')
-           ENDIF
+           !IF (nonbond_list(ia,is)%vdw_potential_type /= vdw_style(1)) THEN
+           !   err_msg = ""
+           !   err_msg(1) = 'vdw_potential type does not equal specified vdw_style'
+           !   CALL Clean_Abort(err_msg,'Get_Atom_Info')
+           !ENDIF
 
            WRITE(logunit,'(A,T25,I3,1x,I3)') 'Species and atom number', is,ia
            WRITE(logunit,'(A,T25,A)') ' atom name:',nonbond_list(ia,is)%atom_name
@@ -1585,7 +1581,11 @@ SUBROUTINE Get_Atom_Info(is)
            WRITE(logunit,'(A,T25,A)') ' vdw type:',nonbond_list(ia,is)%vdw_potential_type
 
            ! Load vdw parameters, specific for each individual type
-           IF (nonbond_list(ia,is)%vdw_potential_type == 'LJ') THEN
+           IF (nonbond_list(ia,is)%vdw_potential_type == 'LJ' .or. &
+               nonbond_list(ia,is)%vdw_potential_type == 'LJ126' .or. &
+               nonbond_list(ia,is)%vdw_potential_type == 'LJ124' .or. &
+               nonbond_list(ia,is)%vdw_potential_type == 'LJ96' .or. &
+               nonbond_list(ia,is)%vdw_potential_type == 'MIE') THEN
               ! epsilon/kB in K read in
               nonbond_list(ia,is)%vdw_param(1) = String_To_Double(line_array(7))
               ! sigma = Angstrom
@@ -1734,7 +1734,7 @@ SUBROUTINE Get_Bond_Info(is)
            ! Assign appropriate values to list elements
            bond_list(ib,is)%atom1 = String_To_Int(line_array(2))
            bond_list(ib,is)%atom2 = String_To_Int(line_array(3))
-           bond_list(ib,is)%bond_potential_type = line_array(4)
+           bond_list(ib,is)%bond_potential_type = TRIM( line_array(4) )
 
            WRITE(logunit,'(A,T25,I3,1x,I3)') 'Species and bond number', is,ib
            WRITE(logunit,'(A,T25,I3)') ' atom1:',bond_list(ib,is)%atom1
@@ -1760,8 +1760,8 @@ SUBROUTINE Get_Bond_Info(is)
                    'Harmonic Bond between atoms: ',bond_list(ib,is)%atom1, bond_list(ib,is)%atom2, &
                    ' in species', is
               bond_list(ib,is)%bond_param(2) = String_To_Double(line_array(5))
-              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond length, in A:',bond_list(ib,is)%bond_param(2)
-              WRITE(logunit,'(A,T25,F10.4)') 'Harmonic bond constant, in K/A^2:',String_To_Double(line_array(6))
+              WRITE(logunit,'(A,T25,F12.4)') 'Harmonic bond length, in A:',bond_list(ib,is)%bond_param(2)
+              WRITE(logunit,'(A,T25,F12.4)') 'Harmonic bond constant, in K/A^2:',String_To_Double(line_array(6))
               bond_list(ib,is)%bond_param(1) = String_To_Double(line_array(6))/atomic_to_K
 
               ! Set number of bond parameters
@@ -1872,7 +1872,7 @@ SUBROUTINE Get_Angle_Info(is)
            angle_list(iang,is)%atom1 = String_To_Int(line_array(2))
            angle_list(iang,is)%atom2 = String_To_Int(line_array(3))
            angle_list(iang,is)%atom3 = String_To_Int(line_array(4))
-           angle_list(iang,is)%angle_potential_type = line_array(5)
+           angle_list(iang,is)%angle_potential_type = TRIM( line_array(5) )
 
            WRITE(logunit,'(A,T25,I3,1x,I3)') 'Species and angle number', is,iang
            WRITE(logunit,'(A,T25,I3)') ' atom1:',angle_list(iang,is)%atom1
@@ -2050,7 +2050,7 @@ SUBROUTINE Get_Dihedral_Info(is)
            dihedral_list(idihed,is)%atom3 = String_To_Int(line_array(4))
            dihedral_list(idihed,is)%atom4 = String_To_Int(line_array(5))
 
-           dihedral_list(idihed,is)%dihedral_potential_type = line_array(6)
+           dihedral_list(idihed,is)%dihedral_potential_type = TRIM( line_array(6) )
 
            WRITE(logunit,'(A,T25,I3,1x,I3)') 'Species and dihedral number', is,idihed
            WRITE(logunit,'(A,T25,I3)') ' atom1:',dihedral_list(idihed,is)%atom1
@@ -2336,7 +2336,7 @@ INTEGER, INTENT(IN) :: is
            improper_list(iimprop,is)%atom3 = String_To_Int(line_array(4))
            improper_list(iimprop,is)%atom4 = String_To_Int(line_array(5))
 
-           improper_list(iimprop,is)%improper_potential_type = line_array(6)
+           improper_list(iimprop,is)%improper_potential_type = TRIM( line_array(6) )
 
            WRITE(logunit,'(A,T25,I3,1x,I3)') 'Species and improper number', is,iimprop
            WRITE(logunit,'(A,T25,I3)') ' atom1:',improper_list(iimprop,is)%atom1
@@ -3286,7 +3286,7 @@ END SUBROUTINE Get_Fragment_Coords
 
 SUBROUTINE Get_Intra_Scaling
 !********************************************************************************
-  INTEGER :: ierr,line_nbr,nbr_entries, iimprop, is
+  INTEGER :: ierr,line_nbr,nbr_entries, is
   CHARACTER(240) :: line_string, line_array(80)
   LOGICAL :: intrascaling_set, intrascaling_read
 
@@ -3328,7 +3328,7 @@ SUBROUTINE Get_Intra_Scaling
                  err_msg(1) = "Error reading Intra_Scaling info."
                  CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
               ELSEIF (line_array(1) == 'table') THEN
-                 intrafile_name = line_array(2)
+                 intrafile_name = TRIM( line_array(2) )
                  intrascaling_read = .true.
                  EXIT
               END IF
@@ -3351,7 +3351,7 @@ SUBROUTINE Get_Intra_Scaling
                  CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
 
               ELSEIF (line_array(1) == 'table') THEN
-                 intrafile_name = line_array(2)
+                 intrafile_name = TRIM( line_array(2) )
                  intrascaling_read = .true.
                  EXIT
               END IF
@@ -3430,7 +3430,7 @@ SUBROUTINE Get_Box_Info
   ! Allowed box types:
   ! CUBIC, ORTHOGONAL, CELL_MATRIX
 !********************************************************************************
-  INTEGER :: ierr,line_nbr,nbr_entries,ibox, is
+  INTEGER :: ierr,line_nbr,nbr_entries,ibox
   CHARACTER(240) :: line_string, line_array(80)
 
 !********************************************************************************
@@ -3490,7 +3490,7 @@ SUBROUTINE Get_Box_Info
            ! Get box type
            CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
            line_nbr = line_nbr + 1
-           box_list(ibox)%box_shape = line_array(1)
+           box_list(ibox)%box_shape = TRIM( line_array(1) )
 
            IF (box_list(ibox)%box_shape == 'CUBIC') THEN
               box_list(ibox)%int_box_shape = int_cubic
@@ -3624,8 +3624,6 @@ SUBROUTINE Get_Box_Info
   ALLOCATE(vdw_sum_style(nbr_boxes) , charge_sum_style(nbr_boxes))
 
   ALLOCATE(int_vdw_style(nbr_boxes) , int_vdw_sum_style(nbr_boxes))
-  ALLOCATE(int_vdw_style_mix(nspecies, nspecies, 15))
-  int_vdw_style_mix = .false.
   ALLOCATE(int_charge_style(nbr_boxes) , int_charge_sum_style(nbr_boxes))
 
   ALLOCATE(rcut_CBMC(nbr_boxes))
@@ -4016,7 +4014,7 @@ SUBROUTINE Get_Move_Probabilities
   ALLOCATE(prob_species_ins_pair(nspecies, nspecies)) ! APS
   species_list(:)%pair_insert = .FALSE.               ! APS
   ALLOCATE(temp_ins_species_index(nspecies, 2))       ! APS
-  temp_ins_species_index = 0.0_DP                     ! APS
+  temp_ins_species_index = 0                          ! APS
   n_insertable = 0
   l_all_pair = .TRUE.
 
@@ -4269,7 +4267,7 @@ SUBROUTINE Get_Move_Probabilities
                  IF(line_string2(1:17) .NE. 'insertion method') THEN
                     err_msg(1) = "Expecting : insertion method"
                     err_msg(2) = "But found :"
-                    err_msg(3) = line_string2
+                    err_msg(3) = TRIM( line_string2 )
                     err_msg(4) = 'in '//TRIM(inputfile)
                     CALL Clean_Abort(err_msg,'Prob_Insertion')
                  END IF
@@ -4296,7 +4294,7 @@ SUBROUTINE Get_Move_Probabilities
                     IF(line_string2(1:24) .NE. 'Number of igas particles') THEN
                        err_msg(1) = "Expection : Number of igas particles"
                        err_msg(2) = "But found :"
-                       err_msg(3) = line_string2
+                       err_msg(3) = TRIM( line_string2 )
                        CALL Clean_Abort(err_msg,'Prob_Insertion')
                     END IF
 
@@ -4312,7 +4310,7 @@ SUBROUTINE Get_Move_Probabilities
                     IF(line_string2(1:15) .NE. 'Nupdate, Nmoves') THEN          
                        err_msg(1) = "Expection : Nupdate, Nmoves, Nzbyomega"
                        err_msg(2) = "But found :"
-                       err_msg(3) = line_string2
+                       err_msg(3) = TRIM( line_string2 )
                        CALL Clean_Abort(err_msg,'Prob_Insertion')
                     END IF
 
@@ -4333,13 +4331,13 @@ SUBROUTINE Get_Move_Probabilities
                     IF(line_string2(1:15) .NE. 'configuration f') THEN          
                        err_msg(1) = "Expection : configuration file"        
                        err_msg(2) = "But found :"
-                       err_msg(3) = line_string2
+                       err_msg(3) = TRIM( line_string2 )
                        CALL Clean_Abort(err_msg,'Prob_Insertion')
                     END IF
 
                     line_nbr = line_nbr + 1
                     CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-                    sorbate_file(is) = line_array(1)
+                    sorbate_file(is) = TRIM( line_array(1) )
                     
                  ELSE IF(line_string2(1:6) == 'RANDOM') THEN
                     species_list(is)%insertion = 'RANDOM'
@@ -4355,13 +4353,13 @@ SUBROUTINE Get_Move_Probabilities
                     IF(line_string2(1:18) .NE. 'configuration file') THEN
                        err_msg(1) = "Expection : configuration file"      
                        err_msg(2) = "But found :"
-                       err_msg(3) = line_string2
+                       err_msg(3) = TRIM( line_string2 )
                        CALL Clean_Abort(err_msg,'Prob_Insertion')
                     END IF
 
                     line_nbr = line_nbr + 1
                     CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-                    sorbate_file(is) = line_array(1)
+                    sorbate_file(is) = TRIM( line_array(1) )
 
                     WRITE(logunit,*) 'Initial configuration is found in the file', TRIM(sorbate_file(is))
                     WRITE(logunit,*)
@@ -4961,12 +4959,13 @@ SUBROUTINE Get_Start_Type
 
     use, intrinsic :: iso_c_binding, only: C_NULL_CHAR
 
-  INTEGER :: ierr, line_nbr, nbr_entries, i,j, ibox, tot_natoms, is
+  INTEGER :: ierr, is, line_nbr, nbr_entries, i, ibox, tot_natoms
   CHARACTER(240) :: line_string, line_array(80)
-  CHARACTER(1) :: first_character
-  CHARACTER(4) :: symbol
 
-  REAL(DP) :: total_mass, this_mass
+  ! parameters for commented out portion
+  !INTEGER :: j
+  !CHARACTER(4) :: symbol
+  !REAL(DP) :: total_mass, this_mass
   
   ierr = 0
   line_nbr = 0
@@ -5024,7 +5023,7 @@ SUBROUTINE Get_Start_Type
 !!$                    CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
 !!$                 END IF
 
-!!$                 init_geomfile(i) = line_array(1)
+!!$                 init_geomfile(i) = TRIM( line_array(1) )
 !!$
 !!$                 WRITE(logunit,*) 
 !!$                 WRITE(logunit,'(A,T50,I3,A)') 'The initial geometry file for species ', i , ' is'
@@ -5281,7 +5280,7 @@ SUBROUTINE Get_Start_Type
               gro_config_file = TRIM(ADJUSTL(line_array(1)))
               ndx_file = TRIM(ADJUSTL(line_array(2)))
               xtc_config_file = TRIM(ADJUSTL(line_array(3)))//C_NULL_CHAR
-              !xtc_config_file = line_array(3)
+              !xtc_config_file = TRIM( line_array(3) )
                  
               tot_natoms = 0
               DO is = 1, nspecies
@@ -5344,7 +5343,7 @@ SUBROUTINE Get_Start_Type
                  CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
               END IF
               
-              restart_file = line_array(1)
+              restart_file = TRIM( line_array(1) )
               WRITE(logunit,*)
               WRITE(logunit,*)'Starting configuration is '
               WRITE(logunit,*) ADJUSTL(line_array(1))
@@ -5378,9 +5377,8 @@ USE Random_Generators
 
   IMPLICIT NONE
 
-  INTEGER :: ierr, line_nbr, nbr_entries,i, ia 
+  INTEGER :: ierr, line_nbr, nbr_entries
   CHARACTER(240) :: line_string,line_array(80)
-  LOGICAL :: overlap
 
   ierr = 0
   line_nbr = 0
@@ -5404,15 +5402,15 @@ USE Random_Generators
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
         
         IF (line_array(1) == 'Equilibration' ) THEN
-           run_style = line_array(1)
+           run_style = TRIM( line_array(1) )
            int_run_style = run_equil
 
         ELSE IF (line_array(1) == 'Production') THEN
-           run_style = line_array(1)
+           run_style = TRIM( line_array(1) )
            int_run_style = run_prod
          
         ELSE IF (line_array(1) == 'Test') THEN
-           run_style = line_array(1)
+           run_style = TRIM( line_array(1) )
            int_run_style = run_test
            
         ELSE
@@ -6085,11 +6083,9 @@ SUBROUTINE Get_Property_Info
 USE Run_Variables, ONLY: cpcollect
 
   INTEGER :: ierr, line_nbr, nbr_properties, max_properties, nbr_entries
-  INTEGER :: i, j, this_box, ibox, is, average_id, ifrac
+  INTEGER :: i, j, this_box, ibox, is
   CHARACTER(240) :: line_string, line_array(80)
   CHARACTER(12) :: extension
-  CHARACTER(9) :: extension1
-  CHARACTER(17) :: extension2
 
   REWIND(inputunit)
 
@@ -6221,12 +6217,12 @@ USE Run_Variables, ONLY: cpcollect
                    line_array(1) == 'Chemical_Potential') THEN
                  DO is = 1, nspecies
                     nbr_properties = nbr_properties + 1
-                    prop_output(nbr_properties,nbr_prop_files(this_box),this_box) = line_array(1) 
+                    prop_output(nbr_properties,nbr_prop_files(this_box),this_box) = TRIM( line_array(1) ) 
                  END DO
 
               ELSE
                  nbr_properties = nbr_properties + 1
-                 prop_output(nbr_properties,nbr_prop_files(this_box),this_box) = line_array(1) 
+                 prop_output(nbr_properties,nbr_prop_files(this_box),this_box) = TRIM( line_array(1) ) 
               END IF
               
            END IF
@@ -6299,7 +6295,7 @@ SUBROUTINE Get_Clustering_Info
   ! 
   !***************************************************************************************************
 
-  INTEGER :: ierr, line_nbr, nbr_entries, i, is, js, ia, ja, itype
+  INTEGER :: ierr, line_nbr, nbr_entries, i, is, js, ia, ja
   INTEGER :: imax_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
   CHARACTER(240) :: line_string, line_array(80)
   REAL(8) :: distance, min_dist, min_dist_sq
@@ -6452,9 +6448,9 @@ EnLoop: DO ientry = 1, n_entries
                     ! Figure out the type of the atom from the name, remember could be multiple with the same name
                     IF (distance > min_dist) THEN
                         DO ia = 1, natoms(is)
-                            IF (nonbond_list(ia,is)%atom_name == line_array(2) ) THEN
+                            IF (nonbond_list(ia,is)%atom_name == TRIM( line_array(2) ) ) THEN
                                 DO ja = 1, natoms(js)
-                                    IF (nonbond_list(ja,js)%atom_name == line_array(4) ) THEN
+                                    IF (nonbond_list(ja,js)%atom_name == TRIM( line_array(4) ) ) THEN
                                         cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
                                         WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', is, 'and'
                                         WRITE(logunit,*) 'atom type "', TRIM(line_array(4)), '" of species, ', js
@@ -6532,9 +6528,9 @@ EnLoop: DO ientry = 1, n_entries
                 ! Figure out the type of the atom from the name, remember could be multiple with the same name
                 IF (distance > min_dist) THEN
                     DO ia = 1, natoms(is)
-                        IF (nonbond_list(ia,is)%atom_name == line_array(2) ) THEN
+                        IF (nonbond_list(ia,is)%atom_name == TRIM( line_array(2) ) ) THEN
                             DO ja = 1, natoms(js)
-                                IF (nonbond_list(ja,js)%atom_name == line_array(4) ) THEN
+                                IF (nonbond_list(ja,js)%atom_name == TRIM( line_array(4) ) ) THEN
                                     cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
                                     WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', is, 'and'
                                     WRITE(logunit,*) 'atom type "', TRIM(line_array(4)), '" of species, ', js
@@ -6754,7 +6750,7 @@ SUBROUTINE Get_Degree_Association_Info
                 err_msg(1) = 'Error while reading inputfile, Too many arguments per species line'
                 CALL Clean_Abort(err_msg,'Get_Degree_Association_Info')
             END IF
-            alpha%aname(is) = line_array(1)
+            alpha%aname(is) = TRIM( line_array(1) )
             IF (alpha%aname(is) == 'NONE' .OR. alpha%aname(is) == 'none') THEN
                 alpha%atype(is) = 0
             ELSE
@@ -7660,7 +7656,7 @@ SUBROUTINE Get_Virial_Info
   ! 
   !***************************************************************************************************
 
-  INTEGER :: ierr, line_nbr, nbr_entries, is
+  INTEGER :: ierr, line_nbr, nbr_entries
   CHARACTER(240) :: line_string, line_array(80) !filename
 
   REWIND(inputunit)
@@ -7892,7 +7888,7 @@ SUBROUTINE Get_File_Info
         DO is = 1, nspecies
            line_nbr = line_nbr + 1
            CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-           frag_file(is) = line_array(1)
+           frag_file(is) = TRIM( line_array(1) )
 
            WRITE(logunit,'(A35,2X,i3,A5)') 'Configuration file for species', is, ' is', TRIM(frag_file(is))
            
@@ -7916,7 +7912,7 @@ SUBROUTINE Get_Energy_Check_Info
 
   IMPLICIT NONE
 
-  INTEGER :: ierr, line_nbr, nbr_entries, is, ibox
+  INTEGER :: ierr, line_nbr, nbr_entries
   CHARACTER(240) :: line_string, line_array(80)
 
   REWIND(inputunit)
@@ -8042,7 +8038,7 @@ SUBROUTINE Get_Lattice
     IMPLICIT NONE
 
     INTEGER :: line_nbr, ierr, nbr_entries
-    CHARACTER*240 :: line_string, line_array(80)
+    CHARACTER(240) :: line_string, line_array(80)
 
     REWIND(inputunit)
 
@@ -8102,7 +8098,7 @@ SUBROUTINE Get_Lattice_File_Info
     IMPLICIT NONE
 
     INTEGER :: line_nbr, ierr, nbr_entries
-    CHARACTER*240 :: line_string, line_array(80)
+    CHARACTER(240) :: line_string, line_array(80)
 
     REWIND(inputunit)
 
@@ -8128,7 +8124,7 @@ SUBROUTINE Get_Lattice_File_Info
           line_nbr = line_nbr + 1
           CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
           
-          lattice_file = line_array(1)
+          lattice_file = TRIM( line_array(1) )
 
           WRITE(logunit,*) 'Lattice coordinates are saved in the file'
           WRITE(logunit,*) lattice_file
@@ -8141,7 +8137,7 @@ SUBROUTINE Get_Lattice_File_Info
              
              err_msg = ''
              err_msg(1) = '# Lattice_File_Info section is missing in the input file'
-             err_msg(2) = inputfile
+             err_msg(2) = TRIM(inputfile)
              CALL Clean_Abort(err_msg,'Get_Lattice_File_Info')
 
           END IF
@@ -8177,7 +8173,7 @@ SUBROUTINE Get_Lattice_Coordinates
     IMPLICIT NONE
 
     INTEGER :: is, iatom
-    CHARACTER*4 :: symbol
+    CHARACTER(4) :: symbol
     ! Since this routine is called in the case of potential map generation
     ! and we do not call Box_Info during the map generation, set the 
     ! number of boxes to 1

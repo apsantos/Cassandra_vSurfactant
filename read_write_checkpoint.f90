@@ -148,10 +148,8 @@ CONTAINS
 
 SUBROUTINE Read_NDX
 
-    INTEGER :: is, ia, i, j, m
-
-    CHARACTER(240) :: line_string, line_array(80), t_ndx_name
-    INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line, idx, i_ndx, totatoms, ps
+    CHARACTER(240) :: line_array(80)
+    INTEGER :: is, line_nbr, nbr_entries, ierr, idx, i_ndx, totatoms
 
     line_nbr = 1
     totatoms = 0
@@ -208,12 +206,12 @@ SUBROUTINE Read_XTC(this_mc_step)
 
     INTEGER, INTENT(IN) :: this_mc_step
 
-    INTEGER :: i, ia, im, is, this_im, this_box, ierr, step, temp_n_equilsteps
+    INTEGER :: i, ia, im, is, this_im, this_box, ierr, temp_n_equilsteps, step
 
     REAL(DP) :: xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
 
-    LOGICAL :: lopen, ex
+    LOGICAL :: ex
 
     CHARACTER(1024) :: filename
 
@@ -229,7 +227,7 @@ SUBROUTINE Read_XTC(this_mc_step)
        CALL Read_GRO(1)
        n_equilsteps = temp_n_equilsteps
 
-       filename = xtc_config_file
+       filename = TRIM( xtc_config_file )
 
        ! Open the file for reading. Convert C pointer to Fortran pointer.
        INQUIRE(file=trim(filename),exist=ex)
@@ -347,18 +345,16 @@ SUBROUTINE Read_GRO(this_mc_step)
 
    INTEGER, INTENT(IN) :: this_mc_step
 
-    INTEGER :: is, ii, jj, im, this_im, ia, nmolecules_is, this_box, mols_this, sp_nmoltotal(nspecies)
-    INTEGER :: this_species, nfrac_global, i, this_rxnum, j, m, alive
-    INTEGER :: this_unit, i_lambda
+    INTEGER :: is, im, this_im, ia, this_box, sp_nmoltotal(nspecies)
     INTEGER :: check_nmol
 
-    REAL(DP) :: E_self, xcom_old, ycom_old, zcom_old
+    REAL(DP) :: xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
 
-    LOGICAL :: lopen, new_frame
+    LOGICAL :: lopen
 
-    CHARACTER(240) :: line_string, line_array(80), t_ndx_name
-    INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line, idx, i_ndx, totatoms, ps
+    CHARACTER(240) :: line_string, line_array(80)
+    INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line, ps
     
     ! Let us read all the counters and count the number of molecules of
     ! each of the species in all the boxes
@@ -425,7 +421,7 @@ SUBROUTINE Read_GRO(this_mc_step)
        IF ( im > nmolecules(is) ) THEN
           err_msg = ""
           err_msg(1) = "Found more than "// TRIM(Int_To_String(nmolecules(is)))//" molecules in file:"
-          err_msg(2) = gro_config_file
+          err_msg(2) = TRIM( gro_config_file )
           err_msg(3) = " Check the *.ndx and gro files."
           CALL Clean_Abort(err_msg,'Read_GRO')
        END IF
@@ -449,7 +445,7 @@ SUBROUTINE Read_GRO(this_mc_step)
 
        this_im = locate(im,is)
 
-       nonbond_list(ia,is)%element = line_array(2)
+       nonbond_list(ia,is)%element = TRIM( line_array(2) )
  
        atom_list(ia,this_im,is)%rxp = String_To_Double(line_array(4)) * 10.0_DP
        atom_list(ia,this_im,is)%ryp = String_To_Double(line_array(5)) * 10.0_DP
@@ -570,17 +566,15 @@ SUBROUTINE Read_XYZ(this_mc_step)
 
    INTEGER, INTENT(IN) :: this_mc_step
 
-    INTEGER :: ibox, is, ii, jj, im, this_im, ia, nmolecules_is, this_box, mols_this, sp_nmoltotal(nspecies)
-    INTEGER :: this_species, nfrac_global, i, this_rxnum, j, m, alive
-    INTEGER :: this_unit, i_lambda
+    INTEGER :: ibox, is, im, this_im, ia, this_box, sp_nmoltotal(nspecies)
     INTEGER :: check_nmol
 
-    REAL(DP) :: E_self, xcom_old, ycom_old, zcom_old
+    REAL(DP) :: xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
 
-    LOGICAL :: lopen, new_frame
+    LOGICAL :: lopen
 
-    CHARACTER(240) :: line_string, line_array(80)
+    CHARACTER(240) :: line_array(80)
     INTEGER :: line_nbr, nbr_entries, ierr, n_lines, i_line
     
     ! Let us read all the counters and count the number of molecules of
@@ -679,7 +673,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
           im_atoms(i_line) = this_im
           is_atoms(i_line) = is
           
-          nonbond_list(ia,is)%element = line_array(1)
+          nonbond_list(ia,is)%element = TRIM( line_array(1) )
     
           atom_list(ia,this_im,is)%rxp = String_To_Double(line_array(2))
           atom_list(ia,this_im,is)%ryp = String_To_Double(line_array(3))
@@ -785,12 +779,12 @@ SUBROUTINE Read_XYZ(this_mc_step)
 SUBROUTINE Read_DCD(this_mc_step)
     INTEGER, INTENT(IN) :: this_mc_step
 
-    INTEGER :: i, ia, im, is, this_im, this_box, ierr, step, temp_n_equilsteps
+    INTEGER :: i, ia, im, is, this_im, this_box, ierr, temp_n_equilsteps
 
     REAL(DP) :: xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
 
-    LOGICAL :: lopen, ex
+    LOGICAL :: ex
 
     CHARACTER(1024) :: filename
 
@@ -814,7 +808,7 @@ SUBROUTINE Read_DCD(this_mc_step)
 
        n_equilsteps = temp_n_equilsteps
 
-       filename = dcd_config_file
+       filename = TRIM( dcd_config_file )
 
        ! Open the file for reading. Convert C pointer to Fortran pointer.
        INQUIRE(file=trim(filename),exist=ex)
@@ -938,19 +932,17 @@ SUBROUTINE Read_Checkpoint
 
    INTEGER :: this_mc_step
 
-    INTEGER :: ibox, is, ii, jj, im, this_im, ia, nmolecules_is, this_box, mols_this, sp_nmoltotal(nspecies)
-    INTEGER :: this_species, nfrac_global, i, this_rxnum, j, m, alive
-    INTEGER :: this_unit, i_lambda
+    INTEGER :: ibox, is, ii, jj, im, this_im, ia, this_box, mols_this, sp_nmoltotal(nspecies)
+    INTEGER :: this_species
+    INTEGER :: this_unit
 
     INTEGER, DIMENSION(:), ALLOCATABLE :: total_molecules, n_int
 
-    REAL(DP) :: this_lambda, E_self, xcom_old, ycom_old, zcom_old
+    REAL(DP) :: this_lambda, xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
 
-    LOGICAL :: f_checkpoint, f_read_old, overlap, cfc_defined
+    LOGICAL :: f_checkpoint, f_read_old
     LOGICAL :: lopen
-
-    TYPE(Energy_Class) :: inrg
 
     ALLOCATE(total_molecules(nspecies))
     ALLOCATE(n_int(nspecies))
@@ -1230,20 +1222,14 @@ SUBROUTINE Read_Checkpoint
     
     IMPLICIT NONE
     
-    INTEGER :: ibox, is, im, ia, nstart, nend, this_im, mols_this, nfrac_global, i, alive, j, this_rxnum
-    INTEGER :: alive_new, counter, m, i_lambda
-    
+    INTEGER :: ibox, is, im, ia, this_im, mols_this
     INTEGER, DIMENSION(:), ALLOCATABLE ::  total_molecules_this
     INTEGER, DIMENSION(:), ALLOCATABLE :: n_int
     
     REAL(DP) :: this_lambda
-    REAL(DP) :: E_recip, E_self, E_intra
-    REAL(DP) :: E_old, xcom_old, ycom_old, zcom_old
+    REAL(DP) :: xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
-    LOGICAL :: overlap
     
-    Type(Energy_Class) :: inrg
-  
     ! Loop over total number of boxes to read in the atomic coordinates
 
     ALLOCATE(total_molecules_this(nspecies))
@@ -1365,7 +1351,6 @@ SUBROUTINE Read_Checkpoint
        END DO
     END DO
 
-    nfrac_global = 0
     DO is = 1, nspecies
        species_list(is)%nmoltotal = SUM(nmols(is,:))
     END DO
@@ -1387,7 +1372,7 @@ SUBROUTINE Write_Trials_Success
 
   IMPLICIT NONE
 
-  INTEGER :: ibox, is, ifrag, ireac
+  INTEGER :: ibox, is, ifrag
 
   WRITE(logunit,*)
   WRITE(logunit,*)

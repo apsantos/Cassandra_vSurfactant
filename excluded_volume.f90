@@ -56,7 +56,7 @@ CONTAINS
     !*********************************************************************************
 
     INTEGER, INTENT(IN) :: this_box
-    INTEGER :: im, is, i, j
+    INTEGER :: im, is
     INTEGER :: i_ins
 
     ! for the lattice_sim option
@@ -66,9 +66,6 @@ CONTAINS
     LOGICAL, DIMENSION(:,:), ALLOCATABLE :: temp_live
     LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: temp_exist
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: temp_nmols
-
-
-    REAL(DP) :: time_start, now_time
 
     ALLOCATE( temp_locate(MAXVAL(nmolecules),nspecies) )
     ALLOCATE( temp_live(MAXVAL(nmolecules),nspecies) )
@@ -149,7 +146,7 @@ CONTAINS
 
   SUBROUTINE Check_Excluded_Volume(im, is, this_box)
     INTEGER, INTENT(IN) :: this_box, im, is
-    INTEGER :: i, j
+    INTEGER :: i
     INTEGER :: ispec, imol, cs
 
     REAL(DP) :: ln_pacc, delta_e
@@ -212,7 +209,6 @@ CONTAINS
     ! local fragment declarations
     INTEGER :: total_frags  ! total number of conformations for this fragment in the library
     INTEGER :: frag_start   ! random fragment to start growing from
-    INTEGER :: frag_total   ! number of non-zero entries in frag_order
     INTEGER :: frag_type
     REAL(DP) :: this_lambda
 
@@ -334,7 +330,6 @@ CONTAINS
     REAL(DP) :: E_bond, E_angle, E_dihedral, E_improper
     REAL(DP) :: E_intra_vdw, E_intra_qq
     REAL(DP) :: E_inter_vdw, E_inter_qq
-    REAL(DP) :: pair_vdw, pair_qq, igas_en
     REAL(DP) :: E_reciprocal_move, E_self_move, E_lrc
     LOGICAL :: inter_overlap(nspecies), intra_overlap(nspecies)
     INTEGER :: alive(nspecies), i, i_type               ! molecule indices

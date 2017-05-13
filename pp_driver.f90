@@ -48,9 +48,8 @@ SUBROUTINE PP_Driver
 !  !$ include 'omp_lib.h'
 
   INTEGER :: i, this_box, ibox, is
-  INTEGER :: ioldN,  delta_n  ! old molecule number and change in molecule number
 
-  REAL(DP) :: time_start, now_time
+  REAL(DP) :: time_start
 
   LOGICAL :: overlap, complete, lopen
 
@@ -79,8 +78,6 @@ SUBROUTINE PP_Driver
 
      ! We will select a move from Golden Sampling scheme
   
-     ioldN = nmols(1,1)  ! store beginning molecule number 
-
      IF (i == n_mcsteps) complete = .TRUE.
 
      IF ( start_type == 'read_xyz' ) THEN
@@ -168,7 +165,7 @@ SUBROUTINE PP_Driver
                     cluster%N = cluster%N_prev
                  ENDIF
               
-                 CALL Update_Cluster_Life(ibox)
+                 CALL Update_Cluster_Life
                  CALL Write_Cluster(ibox)
                  IF ( ncoord_freq /= 0 ) THEN
                     IF ( MOD(i,ncoord_freq) == 0 ) THEN
@@ -228,7 +225,7 @@ SUBROUTINE PP_Driver
                     CALL Find_Clusters(ibox,1)
                  END IF
               
-                 CALL Calculate_Degree_Association(ibox)
+                 CALL Calculate_Degree_Association
                  CALL Write_Cluster(ibox)
               
               !CALL cpu_time(now_time)
@@ -244,7 +241,7 @@ SUBROUTINE PP_Driver
            
               DO ibox = 1, nbr_boxes
               
-                 CALL Calculate_MSD(ibox)
+                 CALL Calculate_MSD()
                  CALL Write_MSD(ibox)
               
               !CALL cpu_time(now_time)
@@ -260,7 +257,7 @@ SUBROUTINE PP_Driver
            
               DO ibox = 1, nbr_boxes
               
-                 CALL Calculate_VACF(ibox)
+                 CALL Calculate_VACF()
                  CALL Write_VACF(ibox)
               
               !CALL cpu_time(now_time)
@@ -279,7 +276,7 @@ SUBROUTINE PP_Driver
                     CALL Find_Clusters(ibox,1)
                  END IF
               
-                 CALL Calculate_End_To_End_Distance(ibox)
+                 CALL Calculate_End_To_End_Distance()
                  CALL Write_Cluster(ibox)
               
               !CALL cpu_time(now_time)
@@ -295,7 +292,7 @@ SUBROUTINE PP_Driver
            
               DO ibox = 1, nbr_boxes
 
-                 CALL Calculate_Bond_his(ibox)
+                 CALL Calculate_Bond_his()
                  CALL Write_Bond(ibox)
               
               !CALL cpu_time(now_time)
@@ -311,7 +308,7 @@ SUBROUTINE PP_Driver
            
               DO ibox = 1, nbr_boxes
 
-                 CALL Calculate_Angle_his(ibox)
+                 CALL Calculate_Angle_his()
                  CALL Write_Angle(ibox)
               
               !CALL cpu_time(now_time)
@@ -327,7 +324,7 @@ SUBROUTINE PP_Driver
            
               DO ibox = 1, nbr_boxes
 
-                 CALL Calculate_Dihedral_his(ibox)
+                 CALL Calculate_Dihedral_his()
                  CALL Write_Dihedral(ibox)
               
               !CALL cpu_time(now_time)
@@ -343,7 +340,7 @@ SUBROUTINE PP_Driver
            
               DO ibox = 1, nbr_boxes
 
-                 CALL Calculate_Atom_Distribution(ibox)
+                 CALL Calculate_Atom_Distribution()
                  CALL Write_Atom_Distribution(ibox)
               
               !CALL cpu_time(now_time)

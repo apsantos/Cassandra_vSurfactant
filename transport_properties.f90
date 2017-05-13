@@ -35,7 +35,7 @@ MODULE Transport_Properties
 
 CONTAINS
 
-  SUBROUTINE Calculate_MSD(this_box)
+  SUBROUTINE Calculate_MSD()
 
     !*********************************************************************************
     !
@@ -44,10 +44,8 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box
     INTEGER :: is, i, im, tau
     REAL(DP) :: drx,  dry,  drz
-    REAL(DP) :: drxp, dryp, drzp
 
     ! difference in "actual time" and time origin
     INTEGER :: delta_t                                                             
@@ -118,7 +116,7 @@ CONTAINS
      
   END SUBROUTINE Calculate_MSD
 
-  SUBROUTINE Calculate_VACF(this_box)
+  SUBROUTINE Calculate_VACF()
 
     !*********************************************************************************
     !
@@ -127,9 +125,8 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box
     INTEGER :: is, i, im, tau
-    REAL(DP) :: drx,  dry,  drz
+    !REAL(DP) :: drx,  dry,  drz
 
     ! difference in "actual time" and time origin
     INTEGER :: delta_t                                                             

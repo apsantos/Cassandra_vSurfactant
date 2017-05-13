@@ -56,8 +56,8 @@ USE Type_Definitions
 !*********************************************************************************
   ! This section contains global variables used by many routines during the run.
 
-  CHARACTER(120) :: run_name, start_type
-  CHARACTER(120) :: err_msg(10)
+  CHARACTER(240) :: run_name, start_type
+  CHARACTER(240) :: err_msg(10)
 
   ! error handling variables
   INTEGER :: AllocateStatus, OpenStatus, DeAllocateStatus
@@ -65,6 +65,8 @@ USE Type_Definitions
   ! Timing function
   CHARACTER(15) :: hostname,date,time,zone
   INTEGER, DIMENSION(8) :: values, begin_values,end_values
+
+  LOGICAL :: lattice_sim
 
   ! Type of simulation to run:
   ! Choices: NVT_MC 
@@ -81,6 +83,8 @@ USE Type_Definitions
   INTEGER, PARAMETER :: sim_gemc_ig = 8
   INTEGER, PARAMETER :: sim_mcf = 9
   INTEGER, PARAMETER :: sim_test = 10
+  INTEGER, PARAMETER :: sim_pp = 11
+  INTEGER, PARAMETER :: sim_virial = 12
   LOGICAL :: lfugacity, lchempot, timed_run, openmp_flag, en_flag
 
   ! The starting seed for the random generator
@@ -176,6 +180,9 @@ USE Type_Definitions
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param8_table, vdw_in_param9_table
   ! Square-Well potential
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param10_table, vdw_in_param11_table
+
+  ! Gromacs file parameters
+  INTEGER, DIMENSION(:), ALLOCATABLE :: ndx_type
 
   ! How many simulation boxes we have. 
   INTEGER :: nbr_boxes
@@ -506,6 +513,10 @@ USE Type_Definitions
   ! Information on the output of data
 
   INTEGER :: nthermo_freq, ncoord_freq, histogram_freq, ncluster_freq, n_mcsteps, n_equilsteps, this_mcstep
+  INTEGER :: nexvol_freq, nalpha_freq, nalphaclus_freq, noligdist_freq 
+  INTEGER :: nmsd_freq, nvacf_freq, ndipole_freq, ncluslife_freq
+  INTEGER :: nbond_freq, nangle_freq, ndihedral_freq, natomdist_freq, natomenergy_freq, nendclus_freq
+  INTEGER :: nvirial_freq, npotential_freq
  
   INTEGER,DIMENSION(:),ALLOCATABLE :: nbr_prop_files
 
@@ -620,12 +631,31 @@ REAL(SP), ALLOCATABLE :: energy_hist(:,:,:) ! element 0 of this matrix contains 
 ! Will have dimensions of (nspecies,nbr_boxes)
 TYPE(Cluster_Class), TARGET :: cluster
 
+INTEGER :: max_nmol
+
 INTEGER, PARAMETER :: int_com = 1
 INTEGER, PARAMETER :: int_type = 2
 INTEGER, PARAMETER :: int_skh = 3
 INTEGER, PARAMETER :: int_micelle = 4
 
 !*********************************************************************************************************
+! Information on Excluded Volume calculation
 
+! Will have dimensions of (nspecies,nbr_boxes)
+TYPE(ExVol_Class), TARGET :: exvol
+
+! Information on Degree Association calculation
+TYPE(DegreeAssociation_Class), TARGET :: alpha
+
+TYPE(Measure_Molecules_Class), TARGET :: measure_mol
+
+TYPE(trans_Class), TARGET :: trans
+
+INTEGER, DIMENSION(:), ALLOCATABLE :: ia_atoms
+INTEGER, DIMENSION(:), ALLOCATABLE :: im_atoms
+INTEGER, DIMENSION(:), ALLOCATABLE :: is_atoms
+INTEGER :: dcd_natoms, xtc_natoms, gro_natoms, xyz_natoms
+TYPE(virial_Class), TARGET :: mcvirial
+ 
 END MODULE Run_Variables
 

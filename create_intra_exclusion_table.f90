@@ -262,8 +262,8 @@ SUBROUTINE Read_Intra_Exclusion_Table
   INTEGER :: t_atoms, itype, jtype
   INTEGER, ALLOCATABLE, DIMENSION(:,:) :: temp_type
 
-  CHARACTER(120) :: line_string, line_array(20)
-  CHARACTER(120) :: temp_name, pot_type
+  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(240) :: temp_name, pot_type
 !-----------------------------------------------------------------------------
     ! Open intra scalingfile and find the line where the data begins
     OPEN(UNIT=intrafile_unit,FILE=intrafile_name,STATUS="OLD",IOSTAT=openstatus,ACTION="READ")

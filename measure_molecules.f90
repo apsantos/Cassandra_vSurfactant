@@ -35,7 +35,7 @@ MODULE Measure_Molecules
 
 CONTAINS
 
-  SUBROUTINE Calculate_End_To_End_Distance(this_box)
+  SUBROUTINE Calculate_End_To_End_Distance()
 
     !*********************************************************************************
     !
@@ -44,8 +44,7 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box
-    INTEGER :: i, j, is, im
+    INTEGER :: i, is, im
     INTEGER :: clus_size
     REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
 
@@ -74,7 +73,7 @@ CONTAINS
                     
   END SUBROUTINE Calculate_End_To_End_Distance
 
-  SUBROUTINE Calculate_Bond_His(this_box)
+  SUBROUTINE Calculate_Bond_His()
 
     !*********************************************************************************
     !
@@ -83,7 +82,6 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box
     INTEGER :: is, i, im, ib, ib_bin
     REAL(DP) :: length
 
@@ -109,7 +107,7 @@ CONTAINS
                     
   END SUBROUTINE Calculate_Bond_His
 
-  SUBROUTINE Calculate_Angle_His(this_box)
+  SUBROUTINE Calculate_Angle_His()
 
     !*********************************************************************************
     !
@@ -118,7 +116,6 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box
     INTEGER :: is, i, im, ia, ia_bin
     REAL(DP) :: theta
 
@@ -145,7 +142,7 @@ CONTAINS
                     
   END SUBROUTINE Calculate_Angle_His
 
-  SUBROUTINE Calculate_Dihedral_His(this_box)
+  SUBROUTINE Calculate_Dihedral_His()
 
     !*********************************************************************************
     !
@@ -154,7 +151,6 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box
     INTEGER :: is, i, im, id, id_bin
     REAL(DP) :: phi
 
@@ -181,7 +177,7 @@ CONTAINS
                     
   END SUBROUTINE Calculate_Dihedral_His
 
-  SUBROUTINE Calculate_Atom_Distribution(this_box)
+  SUBROUTINE Calculate_Atom_Distribution()
 
     !*********************************************************************************
     !
@@ -190,7 +186,6 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box
     INTEGER :: iap, is, ia, js, ja, i, im, j, jm, iap_bin
     REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp, min_dist_sq
 

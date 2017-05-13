@@ -303,21 +303,21 @@ CONTAINS
             IF ((int_charge_sum_style(this_box) == charge_ewald) .AND. (has_charge(is))) THEN
        
                ALLOCATE(cos_mol_old(nvecs(this_box),SUM(nmolecules)),sin_mol_old(nvecs(this_box),SUM(nmolecules)))
-               
+
                !$OMP PARALLEL WORKSHARE DEFAULT(SHARED)
                cos_mol_old(:,:) = cos_mol(1:nvecs(this_box),:)
                sin_mol_old(:,:) = sin_mol(1:nvecs(this_box),:)
                !$OMP END PARALLEL WORKSHARE
-       
+
                CALL Compute_Cluster_Ewald_Reciprocal_Energy_Difference(iclus_N, iclus_mol, iclus_is, int_cluster, &
                                                                        this_box, E_reciprocal_move)
-               
+
             END IF
-            
+
             ! Compute the difference in old and new energy
-            
+
             delta_e = ( E_vdw_move - E_vdw ) + ( E_qq_move - E_qq ) + E_reciprocal_move
-       
+
             IF (int_sim_type == sim_nvt_min) THEN
                IF (delta_e  <= 0.0_DP) THEN
                   accept = .TRUE.
@@ -515,7 +515,7 @@ CONTAINS
         END DO
     END DO
 
-    IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE. ) CALL Micelle_Association(this_box, count_or_move)
+    IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE. ) CALL Micelle_Association(count_or_move)
 
     !write(*,*) 'c/m', count_or_move
     !write(*,*) 'N', cluster%N(1:200)
@@ -647,7 +647,7 @@ CONTAINS
                 cluster%clusmax = cluster%clusmax + 1
                 cluster%clabel(imol, is) = cluster%clusmax
                 iclus = cluster%clusmax
-                cluster%N(cluster%clusmax) = 1
+                cluster%N(INT(cluster%clusmax)) = 1
             END IF
 
             cluster%clabel(ineigh, js) = iclus
@@ -663,7 +663,7 @@ CONTAINS
     IF (cluster%clabel(imol, is) == 0) THEN
         cluster%clusmax = cluster%clusmax + 1
         cluster%clabel(imol, is) = cluster%clusmax
-        cluster%N(cluster%clusmax) = 1
+        cluster%N(INT(cluster%clusmax)) = 1
     END IF
 
   END SUBROUTINE Update_Labels
@@ -793,7 +793,7 @@ CONTAINS
 
   END FUNCTION Neighbor
 
-  SUBROUTINE Micelle_Association(this_box, c_or_m)
+  SUBROUTINE Micelle_Association(c_or_m)
 
     !*********************************************************************************
     !
@@ -802,7 +802,7 @@ CONTAINS
     ! 2/19/15  : Andrew P. Santos
     !*********************************************************************************
 
-    INTEGER, INTENT(IN) :: this_box, c_or_m
+    INTEGER, INTENT(IN) :: c_or_m
     INTEGER :: i, j, as, am, cm, cs, as_clus, nclus
 
     cluster%criteria(c_or_m, int_com) = .FALSE.
@@ -1128,12 +1128,11 @@ CONTAINS
 
   END SUBROUTINE Cluster_COM
 
-  SUBROUTINE Update_Cluster_Life(this_box)
+  SUBROUTINE Update_Cluster_Life()
 
-    INTEGER, INTENT(IN) :: this_box
-    INTEGER :: is, ic, jc, nc, is_clus, imol
+    INTEGER :: ic, jc, nc, is_clus, imol
     INTEGER :: itrue
-    INTEGER, ALLOCATABLE, DIMENSION(:,:) :: N_match, o_age, N_split
+    INTEGER, ALLOCATABLE, DIMENSION(:,:) :: o_age, N_split
     INTEGER, ALLOCATABLE, DIMENSION(:) :: lab_c_to_p
     LOGICAL, ALLOCATABLE, DIMENSION(:) :: N_split_double
     INTEGER :: cn_index, max_N_split, max_nmolecules, half_N
@@ -1452,7 +1451,7 @@ CONTAINS
                     
                     ! Now get the minimum image separation 
                     CALL Minimum_Image_Separation(1, rxijp, ryijp, rzijp, rxij, ryij, rzij)
-            
+
                     rij = (rxij*rxij + ryij*ryij + rzij*rzij)**0.5_DP
 
                     IF (rij < rijmin) rijmin = rij

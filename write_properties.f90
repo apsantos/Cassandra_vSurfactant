@@ -43,9 +43,7 @@ SUBROUTINE Write_Properties(this_mc_step,this_box)
   IMPLICIT NONE
 
   CHARACTER(24) :: write_str
-  INTEGER :: i, this_box, this_unit, this_mc_step, is, n_start, n_end
-  INTEGER :: ifrac, my_ifrac
-
+  INTEGER :: i, this_box, this_unit, this_mc_step
 
   DO i = 1, nbr_prop_files(this_box)
      
@@ -76,8 +74,8 @@ CONTAINS
     IMPLICIT NONE
 
     INTEGER :: file_number, ii
-    CHARACTER*120 :: prop_to_write
-    CHARACTER*120, ALLOCATABLE :: prop_unit(:)
+    CHARACTER(240) :: prop_to_write
+    CHARACTER(240), ALLOCATABLE :: prop_unit(:)
 
     IF (block_average) THEN
        WRITE(this_unit,'(A)') '# Block averages'
@@ -110,7 +108,7 @@ CONTAINS
 
     DO ii = 1, prop_per_file(file_number,this_box) - 1
 
-       prop_to_write = prop_output(ii,file_number,this_box)
+       prop_to_write = TRIM( prop_output(ii,file_number,this_box) )
 
        IF (prop_to_write(1:6) == 'Energy') THEN
 
@@ -142,7 +140,7 @@ CONTAINS
 
     END DO
 
-    prop_to_write = prop_output(ii,file_number,this_box)
+    prop_to_write = TRIM( prop_output(ii,file_number,this_box) )
     
     IF (prop_to_write(1:6) == 'Energy') THEN
        
@@ -197,12 +195,10 @@ CONTAINS
 
    USE Simulation_Properties
    
-   INTEGER :: file_number, ii, is, is_dens, is_cp, is_lambda, total_frac
+   INTEGER :: file_number, ii, is, is_dens, is_cp
    REAL(DP),DIMENSION(:), ALLOCATABLE :: write_buff
    CHARACTER(FILENAME_LEN) :: prop_written
 
-   REAL(DP) :: temp_pres
-   
    ALLOCATE(write_buff(prop_per_file(file_number,this_box)+1))
 
    write_buff(1) = this_mc_step
@@ -218,7 +214,6 @@ CONTAINS
    is = 1
    is_dens = 1
    is_cp = 1
-   is_lambda = 1
 
    DO WHILE ( ii <= prop_per_file(file_number,this_box))
 
@@ -901,7 +896,7 @@ SUBROUTINE Write_Dihedral(this_box)
   INTEGER, INTENT(IN) :: this_box
   INTEGER :: box_unit, is, i, im, id, id_bin
   CHARACTER(5) :: Tatom
-  REAL(DP)  :: length, bin_width
+  REAL(DP)  :: bin_width
 
   DO is = 1, nspecies
      IF( .NOT. ANY(measure_mol%dihedral_spec(:,is) )) CYCLE
@@ -984,9 +979,8 @@ SUBROUTINE Write_Atom_Distribution(this_box)
 
   INTEGER, INTENT(IN) :: this_box
   INTEGER :: box_unit
-  INTEGER :: iap, is, ia, js, ja, i, im, j, jm, iap_bin
-  CHARACTER(5) :: Tatom
-  REAL(DP)  :: length, bin_width
+  INTEGER :: iap, is, ia, ja, i, im, iap_bin
+  REAL(DP)  :: bin_width
 
   a_dist_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.atomdist'
   box_unit = a_dist_file_unit + this_box
