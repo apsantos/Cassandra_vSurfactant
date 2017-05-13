@@ -89,18 +89,13 @@ SUBROUTINE Rigid_Dihedral_Change(this_box)
 
   REAL(DP) :: E_bond, E_angle, E_dihedral, E_improper, E_intra_vdw, E_intra_qq, E_inter_vdw, E_inter_qq
   REAL(DP) :: E_bond_move, E_angle_move, E_dihedral_move, E_improper_move, E_intra_vdw_move
-  REAL(DP) :: E_intra_qq_move, W_intra_vdw, W_intra_qq, W_inter_vdw, W_inter_qq
-  REAL(DP) :: W_intra_vdw_move, W_intra_qq_move, W_inter_vdw_move, W_inter_qq_move
-  REAL(DP) :: E_reciprocal_move, E_inter_vdw_move, E_inter_qq_move, delta_e, p_acc
-  REAL(DP) :: rand, W_reciprocal_move
-
-  REAL(DP), DIMENSION(3,3) :: tvdm, tcdm, qw_di
+  REAL(DP) :: E_intra_qq_move, E_reciprocal_move, E_inter_vdw_move, E_inter_qq_move
+  REAL(DP) :: delta_e, p_acc
+  REAL(DP) :: rand
 
   LOGICAL ::  inter_overlap, intra_overlap
 
  ! Variables associated with framework simulations
-
-  REAL(DP) :: E_framework, E_framework_move, E_correction_move
 
   LOGICAL :: framework_overlap
 

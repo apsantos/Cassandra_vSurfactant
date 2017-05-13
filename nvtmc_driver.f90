@@ -55,21 +55,20 @@ SUBROUTINE NVTMC_Driver
   USE Energy_Routines
   USE Read_Write_Checkpoint
   USE Cluster_Routines
-  USE Excluded_Volume
 
   IMPLICIT NONE
 
 !  !$ include 'omp_lib.h'
 
-  INTEGER :: i,j, this_box, ibox, ireac, which_step, is, im
-  INTEGER :: alive1, alive2, im1
-  INTEGER, ALLOCATABLE, DIMENSION(:) :: n_inside_old
+  INTEGER :: i,j, this_box, ibox, which_step, is
 
   REAL(DP) :: rand_no
   REAL(DP) :: time_start, now_time, thermo_time, coord_time
 
-  LOGICAL :: overlap, aok, write_flag, complete, inside_ch
+  LOGICAL :: overlap, write_flag, complete
   LOGICAL, DIMENSION(:), ALLOCATABLE :: next_write, next_rdf_write
+
+  CHARACTER(4) :: o_m_type
 
   ! The total number of trial move array may not have been set if this
   ! is a fresh run i.e. start_type == make_config. Otherwise this array
@@ -127,6 +126,8 @@ SUBROUTINE NVTMC_Driver
 
         movetime(imove_trans) = movetime(imove_trans) + time_e - time_s
 
+        o_m_type = 'tran'
+        !print*, i, 'trans 0'
      ELSE IF ( rand_no <= cut_rot) THEN
  
         IF(.NOT. openmp_flag) THEN
@@ -145,6 +146,8 @@ SUBROUTINE NVTMC_Driver
 
         movetime(imove_rot) = movetime(imove_rot) + time_e - time_s
 
+        o_m_type = 'rota'
+        !print*, i, 'rot 1'
      ELSE IF (rand_no <= cut_torsion) THEN
  
         IF(.NOT. openmp_flag) THEN
@@ -199,6 +202,28 @@ SUBROUTINE NVTMC_Driver
 
         movetime(imove_regrowth) = movetime(imove_regrowth) + time_e - time_s
 
+        o_m_type = 'regw'
+        !print*, i, 'regrow 2'
+     ELSE IF (rand_no <= cut_cluster) THEN
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_s)
+        ELSE
+!$        time_s = omp_get_wtime()
+        END IF
+
+        CALL Translate_Cluster(this_box)
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_e)
+        ELSE
+!$         time_e = omp_get_wtime()
+        END IF
+
+        movetime(imove_translate_cluster) = movetime(imove_translate_cluster) + time_e - time_s
+
+        o_m_type = 'clus'
+        !print*, i, 'clus 3'
      ELSE IF (rand_no <= cut_atom_displacement) THEN
 
         IF(.NOT. openmp_flag) THEN
@@ -251,6 +276,17 @@ SUBROUTINE NVTMC_Driver
       IF ( .NOT. block_average ) THEN
 
         ! instantaneous values are to be printed
+
+        IF(.NOT. timed_run) THEN
+           IF ( MOD(i,nthermo_freq) == 0) write_flag = .TRUE.
+        ELSE
+           now_time = now_time - thermo_time
+           IF(now_time .GT. nthermo_freq) THEN
+              thermo_time = thermo_time + nthermo_freq
+              write_flag = .TRUE.
+           END IF
+        END IF
+
         IF ( ncluster_freq /= 0 ) THEN
            IF ( MOD(i,ncluster_freq) == 0 ) THEN
            
@@ -264,32 +300,6 @@ SUBROUTINE NVTMC_Driver
            END IF
         END IF
         
-        IF ( nexvol_freq /= 0 ) THEN
-           IF ( MOD(i,nexvol_freq) == 0 ) THEN
-           
-              DO ibox = 1, nbr_boxes
-                 IF ( MOD(i,ncluster_freq) /= 0 ) THEN
-                    CALL Find_Clusters(ibox,1)
-                 END IF
-              
-                 CALL Calculate_Excluded_Volume(ibox)
-              
-              END DO
-           
-           END IF
-        END IF
-        
-
-        IF(.NOT. timed_run) THEN
-           IF ( MOD(i,nthermo_freq) == 0) write_flag = .TRUE.
-        ELSE
-           now_time = now_time - thermo_time
-           IF(now_time .GT. nthermo_freq) THEN
-              thermo_time = thermo_time + nthermo_freq
-              write_flag = .TRUE.
-           END IF
-        END IF
-
         IF(write_flag) THEN
 
            CALL Write_Checkpoint(i)
@@ -328,7 +338,7 @@ SUBROUTINE NVTMC_Driver
            END DO
 
         END IF
-        
+
         write_flag = .FALSE.
 
      ELSE

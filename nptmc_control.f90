@@ -66,12 +66,7 @@ SUBROUTINE NPTMC_Control
 
   IMPLICIT NONE
 
-  INTEGER :: ierr,line_nbr,nbr_entries, i,j, ii,this_mol
-  CHARACTER(120) :: line_string, line_array(20)
-  REAL(DP) :: e_total_bond, e_total_angle, e_total_intra_nb, e_total_inter_nb
-  REAL(DP) ::  E_bond, E_angle, E_dihedral, E_improper
-  REAL(DP) :: E_intra_vdw, E_intra_qq, E_inter_vdw, E_inter_qq, W_intra_vdw, W_intra_qq
-  REAL(DP) :: W_inter_qq, W_inter_vdw
+  INTEGER :: i
 
 !*******************************************************************************
 
@@ -118,11 +113,14 @@ SUBROUTINE NPTMC_Control
   ! Determine the frequency with which information will be output 
   CALL Get_Frequency_Info
 
+  ! Determine the criteria and cutoff value for clustering
+  CALL Get_Clustering_Info
+
   ! Properties to be output
   CALL Get_Property_Info
 
   ! Average information
-  CALL Average_Info	
+  CALL Average_Info
 
 
   CALL Get_Rcutoff_Low

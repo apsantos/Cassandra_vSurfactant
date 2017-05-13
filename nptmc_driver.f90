@@ -56,25 +56,21 @@ SUBROUTINE NPTMC_Driver
   USE Energy_Routines
   USE Read_Write_Checkpoint
   USE Simulation_Properties
+  USE Cluster_Routines
 
   IMPLICIT NONE
 
 !  !$ include 'omp_lib.h'
 
-  INTEGER :: i,j,k, this_box, ibox, is, ifrag, which_step, ireac
-  INTEGER :: howmanyfrac, ii,jj, im1, im2, alive1, alive2
-  INTEGER, ALLOCATABLE, DIMENSION(:) :: n_inside_old
+  INTEGER :: i, this_box, ibox, is, ifrag, which_step
 
-  REAL(DP) :: rand_no, E_lrc, cm_sum
-  REAL(DP) :: molfrac1, molfrac2, check_e, E_inter_vdw, E_inter_qq
-  REAL(DP) :: time_start, now_time, thermo_time, coord_time, E_dihed
+  REAL(DP) :: rand_no
+  REAL(DP) :: time_start, now_time, thermo_time, coord_time
 
   LOGICAL :: overlap
   LOGICAL, DIMENSION(:), ALLOCATABLE :: next_write, next_rdf_write
-  LOGICAL :: aok, inside_ch, write_flag, complete
+  LOGICAL :: write_flag, complete
 
-  TYPE(Energy_Class) :: energy_old
- 
   ! The total number of trial move array may not have been set if this
   ! is a fresh run i.e. start_type == make_config. Otherwise this array
   ! is set in read_checkpoint subroutine in the module Read_Write_Checkpoint
@@ -83,7 +79,6 @@ SUBROUTINE NPTMC_Driver
 
   ALLOCATE(next_write(nbr_boxes))
   ALLOCATE(next_rdf_write(nbr_boxes))
-  ALLOCATE(n_inside_old(nspecies))
   next_write(:) = .false.
   next_rdf_write(:) = .false.
   thermo_time = 0.0
@@ -247,6 +242,24 @@ SUBROUTINE NPTMC_Driver
 
         movetime(imove_regrowth) = movetime(imove_regrowth) + time_e - time_s
 
+     ELSE IF (rand_no <= cut_cluster) THEN
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_s)
+        ELSE
+!$        time_s = omp_get_wtime()
+        END IF
+
+        CALL Translate_Cluster(this_box)
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_e)
+        ELSE
+!$         time_e = omp_get_wtime()
+        END IF
+
+        movetime(imove_translate_cluster) = movetime(imove_translate_cluster) + time_e - time_s
+
      ELSE IF (rand_no <= cut_atom_displacement) THEN
         
         IF(.NOT. openmp_flag) THEN
@@ -315,6 +328,19 @@ SUBROUTINE NPTMC_Driver
         END IF
 
 
+        IF ( ncluster_freq /= 0 ) THEN
+           IF ( MOD(i,ncluster_freq) == 0 ) THEN
+           
+              DO ibox = 1, nbr_boxes
+              
+                 CALL Find_Clusters(ibox,1)
+                 CALL Write_Cluster(ibox)
+              
+              END DO
+           
+           END IF
+        END IF
+        
         IF(write_flag) THEN
     
            CALL Write_Checkpoint(i)
@@ -349,7 +375,7 @@ SUBROUTINE NPTMC_Driver
            END DO
 
         END IF
-        
+
         write_flag = .FALSE.
         
      ELSE

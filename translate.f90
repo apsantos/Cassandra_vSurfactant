@@ -20,7 +20,7 @@
 !*******************************************************************************
 
 !*******************************************************************************
-SUBROUTINE Translate(this_box,mc_step)
+SUBROUTINE Translate(this_box)
 !*******************************************************************************
 
   !*****************************************************************************
@@ -61,7 +61,6 @@ SUBROUTINE Translate(this_box,mc_step)
 
   ! Arguments
   INTEGER  :: this_box   ! box index
-  INTEGER  :: mc_step
 
   ! Local declarations
   INTEGER  :: ibox       ! box index
@@ -77,7 +76,7 @@ SUBROUTINE Translate(this_box,mc_step)
   REAL(DP) :: E_vdw, E_qq, E_vdw_move, E_qq_move, E_reciprocal_move
   REAL(DP) :: rcut_small
 
-  LOGICAL :: inter_overlap, overlap, accept, accept_or_reject
+  LOGICAL :: inter_overlap, accept, accept_or_reject
 
   ! Pair_Energy arrays and Ewald implementation
   INTEGER :: position
@@ -324,8 +323,8 @@ SUBROUTINE Translate(this_box,mc_step)
              max_disp(is,this_box) = MIN(rcut_small,2.0_DP*success_ratio*max_disp(is,this_box))
          END IF
 
-         WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, translation of species ', is,' in box ', &
-                                              this_box, ' : ', max_disp(is,this_box)
+         WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, translation of species ', is, &
+                                             ' in box ', this_box, ' : ', max_disp(is,this_box)
         
      END IF
 

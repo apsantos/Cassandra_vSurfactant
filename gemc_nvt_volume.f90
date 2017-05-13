@@ -67,19 +67,16 @@ SUBROUTINE GEMC_NVT_Volume(box1, box2)
   TYPE(Box_Class) :: box_list_old_1, box_list_old_2
   TYPE(Energy_Class) :: energy_old_1, energy_old_2
 
-  REAL(DP) :: checke
-  LOGICAL :: superbad
-
   INTEGER :: position, alive, my_box
 
   REAL(DP), ALLOCATABLE :: pair_nrg_vdw_old(:,:), pair_nrg_qq_old(:,:)
   REAL(DP), ALLOCATABLE :: cos_mol_old(:,:), sin_mol_old(:,:)
 
-  REAL(DP) :: rcut_vdw_old_1, rcut_coul_old_1, rcut3_old_1, rcut9_old_1, alpha_ewald_old_1
+  REAL(DP) :: rcut_vdw_old_1, rcut_coul_old_1, rcut3_old_1, rcut9_old_1
   REAL(DP) :: h_ewald_cut_old_1, rcut_vdwsq_old_1, rcut_coulsq_old_1, rcut_vdw3_old_1
   REAL(DP) :: rcut_vdw6_old_1, rcut_max_old_1
 
-  REAL(DP) :: rcut_vdw_old_2, rcut_coul_old_2, rcut3_old_2, rcut9_old_2, alpha_ewald_old_2
+  REAL(DP) :: rcut_vdw_old_2, rcut_coul_old_2, rcut3_old_2, rcut9_old_2
   REAL(DP) :: h_ewald_cut_old_2, rcut_vdwsq_old_2, rcut_coulsq_old_2, rcut_vdw3_old_2
   REAL(DP) :: rcut_vdw6_old_2, rcut_max_old_2
 
@@ -234,7 +231,6 @@ SUBROUTINE GEMC_NVT_Volume(box1, box2)
         
         IF (int_charge_sum_style(box1) == charge_ewald) THEN
            
-!           alpha_ewald_old_1 = alpha_ewald(box1)
            h_ewald_cut_old_1 = h_ewald_cut(box1)
 
         END IF
@@ -253,7 +249,6 @@ SUBROUTINE GEMC_NVT_Volume(box1, box2)
 
         IF (int_charge_sum_style(box1) == charge_ewald) THEN
 
-!           alpha_ewald(box1) = ewald_p_sqrt(box1) / rcut_coul(box1)
            h_ewald_cut(box1) = 2.0_DP * ewald_p(box1) / rcut_coul(box1)
 
         END IF
@@ -295,7 +290,6 @@ SUBROUTINE GEMC_NVT_Volume(box1, box2)
         
         IF (int_charge_sum_style(box2) == charge_ewald) THEN
            
-!           alpha_ewald_old_2 = alpha_ewald(box2)
            h_ewald_cut_old_2 = h_ewald_cut(box2)
 
         END IF
@@ -314,7 +308,6 @@ SUBROUTINE GEMC_NVT_Volume(box1, box2)
         
         IF (int_charge_sum_style(box2) == charge_ewald) THEN
 
-!           alpha_ewald(box2) = ewald_p_sqrt(box2) / rcut_coul(box2)
            h_ewald_cut(box2) = 2.0_DP * ewald_p(box2) / rcut_coul(box2)
 
         END IF
@@ -640,7 +633,6 @@ SUBROUTINE GEMC_NVT_Volume(box1, box2)
         
         IF( int_charge_sum_style(box1) == charge_ewald ) THEN
            
-           !           alpha_ewald(box1) = alpha_ewald_old_1
            h_ewald_cut(box1) = h_ewald_cut_old_1
            
         END IF
@@ -664,7 +656,6 @@ SUBROUTINE GEMC_NVT_Volume(box1, box2)
 
         IF( int_charge_sum_style(box2) == charge_ewald ) THEN
            
-!           alpha_ewald(box2) = alpha_ewald_old_2
            h_ewald_cut(box2) = h_ewald_cut_old_2
            
         END IF
