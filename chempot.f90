@@ -53,8 +53,8 @@ SUBROUTINE Chempot(this_box,is)
   INTEGER, ALLOCATABLE :: frag_order(:)
 
   REAL(DP) :: dx, dy, dz 
-  REAL(DP) :: E_bond, E_angle, E_dihedral, E_intra_vdw, E_intra_qq
-  REAL(DP) :: E_inter_vdw, E_inter_qq, E_improper
+  !REAL(DP) :: E_bond, E_angle, E_dihedral, E_improper
+  REAL(DP) :: E_inter_vdw, E_inter_qq, E_intra_vdw, E_intra_qq
   REAL(DP) :: delta_e, E_reciprocal_move, E_self_move, E_lrc
   REAL(DP) :: prefact, CP_energy, nrg_ring_frag_tot
 

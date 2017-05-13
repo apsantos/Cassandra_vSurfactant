@@ -114,9 +114,8 @@ SUBROUTINE Build_Molecule(this_im,is,this_box,frag_order,this_lambda, &
   LOGICAL, INTENT(INOUT) :: cbmc_overlap ! did all trials have core overlap?
 
   ! Local declarations
-  INTEGER :: i, j, this_atom      ! atom indices
-  INTEGER :: ifrag, this_fragment ! fragment indices
-  INTEGER :: im                   ! molecule indices
+  INTEGER :: i, this_atom      ! atom indices
+  INTEGER :: this_fragment ! fragment indices
   INTEGER :: is_fragments ! number of fragments in each molecule of species 'is'
   INTEGER :: total_frags  ! total number of conformations for this fragment in 
                           ! the reservoir
@@ -135,24 +134,17 @@ SUBROUTINE Build_Molecule(this_im,is,this_box,frag_order,this_lambda, &
   LOGICAL :: overlap ! TRUE if there is core overlap between a trial atom 
                      ! position and a an atom already in the box
 
-  CHARACTER  :: this_file*120, symbol*1
-
-  TYPE(Atom_Class), ALLOCATABLE, DIMENSION(:) :: config_list
-
   ! Variables associated with the CBMC part
   INTEGER :: itrial, trial, frag_type, n_frag_atoms
 
   REAL(DP) :: weight(MAX(kappa_ins,kappa_rot,kappa_dih)), rand_no, E_dihed
-  REAL(DP) :: E_intra_vdw, E_intra_qq, E_inter_vdw, E_inter_qq, E_total
+  REAL(DP) :: E_inter_vdw, E_inter_qq, E_total
   REAL(DP) :: nrg(MAX(kappa_ins,kappa_rot,kappa_dih)), nrg_kBT, nrg_ring_frag
 
   LOGICAL :: del_overlap
 
   Type(Atom_Class) :: rtrial(MAXVAL(natoms),0:MAX(kappa_ins,kappa_rot,kappa_dih))
   ! Slit pore variables
-
-  LOGICAL :: framework_overlap
-  REAL(DP) :: E_framework
 
 !  ! DEBUGging variables
 !  INTEGER :: M_XYZ_unit
@@ -368,12 +360,6 @@ SUBROUTINE Build_Molecule(this_im,is,this_box,frag_order,this_lambda, &
               y_anchor = (0.5_DP - rranf()) * box_list(this_box)%length(2,2)
               z_anchor = (0.5_DP - rranf()) * box_list(this_box)%length(3,3)
 
-              IF (lattice_sim) THEN
-                 x_anchor = rranf() * box_list(this_box)%length(1,1)
-                 y_anchor = rranf() * box_list(this_box)%length(2,2)
-                 z_anchor = rranf() * box_list(this_box)%length(3,3)
-              END IF
-
            ELSE
 
               !Generate random positions in fractional coordinates
@@ -381,12 +367,6 @@ SUBROUTINE Build_Molecule(this_im,is,this_box,frag_order,this_lambda, &
               x_anchor = 0.5_DP - rranf()
               y_anchor = 0.5_DP - rranf()
               z_anchor = 0.5_DP - rranf()
-
-              IF (lattice_sim) THEN
-                 x_anchor = rranf()
-                 y_anchor = rranf()
-                 z_anchor = rranf()
-              END IF
 
               !transform back to cartesian
 
@@ -403,12 +383,6 @@ SUBROUTINE Build_Molecule(this_im,is,this_box,frag_order,this_lambda, &
                        box_list(this_box)%length(3,3)*z_anchor
 
 
-           END IF
-
-           IF (lattice_sim) THEN
-               x_anchor = NINT(x_anchor)
-               y_anchor = NINT(y_anchor)
-               z_anchor = NINT(z_anchor)
            END IF
 
         END IF
@@ -616,7 +590,7 @@ SUBROUTINE Build_Molecule(this_im,is,this_box,frag_order,this_lambda, &
   ! frag_order, starting with fragment frag_order(2)
   frag_start = 2
   CALL Fragment_Placement(this_box,this_im,is,frag_start,frag_total, &
-                          frag_order,frag_placed,this_lambda,E_total,P_bias, &
+                          frag_order,frag_placed,E_total,P_bias, &
                           nrg_ring_frag_total,cbmc_overlap,del_overlap)
 
   ! Note that cbmc_overlap may be TRUE and the cbmc_flag will be properly 
@@ -665,26 +639,18 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
   LOGICAL, INTENT(INOUT) :: cbmc_overlap
   !-------------------------------
 
-  INTEGER :: is_fragments, frag_start, frag_start_old, frag_total, i, this_atom
-  INTEGER :: anchor, ifrag, total_connect, frag_connect
-  INTEGER :: j, im
-  INTEGER :: ii,jj,kk, total_frags, this_fragment
-  INTEGER, ALLOCATABLE, DIMENSION(:) :: live, deadend, central
+  INTEGER :: is_fragments, frag_start, frag_total, i, this_atom
+  INTEGER :: total_frags, this_fragment
+  INTEGER, ALLOCATABLE, DIMENSION(:) :: live
   INTEGER, ALLOCATABLE, DIMENSION(:) :: frag_placed
-  REAL(DP) :: x_anchor, y_anchor, z_anchor, xcom_old, ycom_old, zcom_old
-  REAL(DP) :: dx, dy, dz
-  REAL(DP) :: x_this, y_this, z_this,tempx, tempy, tempz, temp_var, E_ang
-  LOGICAL :: overlap
-  CHARACTER  :: this_file*120, symbol*1
-  TYPE(Atom_Class), ALLOCATABLE, DIMENSION(:) :: config_list
   ! Variables associated with the CBMC part
 
   INTEGER :: itrial, trial, frag_type
   REAL(DP) :: weight(MAX(kappa_ins,kappa_rot,kappa_dih)), rand_no
-  REAL(DP) :: e_dihed, E_intra_vdw, E_intra_qq, E_inter_vdw
-  REAL(DP) :: E_inter_qq, E_total
-  REAL(DP) :: nrg(MAX(kappa_ins,kappa_rot,kappa_dih)), nrg_kBT, time0, time1, nrg_ring_frag
-  LOGICAL :: del_overlap
+  REAL(DP) :: e_dihed, E_inter_vdw, e_total
+  REAL(DP) :: E_inter_qq
+  REAL(DP) :: nrg_kBT, nrg_ring_frag
+  LOGICAL :: del_overlap, overlap
   TYPE(Atom_Class) :: rtrial(MAXVAL(natoms),0:MAX(kappa_ins,kappa_rot,kappa_dih))
 
 
@@ -759,12 +725,6 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
                 box_list(this_box)%length(2,2)
            rtrial(first_atom,itrial)%rzp = (0.5_DP - rranf()) * &
                 box_list(this_box)%length(3,3)
-
-           IF (lattice_sim) THEN
-                 x_anchor = NINT( rranf() * box_list(this_box)%length(1,1) )
-                 y_anchor = NINT( rranf() * box_list(this_box)%length(2,2) )
-                 z_anchor = NINT( rranf() * box_list(this_box)%length(3,3) )
-           END IF
            
         END IF
 
@@ -785,9 +745,6 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
 
      CALL Compute_Molecule_Nonbond_Inter_Energy(this_im,is,E_inter_vdw,E_inter_qq,overlap)
 
-
-!    WRITE(8,*) del_flag,this_box, itrial, this_im,E_inter_vdw,  E_inter_qq,overlap
-
   ! compute weight for itrial 
 
      IF (overlap) THEN
@@ -796,7 +753,6 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
      ELSE
          nrg_kBT = beta(this_box) * (E_inter_vdw + E_inter_qq )
 
-!         nrg_kBT = beta(this_box) * (E_inter_vdw )
 !!$        ! compute the weight of this trial for the reverse move and first
 !!$        ! trial. The following IF-ELSE construct ensures that the weight
 !!$        ! for the reverse move is always computed.
@@ -808,7 +764,6 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
             weight(itrial) = DEXP(-nrg_kBT)
          END IF
       END IF
-!     WRITE(8,*) del_flag, itrial, weight(itrial),nrg_kBT,beta(this_box)
       IF (itrial > 1 ) weight(itrial) = weight(itrial-1) + weight(itrial)
       
    ENDDO ! End the generation of trial locations and associating weight
@@ -821,7 +776,6 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
 
   IF (del_flag) THEN
       trial = 1
-!     write(*,*) weight(1), this_box, nrg
   ELSE
    ! Choose one from Golden sampling for an insertion move
       rand_no = rranf() * weight(kappa_ins)
@@ -904,7 +858,7 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
           atom_list(this_atom,this_im,is)%ryp = rtrial(this_atom,0)%ryp
           atom_list(this_atom,this_im,is)%rzp = rtrial(this_atom,0)%rzp
        ENDDO
-       CALL Rotate_XYZ_Axes(this_im,is,frag_start,.true.,.true.,.true.,1)
+       CALL Rotate_XYZ_Axes(this_im,is,frag_start)
        CALL Get_COM(this_im,is)
        !       CALL Fold_Molecule(this_im,is,this_box) 
        DO i = 1,frag_list(frag_start,is)%natoms
@@ -953,7 +907,6 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
          weight(itrial) = 0.0_DP
      ELSE
          nrg_kBT = beta(this_box) * (E_inter_vdw + E_inter_qq )
-!         nrg_kBT = beta(this_box) * (E_inter_vdw )
 !!$        ! compute the weight of this trial for the reverse move and first
 !!$        ! trial. The following IF-ELSE construct ensures that the weight
 !!$        ! for the reverse move is always computed.
@@ -976,7 +929,6 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
 
   IF (del_flag) THEN
       trial = 1
-!     write(*,*) weight(1), this_box, nrg
   ELSE
    ! Choose one from Golden sampling for an insertion move
       rand_no = rranf() * weight(kappa_rot)
@@ -1002,15 +954,7 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
      atom_list(this_atom,this_im,is)%rzp = rtrial(this_atom,trial)%rzp
   END DO
 
-! IF ( .NOT. del_flag) THEN
-!  write(*,*) atom_list(:,this_im,is)%rxp
-! write(*,*) atom_list(:,this_im,is)%rzp
-! write(*,*) atom_list(:,this_im,is)%ryp
-! NR: Now we have place the first fragment.
-! write(*,*)
-!	End if
   frag_placed(frag_start) = 1
-
 
   IF (frag_list(frag_start,is)%ring) THEN
 
@@ -1029,7 +973,7 @@ SUBROUTINE Build_Rigid_Fragment(this_im,is,this_box,frag_order,this_lambda, &
   CALL Compute_Molecule_Dihedral_Energy(this_im,is,e_dihed)
   e_total = e_dihed
 
-  CALL Fragment_Placement(this_box,this_im,is,2,frag_total,frag_order,frag_placed,this_lambda, &
+  CALL Fragment_Placement(this_box,this_im,is,2,frag_total,frag_order,frag_placed, &
        e_total,P_bias,nrg_ring_frag_total, cbmc_overlap, del_overlap)
 
   cbmc_flag = .FALSE.
@@ -1038,7 +982,7 @@ END SUBROUTINE Build_Rigid_Fragment
 
 !*******************************************************************************
 SUBROUTINE Cut_Regrow(this_im,is,frag_live,frag_dead,frag_order,frag_total, &
-     this_lambda,E_prev,P_seq,P_bias,nrg_ring_frag_tot,cbmc_overlap,del_overlap)
+     E_prev,P_seq,P_bias,nrg_ring_frag_tot,cbmc_overlap,del_overlap)
   !*****************************************************************************
   ! The subroutine cuts a bond, deletes part of a molecule and regrows using 
   ! configurational biasing. 
@@ -1068,7 +1012,6 @@ SUBROUTINE Cut_Regrow(this_im,is,frag_live,frag_dead,frag_order,frag_total, &
   INTEGER :: frag_dead  ! the fragment with the cut bond that will be deleted
   INTEGER :: frag_order(1:nfragments(is)) ! order in which frags are added
   INTEGER :: frag_total ! number of entries in frag_order
-  REAL(DP), INTENT(IN) :: this_lambda
   REAL(DP) :: E_prev
   REAL(DP) :: P_seq   ! probability of sequence in frag_order
   REAL(DP) :: P_bias  ! probability of placing each fragment in the box
@@ -1078,16 +1021,14 @@ SUBROUTINE Cut_Regrow(this_im,is,frag_live,frag_dead,frag_order,frag_total, &
 
   ! Local declarations
   INTEGER :: is_fragments, frag_bond, frag_start
-  INTEGER :: this_box, i_frag, frag_no, i, this_atom, anchor, this_frag
+  INTEGER :: this_box, i_frag, i, this_atom, this_frag
   INTEGER :: anchor_live, anchor_dead
   
   INTEGER, DIMENSION(:), ALLOCATABLE :: live ! fragment was not deleted OR 
                                              ! is in frag_order
   INTEGER, DIMENSION(:), ALLOCATABLE :: frag_placed ! fragment was not deleted
 
-  REAL(DP) :: E_total, E_intra_vdw, E_intra_qq, E_inter_vdw, E_inter_qq, E_dihed
-
-  LOGICAL :: overlap
+  REAL(DP) :: E_total, E_dihed
 
   ! Initialize variables
   cbmc_flag = .TRUE.
@@ -1220,7 +1161,7 @@ SUBROUTINE Cut_Regrow(this_im,is,frag_live,frag_dead,frag_order,frag_total, &
 
   frag_start = 1
   CALL Fragment_Placement(this_box,this_im,is,frag_start,frag_total, &
-       frag_order,frag_placed,this_lambda,E_total,P_bias,nrg_ring_frag_tot, &
+       frag_order,frag_placed,E_total,P_bias,nrg_ring_frag_tot, &
        cbmc_overlap,del_overlap)
 
   cbmc_flag = .FALSE.
@@ -1276,7 +1217,7 @@ SUBROUTINE Fragment_Order(this_frag,is,frag_total,frag_order,live,P_seq)
   REAL(DP) :: P_seq   ! the probability of frag_order
 
   ! Local declarations
-  INTEGER :: n_connect, i_frag, j_frag, i_frag_id, j_frag_id, i
+  INTEGER :: n_connect, i_frag, j_frag, i_frag_id, j_frag_id
   INTEGER, DIMENSION(1:nfragments(is)) :: hanging_connections
 
   !*****************************************************************************
@@ -1339,7 +1280,7 @@ END SUBROUTINE Fragment_Order
 
 !*******************************************************************************
 SUBROUTINE Fragment_Placement(this_box, this_im, is, frag_start, frag_total, &
-           frag_order, frag_placed, this_lambda, e_total, P_bias, &
+           frag_order, frag_placed, e_total, P_bias, &
            nrg_ring_frag_tot, cbmc_overlap, del_overlap)
 !*******************************************************************************
 !
@@ -1367,35 +1308,31 @@ SUBROUTINE Fragment_Placement(this_box, this_im, is, frag_start, frag_total, &
   INTEGER, DIMENSION(1:nfragments(is)), INTENT(INOUT) :: frag_placed
 
   REAL(DP), INTENT(INOUT) :: e_total, P_bias, nrg_ring_frag_tot
-  REAL(DP), INTENT(IN) :: this_lambda
   
   LOGICAL, INTENT(INOUT) :: cbmc_overlap, del_overlap
 
   ! local variable
 
-  INTEGER :: i, ifrag, j, this_atom, frag_connect, total_connect, anchor_ifrag, is1, im, ia
+  INTEGER :: i, ifrag, j, this_atom, frag_connect, total_connect, anchor_ifrag
   INTEGER :: anchor_frag_connect, atom_ifrag, atom_frag_connect, ii, trial
   INTEGER :: frag_type, dumcount
 
   INTEGER, DIMENSION(:), ALLOCATABLE :: counted, connection, atom_id
 
-  INTEGER :: ispecies, jmol, k
+  INTEGER :: k
 
   INTEGER :: total_frags, this_fragment, nfrag_atoms
-  REAL(DP) :: x_this,y_this,z_this, vec1(3), vec2(3), aligner_ifrag(3,3)
+  REAL(DP) :: vec1(3), vec2(3), aligner_ifrag(3,3)
   REAL(DP) :: hanger_ifrag(3,3), aligner_frag_connect(3,3), hanger_frag_connect(3,3)
 
   REAL(DP) :: tempx, tempy, tempz, theta, e_dihed
   REAL(DP) :: weight(MAX(kappa_ins,kappa_rot,kappa_dih)), nrg(MAX(kappa_ins,kappa_rot,kappa_dih))
   REAL(DP) :: E_intra_qq, E_intra_vdw, prob_pick
-  REAL(DP) :: e_prev, temp_var, E_ang, E_inter_vdw, E_inter_qq
-  REAL(DP) :: nrg_kBT, p_acc, nrg_intra_vdw, nrg_intra_qq, nrg_inter_vdw, nrg_inter_qq
-  REAL(DP) :: trial_weight
+  REAL(DP) :: e_prev, E_inter_vdw, E_inter_qq
+  REAL(DP) :: nrg_kBT, nrg_intra_vdw, nrg_intra_qq, nrg_inter_vdw, nrg_inter_qq
   REAL(DP) :: nrg_ring_frag, nrg_dihed(MAX(kappa_ins,kappa_rot,kappa_dih))
 
-  LOGICAL :: overlap, overlap_trial(MAX(kappa_ins,kappa_rot,kappa_dih))
-
-  CHARACTER :: this_file*120, element*1 
+  LOGICAL :: overlap
 
   TYPE(Atom_Class), ALLOCATABLE, DIMENSION(:) :: config_list
   TYPE(Atom_Class), ALLOCATABLE, DIMENSION(:,:) :: config_temp_list
@@ -1864,8 +1801,6 @@ SUBROUTINE Fragment_Placement(this_box, this_im, is, frag_start, frag_total, &
               
         END DO
 
-!        write(*,*) nrg(ii), e_dihed, E_intra_vdw, e_prev
-
         IF (overlap) THEN
 
            weight(ii) = 0.0_DP
@@ -2091,8 +2026,6 @@ SUBROUTINE Single_Fragment_Regrowth(alive,is)
    INTEGER, INTENT(IN) :: alive, is
 
    INTEGER :: total_frags, i, this_atom, this_fragment, frag_type
-
-   REAL(DP) :: temp_var, E_ang,x_this, y_this, z_this
 
    ! As this molecule has only 1 fragment, we obtain total number
    ! of fragments and atoms using 1 as the identity

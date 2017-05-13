@@ -19,7 +19,7 @@
 !   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !*******************************************************************************
 
-SUBROUTINE Cut_N_Grow(this_box,mcstep)
+SUBROUTINE Cut_N_Grow(this_box)
 
   !********************************************************************************
   !
@@ -66,14 +66,11 @@ SUBROUTINE Cut_N_Grow(this_box,mcstep)
   IMPLICIT NONE
 
   INTEGER :: ibox, is, nmolecules_species, nmols_box, total_mols, this_box
-  INTEGER :: nfrag_species, im, alive, frag_start, frag_end, frag_total, i
-  INTEGER :: dumcount, iatom, int_phi, mcstep
-  INTEGER :: alive_1, alive_2, locate_1, locate_2
+  INTEGER :: nfrag_species, im, alive, frag_start, frag_end, frag_total
+  INTEGER :: iatom
 
   INTEGER, ALLOCATABLE, DIMENSION(:) :: species_id, frag_order
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: x_box
-  REAL(DP), ALLOCATABLE :: x_old(:), y_old(:), z_old(:)
-  REAL(DP), ALLOCATABLE :: dx(:), dy(:), dz(:)
 
   REAL(DP) :: rand_no, P_seq, P_forward, P_reverse, E_bond_n, E_angle_n, E_dihed_n
   REAL(DP) :: E_intra_vdw_n, E_intra_qq_n, E_inter_vdw_n, E_inter_qq_n
@@ -81,14 +78,12 @@ SUBROUTINE Cut_N_Grow(this_box,mcstep)
   REAL(DP) :: E_bond_o, E_angle_o, E_dihed_o, delta_e_n, delta_e_o
   REAL(DP) :: E_improper_n, E_improper_o
   REAL(DP) :: E_selferf_n, E_selferf_o
-  REAL(DP) :: E_reciprocal_move, ln_pacc, e_prev, delta_intra, phi
-  REAL(DP) :: energy_olde, check_e
+  REAL(DP) :: E_reciprocal_move, ln_pacc, e_prev
   REAL(DP) :: nrg_ring_frag_forward, nrg_ring_frag_reverse
   REAL(DP) :: lambda_for_cut
 
-  LOGICAL ::  cbmc_overlap, accept, accept_or_reject, update_flag, superbad, overlap
-  LOGICAL :: del_overlap, cbmc_overlap_f, del_overlap_f, intra_overlap
-  LOGICAL  :: inside_start, inside_finish
+  LOGICAL ::  cbmc_overlap, accept, accept_or_reject
+  LOGICAL :: del_overlap, intra_overlap
 
   TYPE(Atom_Class), ALLOCATABLE :: new_atom_list(:)
   TYPE(molecule_Class) :: new_molecule_list
@@ -96,16 +91,13 @@ SUBROUTINE Cut_N_Grow(this_box,mcstep)
 
   ! Pair_Energy arrays and Ewald implementation
 
-  INTEGER :: start, locate_im, count, this_species, position, this_im
-!  REAL(DP), ALLOCATABLE :: pair_vdw_temp(:), pair_qq_temp(:)
+  INTEGER :: position
   REAL(DP), ALLOCATABLE :: cos_mol_old(:), sin_mol_old(:)
 
   LOGICAL :: l_charge
 
   E_reciprocal_move = 0.0_DP
 
-  inside_start = .FALSE.
-!  imp_Flag = .FALSE.
   nrg_ring_frag_forward = 0.0
   nrg_ring_frag_reverse = 0.0
 
@@ -218,7 +210,7 @@ SUBROUTINE Cut_N_Grow(this_box,mcstep)
      nrg_ring_frag_forward = 0.0_DP
 
      lambda_for_cut = molecule_list(alive,is)%cfc_lambda
-     CALL Cut_Regrow(alive,is,frag_start,frag_end,frag_order,frag_total,lambda_for_cut, &
+     CALL Cut_Regrow(alive,is,frag_start,frag_end,frag_order,frag_total, &
           e_prev, P_seq, P_forward, nrg_ring_frag_forward, cbmc_overlap, del_overlap)
 
   END IF
@@ -341,7 +333,7 @@ SUBROUTINE Cut_N_Grow(this_box,mcstep)
 
      lambda_for_cut = molecule_list(alive,is)%cfc_lambda
      nrg_ring_frag_reverse = 0.0_DP
-     CALL Cut_Regrow(alive,is,frag_start,frag_end,frag_order,frag_total, lambda_for_cut, & 
+     CALL Cut_Regrow(alive,is,frag_start,frag_end,frag_order,frag_total, & 
           e_prev, P_seq, P_reverse, nrg_ring_frag_reverse, cbmc_overlap, del_overlap)
 
      atom_list(1:natoms(is),alive,is)%exist = .true.

@@ -51,22 +51,15 @@
 
     ! Local
     INTEGER :: is,im,ia, this_box, alive, this_im, n_start, n_end
-    INTEGER :: is2, im2, ja, ibox, which_anchor
-    INTEGER :: isdstart,isdend,isistart,isiend,ireac
-    INTEGER :: i,m,box_start,box_end, ii
-    INTEGER :: im_this,im_other, other_box, alive_this, alive_other, this_atom
-
+    INTEGER :: is2, im2, ja, ibox
 
     INTEGER, ALLOCATABLE,DIMENSION(:) :: frag_order
 
     REAL(DP) :: rxijp, ryijp, rzijp, rxij, ryij, rzij, rsq, lambda_for_build
     REAL(DP) :: P_seq, P_bias
-    REAL(DP) :: rand_lambda,lambda_ins,lambda_del
     REAL(DP) :: nrg_ring_frag_tot
 
-    LOGICAL :: overlap, cbmc_overlap
-
-    CHARACTER*120 :: init_config_file, init_config_file1
+    LOGICAL :: cbmc_overlap
 !********************************************************************************
     ! Place all the molecules in the box using CB growth.
 
@@ -74,7 +67,6 @@
 
     ! Initialize the cfc amd existence flags. 
    
-    overlap = .false. 
     molecule_list(:,:)%live = .false.
 
     DO is = 1, nspecies
@@ -216,7 +208,7 @@
                 
                 ! compute the distance of the psuedoatom farthest from the COM.
                 
-                CALL Compute_Max_COM_Distance(alive,is)
+                CALL Compute_Max_Com_Distance(alive,is)
                 ! write to a file for viewing
                 
                 WRITE(*,*) 'successfully inserted molecule', im
@@ -235,7 +227,6 @@
        ! Here the configuration for this box has been generated
        ! Let's write this out
        CALL Write_Coords(ibox)
-       overlap = .FALSE.
 
     END DO  ! ends do loop from line 72 (nbr_boxes)
     
@@ -257,7 +248,7 @@
       REAL(DP) :: theta, phi, psi, rot11, rot12, rot13, rot21, rot22, rot23
       REAL(DP) :: rot31, rot32, rot33, rxpnew, rypnew, rzpnew
       
-      INTEGER :: i, ia
+      INTEGER :: ia
       
       ! Pick random eulerians
       
@@ -383,13 +374,13 @@
        CALL Compute_Molecule_Improper_Energy(alive,is,E_improper)
        CALL Compute_Molecule_Nonbond_Intra_Energy(alive,is,E_intra_vdw,E_intra_qq,intra_overlap)
 
-       energy_igas(i,is)%bond = E_bond
-       energy_igas(i,is)%angle = E_angle
-       energy_igas(i,is)%dihedral = E_dihedral
-       energy_igas(i,is)%improper = E_improper
-       energy_igas(i,is)%intra_vdw = E_intra_vdw
-       energy_igas(i,is)%intra_q = E_intra_qq
-       energy_igas(i,is)%total = E_bond + E_angle + E_dihedral + E_improper + E_intra_vdw + E_intra_qq
+       energy_igas(alive,is)%bond = E_bond
+       energy_igas(alive,is)%angle = E_angle
+       energy_igas(alive,is)%dihedral = E_dihedral
+       energy_igas(alive,is)%improper = E_improper
+       energy_igas(alive,is)%intra_vdw = E_intra_vdw
+       energy_igas(alive,is)%intra_q = E_intra_qq
+       energy_igas(alive,is)%total = E_bond + E_angle + E_dihedral + E_improper + E_intra_vdw + E_intra_qq
 
     END IF
 
@@ -426,7 +417,7 @@
           ELSE
 
              lambda_for_cut = molecule_list(alive,is)%cfc_lambda
-             CALL Cut_Regrow(alive,is,frag_start,frag_end,frag_order,frag_total,lambda_for_cut, &
+             CALL Cut_Regrow(alive,is,frag_start,frag_end,frag_order,frag_total, &
                   e_prev,P_seq,P_bias, nrg_ring_frag_forward, cbmc_overlap, del_overlap)
 
              IF (cbmc_overlap .or. del_overlap) THEN

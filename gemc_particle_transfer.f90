@@ -61,13 +61,12 @@ SUBROUTINE GEMC_Particle_Transfer(box_in, box_out)
 
   INTEGER :: box_in, box_out, i, this_species, i_type
 
-  INTEGER :: nmols_sorbate, nsorbate, is, ibox, im ,alive, which_anchor
+  INTEGER :: nmols_sorbate, nsorbate, is, ibox, im ,alive
   INTEGER :: rand_igas 
 
   INTEGER, ALLOCATABLE :: sorbate_id(:), frag_order(:)
 
   REAL(DP), ALLOCATABLE :: sorbate_x(:)
-  REAL(DP), ALLOCATABLE :: dx(:), dy(:), dz(:)
 
   REAL(DP) :: pick_species, delta_e_out, delta_e_out_pacc, e_bond_out, e_angle_out, e_dihed_out
   REAL(DP) :: E_intra_vdw_out, E_intra_qq_out
@@ -691,7 +690,7 @@ SUBROUTINE New_Positions(this_box,alive,is,rand_igas)
 
   IMPLICIT NONE
   
-  INTEGER :: this_box,alive,is, rand_igas, i
+  INTEGER :: this_box,alive,is, rand_igas
   REAL(DP) :: dx,dy,dz, this_x, this_y, this_z
 
 
@@ -734,7 +733,7 @@ SUBROUTINE New_Positions(this_box,alive,is,rand_igas)
      
      ! obtain a ranom configuratio from the file
 
-     rand_igas = (rranf() * n_igas(is)) + 1
+     rand_igas = INT(rranf() * n_igas(is)) + 1
 
      molecule_list(alive,is)%xcom = molecule_list_igas(rand_igas,is)%xcom
      molecule_list(alive,is)%ycom = molecule_list_igas(rand_igas,is)%ycom
