@@ -56,8 +56,8 @@ USE Type_Definitions
 !*********************************************************************************
   ! This section contains global variables used by many routines during the run.
 
-  CHARACTER(240) :: run_name,start_type
-  CHARACTER(80) :: err_msg(10)
+  CHARACTER(120) :: run_name, start_type
+  CHARACTER(120) :: err_msg(10)
 
   ! error handling variables
   INTEGER :: AllocateStatus, OpenStatus, DeAllocateStatus
@@ -65,8 +65,6 @@ USE Type_Definitions
   ! Timing function
   CHARACTER(15) :: hostname,date,time,zone
   INTEGER, DIMENSION(8) :: values, begin_values,end_values
-
-  LOGICAL :: lattice_sim
 
   ! Type of simulation to run:
   ! Choices: NVT_MC 
@@ -82,9 +80,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: sim_gemc_npt = 7
   INTEGER, PARAMETER :: sim_gemc_ig = 8
   INTEGER, PARAMETER :: sim_mcf = 9
-  INTEGER, PARAMETER :: sim_pp = 10
-  INTEGER, PARAMETER :: sim_virial = 11
-  INTEGER, PARAMETER :: sim_test = 12
+  INTEGER, PARAMETER :: sim_test = 10
   LOGICAL :: lfugacity, lchempot, timed_run, openmp_flag, en_flag
 
   ! The starting seed for the random generator
@@ -96,7 +92,10 @@ USE Type_Definitions
   CHARACTER(15), DIMENSION(:), ALLOCATABLE :: vdw_style, charge_style, vdw_sum_style, charge_sum_style
   INTEGER :: int_mix_rule, int_run_style
   INTEGER, DIMENSION(:), ALLOCATABLE :: int_vdw_style, int_vdw_sum_style
-  LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: int_vdw_style_mix ! the length of the 3rd dimesnio is the largest vdw_type
+  INTEGER, DIMENSION(:,:), ALLOCATABLE :: int_vdw_style_mix ! the length of the 3rd dimension is the largest vdw_type
+  INTEGER, DIMENSION(:,:), ALLOCATABLE :: int_vdw_sum_style_mix ! type i and j sum style
+  INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: int_in_vdw_style_mix ! the length of the 3rd dimension is the largest vdw_type
+  INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: int_in_vdw_sum_style_mix ! type i and j sum style
   INTEGER, DIMENSION(:), ALLOCATABLE :: int_charge_style, int_charge_sum_style
   INTEGER, PARAMETER :: run_equil = 0
   INTEGER, PARAMETER :: run_prod = 1
@@ -112,11 +111,11 @@ USE Type_Definitions
   INTEGER, PARAMETER :: vdw_mie = 8
   INTEGER, PARAMETER :: vdw_lj124 = 9
   INTEGER, PARAMETER :: vdw_lj96 = 10
-  INTEGER, PARAMETER :: vdw_wca = 11
-  INTEGER, PARAMETER :: vdw_hydra = 12
-  INTEGER, PARAMETER :: vdw_corr = 13
-  INTEGER, PARAMETER :: vdw_yukawa = 14
-  INTEGER, PARAMETER :: vdw_sw = 15
+  INTEGER, PARAMETER :: vdw_hydra = 11
+  INTEGER, PARAMETER :: vdw_corr = 12
+  INTEGER, PARAMETER :: vdw_yukawa = 13
+  INTEGER, PARAMETER :: vdw_sw = 14
+
 
   INTEGER, PARAMETER :: charge_none = 0
   INTEGER, PARAMETER :: charge_coul = 1
@@ -126,30 +125,30 @@ USE Type_Definitions
 
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut_cbmc 
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut_vdw, rcut_coul, ron_charmm, roff_charmm, rcut_max
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: rcut_vdw_mix, rcut_vdwsq_mix
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: rcut_in_vdw_mix, rcut_in_vdwsq_mix
   REAL(DP), DIMENSION(:), ALLOCATABLE :: ron_switch, roff_switch, roff_switch_sq, switch_factor1
   REAL(DP), DIMENSION(:), ALLOCATABLE :: switch_factor2, ron_switch_sq
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut_vdwsq, rcut_coulsq, ron_charmmsq, roff_charmmsq
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut9, rcut3
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut_vdw3, rcut_vdw6
   REAL(DP) :: edens_cut, rcut_clus, rcut_low, rcut_lowsq
-  REAL(DP) :: cut_cluster
   LOGICAL, DIMENSION(:), ALLOCATABLE :: l_half_len_cutoff
 
  ! Mixing Rules variables :
   CHARACTER(40), DIMENSION(:,:), ALLOCATABLE :: vdw_interaction_table
   INTEGER, DIMENSION(:,:), ALLOCATABLE ::vdw_int_table
-  !LJ
+  ! LJ
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param1_table, vdw_param2_table
-  !WCA
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param3_table, vdw_param4_table
-  !HYDR
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param5_table, vdw_param6_table, vdw_param7_table
-  !QQ CORR
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param8_table
-  !Yukawa
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param9_table, vdw_param10_table
-  !Square-Well potential
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param11_table, vdw_param12_table
+  ! HYDR
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param3_table, vdw_param4_table, vdw_param5_table
+  ! QQ CORR
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param6_table, vdw_param7_table
+  ! Yukawa
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param8_table, vdw_param9_table
+  ! Square-Well potential
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param10_table, vdw_param11_table
+
 
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alpha_ewald, h_ewald_cut
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alphal_ewald
@@ -167,8 +166,17 @@ USE Type_Definitions
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_intra_scale, charge_intra_scale
   LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: l_bonded
 
-  ! Gromacs file parameters
-  INTEGER, DIMENSION(:), ALLOCATABLE :: ndx_type
+  ! LJ
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param1_table, vdw_in_param2_table
+  ! HYDR
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param3_table, vdw_in_param4_table, vdw_in_param5_table
+  ! QQ CORR
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param6_table, vdw_in_param7_table
+  ! Yukawa
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param8_table, vdw_in_param9_table
+  ! Square-Well potential
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param10_table, vdw_in_param11_table
+
   ! How many simulation boxes we have. 
   INTEGER :: nbr_boxes
   INTEGER, PARAMETER :: int_cubic = 0
@@ -187,9 +195,13 @@ USE Type_Definitions
  !***************************************************************
   !Conversion factors and constants
 
-  REAL(DP), PARAMETER :: PI=3.1415926536_DP
+  REAL(DP), PARAMETER :: PI = 3.1415926536_DP
   REAL(DP), PARAMETER :: twoPI = 6.2831853072_DP
   REAL(DP), PARAMETER :: rootPI = 1.7724538509_DP
+
+  !lj parameters
+  REAL(DP), PARAMETER :: lj124pre = 2.5980762114_DP
+  REAL(DP), PARAMETER :: lj96pre = 6.75_DP
 
   !KBOLTZ is Boltzmann's constant in atomic units amu A^2 / (K ps^2)
   REAL(DP), PARAMETER :: kboltz = 0.8314472_DP
@@ -467,7 +479,7 @@ USE Type_Definitions
   ! individual move probability
   REAL(DP) :: prob_trans, prob_rot, prob_torsion, prob_volume, prob_angle, prob_insertion
   REAL(DP) :: prob_deletion, prob_swap, prob_regrowth, prob_ring, prob_atom_displacement
-  REAL(DP) :: prob_cluster     ! APS
+  REAL(DP) :: prob_cluster
   REAL(DP), ALLOCATABLE :: prob_swap_boxes(:,:)
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_rot_species
   REAL(DP), DIMENSION(:), ALLOCATABLE :: prob_swap_species
@@ -488,15 +500,12 @@ USE Type_Definitions
 
   REAL(DP) :: cut_trans, cut_rot, cut_torsion, cut_volume, cut_angle, cut_insertion, cut_deletion
   REAL(DP) :: cut_swap, cut_regrowth, cut_ring, cut_atom_displacement, cut_lambda
+  REAL(DP) :: cut_cluster
  
   !*********************************************************************************************************
   ! Information on the output of data
 
-  INTEGER :: nthermo_freq, ncoord_freq, n_mcsteps, n_equilsteps, this_mcstep
-  INTEGER :: ncluster_freq, nexvol_freq, nalpha_freq, nalphaclus_freq, noligdist_freq 
-  INTEGER :: nmsd_freq, nvacf_freq, ndipole_freq, ncluslife_freq
-  INTEGER :: nbond_freq, nangle_freq, ndihedral_freq, natomdist_freq, natomenergy_freq, nendclus_freq
-  INTEGER :: nvirial_freq, npotential_freq
+  INTEGER :: nthermo_freq, ncoord_freq, histogram_freq, ncluster_freq, n_mcsteps, n_equilsteps, this_mcstep
  
   INTEGER,DIMENSION(:),ALLOCATABLE :: nbr_prop_files
 
@@ -541,6 +550,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: imove_regrowth = 8
   INTEGER, PARAMETER :: imove_check = 9
   INTEGER, PARAMETER :: imove_atom_displacement = 10
+  INTEGER, PARAMETER :: imove_translate_cluster = 11
 
 
   REAL(DP) :: time_s, time_e
@@ -592,41 +602,30 @@ INTEGER :: n_lat_atoms
 
 !!!!de Broglie of pair
 LOGICAL :: store_sum
-
-  !*********************************************************************************************************
-  ! Post Processing
-  !*********************************************************************************************************
-  ! Information on Clusters
-
-  ! Will have dimensions of (nspecies,nbr_boxes)
-  TYPE(Cluster_Class), TARGET :: cluster
-
-  INTEGER :: max_nmol
-
-  INTEGER, PARAMETER :: int_com = 1
-  INTEGER, PARAMETER :: int_type = 2
-  INTEGER, PARAMETER :: int_skh = 3
-  INTEGER, PARAMETER :: int_micelle = 4
-
-  !*********************************************************************************************************
-  ! Information on Excluded Volume calculation
-
-  ! Will have dimensions of (nspecies,nbr_boxes)
-  TYPE(ExVol_Class), TARGET :: exvol
-
-  ! Information on Degree Association calculation
-  TYPE(DegreeAssociation_Class), TARGET :: alpha
-
-  TYPE(Measure_Molecules_Class), TARGET :: measure_mol
-
-  TYPE(trans_Class), TARGET :: trans
-
-  INTEGER, DIMENSION(:), ALLOCATABLE :: ia_atoms
-  INTEGER, DIMENSION(:), ALLOCATABLE :: im_atoms
-  INTEGER, DIMENSION(:), ALLOCATABLE :: is_atoms
-  INTEGER :: dcd_natoms, xtc_natoms, gro_natoms, xyz_natoms
   
-  TYPE(virial_Class), TARGET :: mcvirial
+! histogram writing variables
+INTEGER(8)            :: n_energy_hist      ! number of points for energy discretization
+REAL(DP)              :: energy_hist_width  ! width of energy histograms; should take into account interactions
+REAL(SP), ALLOCATABLE :: energy_hist(:,:,:) ! element 0 of this matrix contains the
+                                            ! starting value of energy for the bins at that amph. number. 
+                                            ! element -2 is the min value of energy for non-zero observations
+                                            ! element -1 is the max value of energy for non-zero observations
+                                            ! this arrary takes up a LOT of memory
+
+!*********************************************************************************************************
+! Post Processing
+!*********************************************************************************************************
+! Information on Clusters
+
+! Will have dimensions of (nspecies,nbr_boxes)
+TYPE(Cluster_Class), TARGET :: cluster
+
+INTEGER, PARAMETER :: int_com = 1
+INTEGER, PARAMETER :: int_type = 2
+INTEGER, PARAMETER :: int_skh = 3
+INTEGER, PARAMETER :: int_micelle = 4
+
+!*********************************************************************************************************
 
 END MODULE Run_Variables
 
