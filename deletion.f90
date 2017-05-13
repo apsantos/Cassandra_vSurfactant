@@ -19,7 +19,7 @@
 !   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !*******************************************************************************
 
-SUBROUTINE Deletion(this_box,mcstep,randno)
+SUBROUTINE Deletion(this_box)
   
   !*****************************************************************************
   !
@@ -63,21 +63,19 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
 
   ! Arguments
   INTEGER, INTENT(INOUT) :: this_box ! attempt to delete a molecule in this_box
-  INTEGER :: mcstep  ! not used
-  REAL(DP) :: randno ! not used
 
   ! Local declarations
   INTEGER :: i, i_type               ! atom indices
   INTEGER :: ifrag                   ! fragment indices
-  INTEGER :: im(2), alive(2)               ! molecule indices
+  INTEGER :: im(nspecies), alive(nspecies)               ! molecule indices
   INTEGER :: is, is_rand, is_counter ! species indices
-  INTEGER :: kappa_tot, which_anchor
+  INTEGER :: kappa_tot
   INTEGER, ALLOCATABLE :: frag_order(:)
   INTEGER :: k, position
   INTEGER :: tn1, tn2, n1, n2, nplocal, npair, dn
 
   REAL(DP) :: ppt, pp(n_insertable), randnpair, loc_chem_pot
-  REAL(DP) :: delta_e, delta_e_pacc, dblocal
+  REAL(DP) :: delta_e, dblocal
   REAL(DP) :: E_bond, E_angle, E_dihedral, E_improper
   REAL(DP) :: f_bond, f_angle, f_dihedral, f_improper
   REAL(DP) :: E_intra_vdw, E_intra_qq
@@ -90,7 +88,7 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
   REAL(DP) :: f_inter_vdw, f_inter_qq, pair_vdw, pair_qq
   REAL(DP) :: f_intra_vdw, f_intra_qq, f_reciprocal, f_self_diff
 
-  LOGICAL :: inter_overlap(2), cbmc_overlap(2), intra_overlap(2)
+  LOGICAL :: inter_overlap(nspecies), cbmc_overlap(nspecies), intra_overlap(nspecies)
   LOGICAL :: accept, accept_or_reject, poverlap, isgas, isfrag
 
   ! Initialize variables
@@ -522,7 +520,6 @@ SUBROUTINE Deletion(this_box,mcstep,randno)
      nsuccess(is,this_box)%deletion = nsuccess(is,this_box)%deletion + 1
      enddo
 
-!     CALL System_Energy_Check(1,mcstep,randno)
   ELSE
 
      is = n1

@@ -19,7 +19,7 @@
 !   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !*******************************************************************************
 
-SUBROUTINE Insertion(this_box,mcstep,randno)
+SUBROUTINE Insertion(this_box)
 
   !*****************************************************************************
   ! 
@@ -61,15 +61,13 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
 
   ! Arguments
   INTEGER :: this_box ! attempt to insert a molecule in this_box
-  INTEGER :: mcstep   ! not used
-  REAL(DP) :: randno  ! not used
 
   ! Local declarations
   INTEGER :: i, i_type               ! atom indices
   INTEGER :: ifrag                   ! fragment indices
-  INTEGER :: im, alive(2)               ! molecule indices
+  INTEGER :: alive(nspecies)               ! molecule indices
   INTEGER :: is, is_rand, is_counter ! species indices
-  INTEGER :: kappa_tot, which_anchor
+  INTEGER :: kappa_tot
   INTEGER, ALLOCATABLE :: frag_order(:)
   INTEGER :: rand_igas, tot_mols
   INTEGER :: tn1, tn2, n1, n2, nplocal, npair, dn
@@ -88,7 +86,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   REAL(DP) :: ln_pacc, P_seq, P_bias, this_lambda
   REAL(DP) :: fp_bias, fp_seq
 
-  LOGICAL :: inter_overlap(2), cbmc_overlap(2), intra_overlap(2), poverlap
+  LOGICAL :: inter_overlap(nspecies), cbmc_overlap(nspecies), intra_overlap(nspecies), poverlap
   LOGICAL :: accept, accept_or_reject, isfrag, isgas, rej_pair, cbmc_rej_pair
 
   ! Initialize variables
@@ -144,77 +142,73 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
   ! and the number of insertable species, nspec_insert:
 
   if (any(species_list(:)%pair_insert) .eqv. .TRUE.) then
-  do i = 1, n_insertable
-  tn1 = ins_species_index(i,1)
-  tn2 = ins_species_index(i,2)
-  ppt = prob_species_ins_pair(tn1,tn2)
-  if (i == 1) then
-     pp(i) = ppt
-  else
-     pp(i) = ppt + pp(i-1)
-  endif
-  enddo
+     do i = 1, n_insertable
+        tn1 = ins_species_index(i,1)
+        tn2 = ins_species_index(i,2)
+        ppt = prob_species_ins_pair(tn1,tn2)
+        if (i == 1) then
+           pp(i) = ppt
+        else
+           pp(i) = ppt + pp(i-1)
+        endif
+     enddo
+      
+     randnpair = rranf()
+     do i = n_insertable, 1, -1
+        if(randnpair .LE. pp(i)) then
+           n1 = ins_species_index(i,1)
+           n2 = ins_species_index(i,2)
+           npair = i
+        endif
+     enddo
 
-  randnpair = rranf()
-  do i = n_insertable, 1, -1
-  if(randnpair .LE. pp(i)) then
-     n1 = ins_species_index(i,1)
-     n2 = ins_species_index(i,2)
-     npair = i
-  endif
-  enddo
   else
-  is_rand = INT(rranf() * nspec_insert) + 1
-
-  is_counter = 0
-  DO is = 1, nspecies
-     IF(species_list(is)%int_species_type == int_sorbate) THEN
-        is_counter = is_counter + 1
-     END IF
-     IF(is_counter == is_rand) EXIT ! exit the loop when 'is' has been found
-  END DO
-  n1 = is
-  n2 = is
+     is_rand = INT(rranf() * nspec_insert) + 1
+   
+     is_counter = 0
+     DO is = 1, nspecies
+        IF(species_list(is)%int_species_type == int_sorbate) THEN
+           is_counter = is_counter + 1
+        END IF
+        IF(is_counter == is_rand) EXIT ! exit the loop when 'is' has been found
+     END DO
+     n1 = is
+     n2 = is
   endif
 
   dn = n2 - n1
   if (dn .EQ. 0) dn = 1
 
   do is = n1, n2, dn
-  tot_mols = SUM(nmols(is,:)) ! summed over the number of boxes?
+     tot_mols = SUM(nmols(is,:)) ! summed over the number of boxes?
+   
+     ! Check that tot_mols is less than the maximum allowable, nmolecules(is)
+   
+     IF (tot_mols == nmolecules(is)) THEN
+        err_msg = ""
+        err_msg(1) = 'Number of molecule exceeds limit of ' // &
+                     INT_to_String(tot_mols) 
+        err_msg(2) = 'Increase molecule number limit in input file '
+        CALL Clean_Abort(err_msg,'Insertion')
+        ! exit if we are attempting an insertion above the maximum allowable
+     END IF
 
-  ! Check that tot_mols is less than the maximum allowable, nmolecules(is)
-
-  IF (tot_mols == nmolecules(is)) THEN
-     err_msg = ""
-     err_msg(1) = 'Number of molecule exceeds limit of ' // &
-                  INT_to_String(tot_mols) 
-     err_msg(2) = 'Increase molecule number limit in input file '
-     CALL Clean_Abort(err_msg,'Insertion')
-     ! exit if we are attempting an insertion above the maximum allowable
-  END IF
-  enddo
-
-  ! Now that an insertion will be attempted, we need to do some bookkeeping:
-  !  * Increment the counters to compute success ratios
-
-  do is = n1, n2, dn
-  ntrials(is,this_box)%insertion = ntrials(is,this_box)%insertion + 1
-
-  !  * Assign a locate number for this molecule
-
-  IF ( locate(tot_mols+1,is) == 0 ) THEN
-     locate(tot_mols+1,is) = tot_mols + 1
-     ! otherwise we will use the locate number of a previously deleted molecule 
-     ! that has been moved to the end of the array.
-  END IF
-
-  !  * Set properties of the to-be-inserted molecule
-
-  alive(is) = locate(tot_mols+1,is)
-  molecule_list(alive(is),is)%which_box = this_box
-  molecule_list(alive(is),is)%cfc_lambda = this_lambda
-  molecule_list(alive(is),is)%molecule_type = int_normal
+     ! Now that an insertion will be attempted, we need to do some bookkeeping:
+     !  * Increment the counters to compute success ratios
+     ntrials(is,this_box)%insertion = ntrials(is,this_box)%insertion + 1
+   
+     !  * Assign a locate number for this molecule
+     IF ( locate(tot_mols+1,is) == 0 ) THEN
+        locate(tot_mols+1,is) = tot_mols + 1
+        ! otherwise we will use the locate number of a previously deleted molecule 
+        ! that has been moved to the end of the array.
+     END IF
+   
+     !  * Set properties of the to-be-inserted molecule
+     alive(is) = locate(tot_mols+1,is)
+     molecule_list(alive(is),is)%which_box = this_box
+     molecule_list(alive(is),is)%cfc_lambda = this_lambda
+     molecule_list(alive(is),is)%molecule_type = int_normal
   enddo
 
   tot_trials(this_box) = tot_trials(this_box) + 1
@@ -312,7 +306,7 @@ SUBROUTINE Insertion(this_box,mcstep,randno)
         ! local environment. The conformations are sampled according to their 
         ! Boltzmann weight. Read one in at random:
 
-        rand_igas = (rranf() * n_igas(is)) + 1
+        rand_igas = INT(rranf() * n_igas(is)) + 1
 
         molecule_list(alive(is),is)%xcom = molecule_list_igas(rand_igas,is)%xcom
         molecule_list(alive(is),is)%ycom = molecule_list_igas(rand_igas,is)%ycom
