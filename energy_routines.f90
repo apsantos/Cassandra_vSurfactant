@@ -161,7 +161,7 @@ CONTAINS
   ! Only does water now.
   SUBROUTINE Calculate_Permitivity(box_int, solvent, eps)
     INTEGER, INTENT(IN) :: box_int
-    CHARACTER(80), INTENT(IN) :: solvent
+    CHARACTER(120), INTENT(IN) :: solvent
     REAL(DP), INTENT(OUT) :: eps
 
     IF (solvent == 'water') THEN
@@ -235,7 +235,7 @@ CONTAINS
              energy = 0.0_DP
              ierr = 0
           ELSEIF (bond_list(ibond,species)%bond_potential_type == 'harmonic') THEN
-             k=bond_list(ibond,species)%bond_param(1)
+             k = bond_list(ibond,species)%bond_param(1)
              l0 = bond_list(ibond,species)%bond_param(2)
                 
              CALL Get_Bond_Length(ibond,molecule,species,length)
@@ -294,7 +294,7 @@ CONTAINS
        IF (bond_list(ibond,species)%int_bond_type == int_none) THEN
           eb = 0.0_DP
        ELSEIF (bond_list(ibond,species)%int_bond_type == int_harmonic) THEN
-          k=bond_list(ibond,species)%bond_param(1)
+          k = bond_list(ibond,species)%bond_param(1)
           l0 = bond_list(ibond,species)%bond_param(2)
           CALL Get_Bond_Length(ibond,molecule,species,length)
           eb = k*(length-l0)**2
@@ -976,22 +976,16 @@ CONTAINS
     REAL(DP), INTENT(OUT) :: E_intra_vdw,E_inter_vdw,E_intra_qq,E_inter_qq
     REAL(DP) :: E_intra_vdw_new,E_inter_vdw_new,E_intra_qq_new,E_inter_qq_new
     LOGICAL, INTENT(OUT) :: overlap   
-    INTEGER :: this_box,is,im,ia, mol_is, itype, jtype, vdw_in
-    REAL(DP) :: rxij,ryij,rzij,rijsq,rxijp,ryijp,rzijp
+    INTEGER :: this_box, is, im, ia, mol_is, itype, jtype, vdw_in
+    REAL(DP) :: rxij,ryij,rzij,rijsq,rxijp,ryijp,rzijp, rinteraction
     REAL(DP) :: Eij_vdw,Eij_qq
     REAL(DP) :: eps, sig, SigOverRsq, SigOverR6, SigOverR12
-    REAL(DP) :: qi, qj, rij, erf_val, erfc_val, qsc
-    REAL(DP) :: T, x, xsq, TP
+    REAL(DP) :: qi, qj, rij, erf_val, qsc
     REAL(DP) :: rcom,rx,ry,rz
-    REAL(DP) :: rcut, rcutsq, rinteraction
+    REAL(DP) :: rcut, rcutsq
     REAL(DP) :: this_lambda_lj
  
     LOGICAL :: get_vdw,get_qq, f_intra_nrg, get_interaction
-
-    REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-    REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-    REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
-
 
     !----------------------------------------------------------------------------------------------              
     E_inter_vdw = 0.0_DP
@@ -1051,7 +1045,7 @@ CONTAINS
        DO is=1,nspecies
           
           !$OMP PARALLEL DO DEFAULT(SHARED) &
-          !$OMP PRIVATE(im,mol_is,rxijp,ryijp,rzijp,rijsq,rinteraction,T,x,xsq,TP,erfc_val,ia,f_intra_nrg) &
+          !$OMP PRIVATE(im,mol_is,rxijp,ryijp,rzijp,rijsq,rinteraction,ia,f_intra_nrg) &
           !$OMP PRIVATE(itype,jtype,eps,sig,SigOverRsq,SigOverR6,SigOverR12,rij,erf_val,Eij_vdw,Eij_qq,qsc) &
           !$OMP SCHEDULE(DYNAMIC) &
           !$OMP REDUCTION(+:E_inter_vdw,E_inter_qq,E_intra_vdw,E_intra_qq)
@@ -1166,15 +1160,8 @@ CONTAINS
                       SigOverR12 = SigOverR6 * SigOverR6
                       Eij_vdw = 4.0_DP * eps * (SigOverR12 - SigOverR6)
                       
-                      x = alpha_ewald(this_box) * rij
-                      T = 1.0_DP / (1.0_DP + P*x)
-                      xsq = x*x
-                      TP = T * (A1 + T * (A2 + T * (A3 + T * (A4 + T * A5))))
-                      erfc_val = TP * EXP(-xsq)
-                      
-                      erf_val = 1.0_DP - erfc_val
-                      
-                      Eij_qq = (qi*qj/rij)*(qsc-erf_val)*charge_factor(this_box)
+                      erf_val = 1.0_DP - erfc(alpha_ewald(this_box) * rij)
+                      Eij_qq = (qi * qj / rij) * (qsc - erf_val) * charge_factor(this_box)
                       
                       
                       IF (f_intra_nrg) THEN
@@ -1348,10 +1335,6 @@ CONTAINS
     REAL(DP) :: Eij_vdw, Eij_qq
     REAL(DP), OPTIONAL :: E_self
     
-    !REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-    !REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-    !REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
-
     LOGICAL :: get_vdw, get_qq, intra_overlap
 
     E_intra_vdw = 0.0_DP
@@ -1452,10 +1435,6 @@ CONTAINS
     
     REAL(DP) :: Eij_vdw, Eij_qq
     REAL(DP) :: rcom, rx, ry, rz
-
-    !REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-    !REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-    !REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
 
     LOGICAL :: get_interaction
 
@@ -1572,29 +1551,35 @@ CONTAINS
   !------------------------------------------------------------------------------------------
     ! Passed to
     REAL(DP) :: rijsq
-    !REAL(DP) :: rxij,ryij,rzij,rijsq
     INTEGER :: is,im,ia,js,jm,ja,ibox
     LOGICAL :: get_vdw,get_qq
+
+    INTEGER :: i_vdw, i_vdw_sum
 
     ! Returned
     REAL(DP) :: Eij_vdw,Eij_qq
 
     ! Local
     INTEGER :: itype,jtype, this_box
-    REAL(DP) :: eps,sig,SigOverRsq,SigOverR6,SigOverR12
+    REAL(DP) :: eps,sig
+    REAL(DP) :: SigOverRsq,SigOverR6,SigOverR12
     REAL(DP) :: SigOverRsq_shift,SigOverR6_shift,SigOverR12_shift
+    REAL(DP) :: SigOverR4
+    REAL(DP) :: SigOverR4_shift
+    REAL(DP) :: SigOverR3,SigOverR9
+    REAL(DP) :: SigOverR3_shift,SigOverR9_shift
     REAL(DP) :: roffsq_rijsq, roffsq_rijsq_sq, factor2, fscale
-    REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff, rij,  mie_n, mie_m
-    REAL(DP) :: SigOverR_shift, SigOverRn_shift, SigOverRm_shift, rcut_vdw
+    REAL(DP) :: SigOverR, SigOverRn, SigOverRm
+    REAL(DP) :: SigOverR_shift, SigOverRn_shift, SigOverRm_shift, rcut_vdw, rcutsq
+    REAL(DP) :: mie_coeff, rij,  mie_n, mie_m
 !    REAL(DP) :: Eij_vdw_check
     Real(DP) :: qi,qj, qsc
     REAL(DP) :: this_lambda
-    !REAL(DP) :: RsqOverSig_Shift, RsqOverSig6_Shift, factorLJ_Shift
 
     LOGICAL :: fraction
 
 !FSL Local Hydration and WCA Parameters
-    REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, E_wca, epswca, rwca, kappa
+    REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, kappa
 
   !------------------------------------------------------------------------------------------
     Eij_vdw = 0.0_DP
@@ -1604,7 +1589,6 @@ CONTAINS
     E_hyd = 0.0_DP
     Preexph = 0.0_DP
     Powerh = 0.0_DP
-    E_wca = 0.0_DP
 
     ibox = molecule_list(im,is)%which_box
 
@@ -1615,85 +1599,60 @@ CONTAINS
        itype = nonbond_list(ia,is)%atom_type_number
        jtype = nonbond_list(ja,js)%atom_type_number
        
+       IF (is == js .AND. im == jm) THEN
+          i_vdw = int_in_vdw_style_mix(ia,ja,is)
+          i_vdw_sum = int_in_vdw_sum_style_mix(ia,ja,is)
+          rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+       ELSE
+          i_vdw = int_vdw_style_mix(itype,jtype)
+          i_vdw_sum = int_vdw_sum_style_mix(itype,jtype)
+          rcutsq = rcut_vdwsq_mix(itype,jtype)
+       END IF
+
        VDW_calculation: IF (get_vdw) THEN
 
-!WCA calculation
-       !IF(vdw_param3_table(itype,jtype) /= 0 ) THEN 
-       IF(vdw_param3_table(itype,jtype) /= 0 .AND. is /= js & 
-        .OR. vdw_param3_table(itype,jtype) /= 0 .AND. is == js .AND. &
-        im /= jm) THEN
-
-          sig = vdw_param2_table(itype,jtype)
-
-          epswca = vdw_param3_table(itype,jtype)
-          rwca = vdw_param4_table(itype,jtype)
-          rij = SQRT(rijsq)
-
-             IF (is == js .AND. im == jm) THEN
-                
-                ! This controls 1-2, 1-3, and 1-4 interactions
-                
-                epswca = epswca * vdw_intra_scale(ia,ja,is)
-
-             ENDIF
-                
-          IF(rij .GT. rwca) THEN
-             Eij_vdw = 0.0_DP
-
-          ELSE
-             SigOverRsq = (sig**2) / rijsq
-             SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
-             SigOverR12 = SigOverR6 * SigOverR6
-
-             Eij_vdw = 4.0_DP * epswca * (SigOverR12 - SigOverR6) + epswca
-
-          END IF
-!End WCA calculation
-       ELSE
-
-          LJ_calculation: IF (int_vdw_style(1) == vdw_lj) THEN
+          LJ_12_6_calculation: IF (i_vdw == vdw_lj) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
              IF (is == js .AND. im == jm) THEN
-                
                 ! This controls 1-2, 1-3, and 1-4 interactions
-                
-                eps = eps * vdw_intra_scale(ia,ja,is)
-
+                eps  = vdw_in_param1_table(ia,ja,is)
+                sig  = vdw_in_param2_table(ia,ja,is)
+                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                    eps = 0.0
+                ENDIF
              ENDIF
                 
              SigOverRsq = (sig**2) / rijsq
              SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
              SigOverR12 = SigOverR6 * SigOverR6
              
-             IF (int_vdw_sum_style(ibox) == vdw_charmm) THEN
+             IF (i_vdw_sum == vdw_charmm) THEN
 
                 ! use the form for modified LJ potential
                 
                 Eij_vdw = eps * (SigOverR12 - 2.0_DP * SigOverR6)
 
-             ELSEIF (int_vdw_sum_style(ibox) == vdw_cut .OR. int_vdw_sum_style(ibox) == vdw_cut_tail) THEN
+             ELSEIF (i_vdw_sum == vdw_cut .OR. i_vdw_sum == vdw_cut_tail) THEN
                  
                    Eij_vdw = 4.0_DP * eps * (SigOverR12 - SigOverR6)
 
-             ELSEIF (int_vdw_sum_style(ibox) == vdw_cut_shift) THEN
+             ELSEIF (i_vdw_sum == vdw_cut_shift) THEN
                 
-                SigOverRsq = (sig**2)/rijsq
-                SigOverR6 = SigOverRsq * SigOverRsq * SigOverRsq
-                SigOverR12 = SigOverR6 * SigOverR6
-
-                
-                SigOverRsq_shift = sig**2/rcut_vdwsq(ibox)
+                IF (rijsq < rcutsq) THEN
+                SigOverRsq_shift = sig**2/rcutsq
                 SigOverR6_shift = SigOverRsq_shift * SigOverRsq_shift * SigOverRsq_shift
                 SigOverR12_shift = SigOverR6_shift * SigOverR6_shift
                 
                 Eij_vdw = 4.0_DP * eps * ( (SigOverR12 - SigOverR6) - (SigOverR12_shift - SigOverR6_shift) )
+                ENDIF
 
                 
-             ELSEIF (int_vdw_sum_style(ibox) == vdw_cut_switch) THEN
+             ELSEIF (i_vdw_sum == vdw_cut_switch) THEN
                 
                 Eij_vdw = 4.0_DP * eps * (SigOverR12 - SigOverR6)
                                             
@@ -1718,94 +1677,216 @@ CONTAINS
                    fscale = 0.0_DP
                    Eij_vdw = 0.0_DP
                 ENDIF
-
-             ELSEIF (int_vdw_sum_style(ibox) == vdw_mie) THEN
-
-                rij = SQRT(rijsq)
-                rcut_vdw = SQRT(rcut_vdwsq(ibox))
-                
-                mie_n = mie_nlist(mie_Matrix(is,js))
-                mie_m = mie_mlist(mie_Matrix(is,js))
-                mie_coeff = mie_n/(mie_n-mie_m) * (mie_n/mie_m)**(mie_m/(mie_n-mie_m))
-                SigOverR = sig/rij
-                SigOverR_shift = sig/rcut_vdw
-                !use cut-shift potential
-                SigOverRn_shift = SigOverR_shift ** mie_n
-                SigOverRm_shift = SigOverR_shift ** mie_m
-                SigOverRn = SigOverR ** mie_n
-                SigOverRm = SigOverR ** mie_m
-                Eij_vdw =  mie_coeff * eps * ((SigOverRn - SigOverRm) - (SigOverRn_shift - SigOverRm_shift))
-                
              ENDIF
-             
-             
-          ENDIF LJ_calculation
 
-          Yukawa_calculation: IF (vdw_param9_table(itype,jtype) /= 0) THEN
+          ENDIF LJ_12_6_calculation
+
+          LJ_12_4_calculation: IF (i_vdw == vdw_lj124) THEN
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             eps = vdw_param1_table(itype,jtype)
+             sig = vdw_param2_table(itype,jtype)
+             rcutsq = rcut_vdwsq_mix(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                eps = vdw_in_param1_table(ia,ja,is)
+                sig = vdw_in_param2_table(ia,ja,is)
+                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                   eps = 0.0
+                ENDIF
+             ENDIF
+                
+             SigOverRsq = (sig**2) / rijsq
+             SigOverR4  = SigOverRsq * SigOverRsq
+             SigOverR12 = SigOverR4 * SigOverR4 * SigOverR4
+
+             Eij_vdw = lj124pre * eps * (SigOverR12 - SigOverR4)
+             
+             IF (i_vdw_sum == vdw_cut_shift) THEN
+                
+                IF (rijsq < rcutsq) THEN
+                SigOverRsq_shift = sig**2/rcutsq
+                SigOverR4_shift = SigOverRsq_shift * SigOverRsq_shift
+                SigOverR12_shift = SigOverR4_shift * SigOverR4_shift * SigOverR4_shift
+                
+                Eij_vdw = Eij_vdw - (lj124pre * eps * (SigOverR12_shift - SigOverR4_shift) )
+                ENDIF
+
+                
+             ELSEIF (i_vdw_sum == vdw_cut_switch) THEN
+                
+                IF ( (rijsq < ron_switch_sq(ibox) )) THEN
+                   
+                   fscale = 1.0_DP
+                   
+                ELSEIF ( rijsq <= roff_switch_sq(ibox)) THEN
+                   
+                   roffsq_rijsq = roff_switch_sq(ibox) - rijsq
+                   
+                   roffsq_rijsq_sq = roffsq_rijsq * roffsq_rijsq
+                   
+                   factor2 = switch_factor2(ibox) + 2.0_DP * rijsq
+                   
+                   fscale = roffsq_rijsq_sq * factor2 * switch_factor1(ibox)
+                   
+                   Eij_vdw = fscale * Eij_vdw
+
+                ELSE
+                   
+                   fscale = 0.0_DP
+                   Eij_vdw = 0.0_DP
+                ENDIF
+             ENDIF
+
+          ENDIF LJ_12_4_calculation
+
+          LJ_9_6_calculation: IF (i_vdw == vdw_lj96) THEN
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             eps = vdw_param1_table(itype,jtype)
+             sig = vdw_param2_table(itype,jtype)
+             rcutsq = rcut_vdwsq_mix(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                eps = vdw_in_param1_table(ia,ja,is)
+                sig = vdw_in_param2_table(ia,ja,is)
+                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                    eps = 0.0
+                ENDIF
+             ENDIF
+                
+             SigOverR3 = (sig**3) / (rijsq * SQRT( rijsq ))
+             SigOverR6  = SigOverR3 * SigOverR3
+             SigOverR9  = SigOverR6 * SigOverR3
+
+             Eij_vdw = lj96pre * eps * (SigOverR9 - SigOverR6)
+             
+             IF (i_vdw_sum == vdw_cut_shift) THEN
+                
+                IF (rijsq < rcutsq) THEN
+                SigOverR3_shift = (sig**3) / (rcutsq * SQRT( rcutsq ))
+                SigOverR6_shift  = SigOverR3_shift * SigOverR3_shift
+                SigOverR9_shift  = SigOverR6_shift * SigOverR3_shift
+                
+                Eij_vdw = Eij_vdw - (lj96pre * eps * (SigOverR9_shift - SigOverR6_shift) )
+                ENDIF
+
+                
+             ELSEIF (i_vdw_sum == vdw_cut_switch) THEN
+                
+                IF ( (rijsq < ron_switch_sq(ibox) )) THEN
+                   
+                   fscale = 1.0_DP
+                   
+                ELSEIF ( rijsq <= roff_switch_sq(ibox)) THEN
+                   
+                   roffsq_rijsq = roff_switch_sq(ibox) - rijsq
+                   
+                   roffsq_rijsq_sq = roffsq_rijsq * roffsq_rijsq
+                   
+                   factor2 = switch_factor2(ibox) + 2.0_DP * rijsq
+                   
+                   fscale = roffsq_rijsq_sq * factor2 * switch_factor1(ibox)
+                   
+                   Eij_vdw = fscale * Eij_vdw
+
+                ELSE
+                   
+                   fscale = 0.0_DP
+                   Eij_vdw = 0.0_DP
+                ENDIF
+             ENDIF
+
+          ENDIF LJ_9_6_calculation
+
+          mie_calculation: IF (i_vdw == vdw_mie) THEN
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             eps = vdw_param1_table(itype,jtype)
+             sig = vdw_param2_table(itype,jtype)
+             rcutsq = rcut_vdwsq_mix(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                eps = vdw_in_param1_table(ia,ja,is)
+                sig = vdw_in_param2_table(ia,ja,is)
+                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                    eps = 0.0
+                ENDIF
+             ENDIF
+                
+             SigOverRsq = (sig**2) / rijsq
+
+             rij = SQRT(rijsq)
+             rcut_vdw = SQRT(rcutsq)
+                
+             mie_n = mie_nlist(mie_Matrix(is,js))
+             mie_m = mie_mlist(mie_Matrix(is,js))
+             mie_coeff = mie_n/(mie_n-mie_m) * (mie_n/mie_m)**(mie_m/(mie_n-mie_m))
+             SigOverR = sig/rij
+             SigOverR_shift = sig/rcut_vdw
+             !use cut-shift potential
+             SigOverRn_shift = SigOverR_shift ** mie_n
+             SigOverRm_shift = SigOverR_shift ** mie_m
+             SigOverRn = SigOverR ** mie_n
+             SigOverRm = SigOverR ** mie_m
+             Eij_vdw =  mie_coeff * eps * ((SigOverRn - SigOverRm) - (SigOverRn_shift - SigOverRm_shift))
+                
+          ENDIF mie_calculation
+             
+          Yukawa_calculation: IF (i_vdw == vdw_yukawa) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param9_table(itype,jtype)
              kappa = vdw_param10_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
              IF (is == js .AND. im == jm) THEN
-
                 ! This controls 1-2, 1-3, and 1-4 interactions
-
-                eps = eps * vdw_intra_scale(ia,ja,is)
-
+                eps = vdw_in_param9_table(ia,ja,is)
+                kappa = vdw_in_param10_table(ia,ja,is)
+                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                    eps = 0.0
+                ENDIF
              ENDIF
- 
-             IF (int_vdw_sum_style(ibox) == vdw_cut .OR. &
-                 int_vdw_sum_style(ibox) == vdw_cut_tail) THEN
-                  
-                 rij = SQRT(rijsq)
-                 Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij)
- 
-             ELSEIF (int_vdw_sum_style(ibox) == vdw_cut_shift) THEN
+                
+            IF (i_vdw_sum == vdw_cut .OR. i_vdw_sum == vdw_cut_tail) THEN
                  
-                 rij = SQRT(rijsq)
-                 rcut_vdw = SQRT(rcut_vdwsq(ibox))
-                 Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij) &
-                         - (eps * exp(-kappa * rcut_vdw)/rcut_vdw)
-             ELSE
-                 rij = SQRT(rijsq)
-                 Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij)
-             ENDIF
- 
+                rij = SQRT(rijsq)
+                Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij)
+
+            ELSEIF (i_vdw_sum == vdw_cut_shift) THEN
+                
+                rij = SQRT(rijsq)
+                rcut_vdw = SQRT(rcutsq)
+                Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij) - (eps * exp(-kappa * rcut_vdw)/rcut_vdw)
+            ELSE
+                rij = SQRT(rijsq)
+                Eij_vdw = Eij_vdw + (eps * exp(-kappa * rij)/rij)
+            ENDIF
 
           ENDIF Yukawa_calculation
 
-          SquareWell_calculation: IF (vdw_param11_table(itype,jtype) /= 0) THEN
-             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
-             eps = vdw_param11_table(itype,jtype)
-             sig = vdw_param12_table(itype,jtype)
-
-             ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
-
-                ! This controls 1-2, 1-3, and 1-4 interactions
-                eps = eps * vdw_intra_scale(ia,ja,is)
-
-             ENDIF
-
-             IF (rijsq < rcut_vdwsq(ibox)) THEN
-                Eij_vdw = Eij_vdw + 10000000.
-             ELSE IF (rijsq < sig) THEN
-                Eij_vdw = Eij_vdw - eps
-             ELSE 
-                Eij_vdw = Eij_vdw + 0.0
-             ENDIF
-
-          ENDIF SquareWell_calculation
-
-!Closing loop for checking WCA
-       ENDIF 
        ENDIF VDW_calculation
 !FSL Hydration Energy start
-       hydration_calculation: IF(vdw_param5_table(itype,jtype) /= 0) THEN
-          Hhyd = vdw_param5_table(itype,jtype)
-          Rhyd = vdw_param6_table(itype,jtype)
-          Shyd = vdw_param7_table(itype,jtype)
+       hydration_calculation: IF (i_vdw == vdw_hydra) THEN
+          Hhyd = vdw_param4_table(itype,jtype)
+          Rhyd = vdw_param5_table(itype,jtype)
+          Shyd = vdw_param6_table(itype,jtype)
+
+          ! Apply intramolecular scaling if necessary
+          IF (is == js .AND. im == jm) THEN
+             ! This controls 1-2, 1-3, and 1-4 interactions
+             Hhyd = vdw_in_param4_table(ia,ja,is)
+             Rhyd = vdw_in_param5_table(ia,ja,is)
+             Shyd = vdw_in_param6_table(ia,ja,is)
+          ENDIF
+                
           rij = SQRT(rijsq)
 
           Preexph = Hhyd/(Shyd*(SQRT(twopi)))
@@ -1847,9 +1928,7 @@ CONTAINS
        
     ENDIF ExistCheck
 
-  !IF ( vdw_param3_table(itype,jtype) /= 0 .AND. im == jm .AND. is /= js ) THEN
   !writE(*,'(2A,F8.3,X,F11.5,X,F11.5)') nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), Eij_vdw, Eij_qq
-  !END IF
 
   END SUBROUTINE Pair_Energy
 
@@ -1908,15 +1987,12 @@ CONTAINS
     ! May need to protect against very small rijsq
     erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
     Eij = (qi*qj/rij)*(qsc - erf_val)*charge_factor(ibox)
-!                   IF(en_flag) THEN
-!                      WRITE(60,"(4I4,2F8.5,F24.12)") ia, ja, jm, js, qi,qj, Eij
-!                   END IF
 
 !FSL QQ Cor start
-    QQ_cor_calculation: IF(vdw_param8_table(itype,jtype) /= 0) THEN
+    QQ_cor_calculation: IF(vdw_param6_table(itype,jtype) /= 0) THEN
 
        Cqqcor = species_list(is)%total_charge*species_list(js)%total_charge
-       Rqqcor = vdw_param8_table(itype,jtype)
+       Rqqcor = vdw_param6_table(itype,jtype)
        Sqqcor = vdw_param7_table(itype,jtype)
 
        tanhqqcor = DTANH((rij - Rqqcor)/Sqqcor)
@@ -1926,30 +2002,6 @@ CONTAINS
 
     Eij = Eij + E_qqcor
 !FSL QQ Cor end    
-!------------------------------------------------------------------------------
-  CONTAINS
-
-    FUNCTION erfc(x)
-      !**************************************************************************
-      !                                                                         *
-      ! Calculate the complementary error function for  a number
-      !                                                                         *
-      !**************************************************************************
-
-      REAL(DP) :: erfc
-      REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-      REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-      REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
-      REAL(DP) :: T, x, xsq, TP
-
-      T = 1.0_DP / (1.0_DP + P*x)
-      xsq = x*x
-
-      TP = T * (A1 + T * (A2 + T * (A3 + T * (A4 + T * A5))))
-
-      erfc = TP * EXP(-xsq)
-
-    END FUNCTION erfc
 !------------------------------------------------------------------------------
 
   END SUBROUTINE Ewald_Real
@@ -3196,7 +3248,6 @@ CONTAINS
           epsij = vdw_param1_table(ia,ja)
           sigij = vdw_param2_table(ia,ja)
 
-
           IF(vdw_param3_table(ia,ja) /= 0) CYCLE
           
           sigij2 = sigij*sigij
@@ -3285,7 +3336,13 @@ CONTAINS
    VDW_Test2: IF (int_vdw_style(this_box) == vdw_none) THEN
       get_vdw = .FALSE.
       
-   ELSEIF (int_vdw_style(this_box) == vdw_lj) THEN
+   ELSEIF (int_vdw_style(this_box) == vdw_lj    .or. &
+           int_vdw_style(this_box) == vdw_lj124 .or. &
+           int_vdw_style(this_box) == vdw_lj96  .or. &
+           int_vdw_style(this_box) == vdw_mie   .or. &
+           int_vdw_style(this_box) == vdw_yukawa.or. &
+           int_vdw_style(this_box) == vdw_hydra .or. &
+           int_vdw_style(this_box) == vdw_sw) THEN
       
       IF (CBMC_flag) THEN
          IF (rijsq <= rcut_cbmcsq) THEN
@@ -3331,7 +3388,7 @@ CONTAINS
    ELSE
       err_msg = ""
       err_msg(1) = 'vdw_style must be NONE of LJ'
-      CALL Clean_Abort(err_msg,'Compute_Atom_Nonbond_Energy')
+      CALL Clean_Abort(err_msg,'Energy_Test')
       
    ENDIF VDW_Test2
    
@@ -3606,6 +3663,7 @@ CONTAINS
   !------------------------------------------------------------------------------------------
     ! Passed to
     REAL(DP) :: rijsq
+    REAL(DP) :: rcutsq
     INTEGER :: is,im,ia,js,jm,ja,ibox
     LOGICAL :: get_vdw,get_qq, fraction
 
@@ -3614,15 +3672,22 @@ CONTAINS
 
     ! Local
     INTEGER :: itype,jtype, this_box
-    REAL(DP) :: eps,sig,SigOverRsq,SigOverR6,SigOverR12
-    REAL(DP) :: SigOverRsq_shift,SigOverR6_shift,SigOverR12_shift
+    REAL(DP) :: eps,sig,SigOverRsq,SigOverR6,SigOverR12, kappa
+    REAL(DP) :: SigOverR4
+    REAL(DP) :: SigOverR3,SigOverR9
     REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff, mie_n, mie_m
     REAL(DP) :: roffsq_rijsq, roffsq_rijsq_sq, factor2, fscale
     REAL(DP) :: qi,qj, qsc, erf_val, this_lambda
-    REAL(DP) :: rij, ewald_constant, exp_const, Wij_self, kappa
+    REAL(DP) :: rij, ewald_constant, exp_const, Wij_self
+
+!FSL Local Hydration and WCA Parameters
+    REAL(DP) :: Wij_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, rshift
+
+    INTEGER :: i_vdw, i_vdw_sum
 
   !------------------------------------------------------------------------------------------
 
+    Eij_vdw = 0.0_DP
     Wij_vdw = 0.0_DP
     Wij_qq = 0.0_DP
     fraction = .false.
@@ -3637,51 +3702,46 @@ CONTAINS
        itype = nonbond_list(ia,is)%atom_type_number
        jtype = nonbond_list(ja,js)%atom_type_number
        
+       IF (is == js .AND. im == jm) THEN
+          i_vdw = int_in_vdw_style_mix(ia,ja,is)
+          i_vdw_sum = int_in_vdw_sum_style_mix(ia,ja,is)
+       ELSE
+          i_vdw = int_vdw_style_mix(itype,jtype)
+          i_vdw_sum = int_vdw_sum_style_mix(itype,jtype)
+       END IF
+
        VDW_calculation: IF (get_vdw) THEN
 
-          LJ_12_6_calculation: IF (int_vdw_style(1) == vdw_lj) THEN
+          LJ_12_6_calculation: IF (i_vdw == vdw_lj) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
              IF (is == js .AND. im == jm) THEN
-                
                 ! This controls 1-2, 1-3, and 1-4 interactions
-                
-                eps = eps * vdw_intra_scale(ia,ja,is)
-
+                eps = vdw_in_param1_table(ia,ja,is)
+                sig = vdw_in_param2_table(ia,ja,is)
+                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                    eps = 0.0
+                ENDIF
              ENDIF
+                
+             SigOverRsq = (sig**2.0_DP)/rijsq
+             SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
+             SigOverR12 = SigOverR6 * SigOverR6
 
-             IF (int_vdw_sum_style(ibox) == vdw_charmm) THEN
-                SigOverRsq = (sig**2.0_DP)/rijsq
-                SigOverR6  = SigOverRsq * SigOverRsq * SigOverRsq
-                SigOverR12 = SigOverR6 * SigOverR6
-
+             IF (i_vdw_sum == vdw_charmm) THEN
                 Wij_vdw = (12.0_DP * eps ) * (SigOverR12 - SigOverR6)
 
-             ELSEIF (int_vdw_sum_style(ibox) == vdw_cut .OR. int_vdw_sum_style(ibox) == vdw_cut_tail) THEN
-                SigOverRsq = (sig**2)/rijsq
-                SigOverR6 = SigOverRsq * SigOverRsq * SigOverRsq
-                SigOverR12 = SigOverR6 * SigOverR6
-                
+             ELSEIF (i_vdw_sum == vdw_cut .OR. i_vdw_sum == vdw_cut_tail) THEN
                 Wij_vdw = (24.0_DP * eps) * (2.0_DP*SigOverR12 - SigOverR6)
-             ELSEIF (int_vdw_sum_style(ibox) == vdw_cut_shift) THEN
-                SigOverRsq = (sig**2)/rijsq
-                SigOverR6 = SigOverRsq * SigOverRsq * SigOverRsq
-                SigOverR12 = SigOverR6 * SigOverR6
 
-                SigOverRsq_shift = sig**2/rcut_vdwsq(ibox)
-                SigOverR6_shift = SigOverRsq_shift * SigOverRsq_shift * SigOverRsq_shift
-                SigOverR12_shift = SigOverR6_shift * SigOverR6_shift
-
+             ELSEIF (i_vdw_sum == vdw_cut_shift) THEN
                 Wij_vdw = (24.0_DP * eps) * (2.0_DP*SigOverR12 - SigOverR6) 
 
-             ELSEIF (int_vdw_sum_style(ibox) == vdw_cut_switch) THEN
-                
-                SigOverRsq = (sig**2)/rijsq
-                SigOverR6 = SigOverRsq * SigOverRsq * SigOverRsq
-                SigOverR12 = SigOverR6 * SigOverR6
+             ELSEIF (i_vdw_sum == vdw_cut_switch) THEN
                 
                 IF ( (rijsq < ron_switch_sq(ibox) )) THEN
                    
@@ -3704,7 +3764,135 @@ CONTAINS
                         (8.0_DP * rijsq * rijsq * roffsq_rijsq * Eij_vdw * switch_factor1(ibox))/(3.0_DP)
 
                 END IF
-             ELSEIF (int_vdw_sum_style(ibox) == vdw_mie) THEN
+
+             ELSE
+
+                fscale = 0.0_DP
+                Eij_vdw = 0.0_DP
+                Wij_vdw = 0.0_DP
+                               
+             ENDIF
+             
+             ! Add other potential types here
+          ENDIF LJ_12_6_calculation
+
+          LJ_12_4_calculation: IF (i_vdw == vdw_lj124) THEN
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             eps = vdw_param1_table(itype,jtype)
+             sig = vdw_param2_table(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                eps = vdw_in_param1_table(ia,ja,is)
+                sig = vdw_in_param2_table(ia,ja,is)
+                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                    eps = 0.0
+                ENDIF
+             ENDIF
+
+             SigOverRsq = (sig**2) / rijsq
+             SigOverR4  = SigOverRsq * SigOverRsq
+             SigOverR12 = SigOverR4 * SigOverR4 * SigOverR4
+
+             Wij_vdw = (4.0_DP * lj124pre * eps) * (3.0_DP*SigOverR12 - SigOverR4)
+
+             IF (i_vdw_sum == vdw_cut_switch) THEN
+                
+                IF ( (rijsq < ron_switch_sq(ibox) )) THEN
+                   
+                   fscale = 1.0_DP
+                   
+                ELSE IF ( rijsq <= roff_switch_sq(ibox)) THEN
+                   
+                   Eij_vdw = lj124pre * eps * (SigOverR12 - SigOverR4)
+
+                   roffsq_rijsq = roff_switch_sq(ibox) - rijsq
+                  
+                   roffsq_rijsq_sq = roffsq_rijsq * roffsq_rijsq
+
+                   factor2 = switch_factor2(ibox) + 2.0_DP * rijsq
+
+                   fscale = roffsq_rijsq_sq * factor2 * switch_factor1(ibox)
+
+                   Eij_vdw = fscale * Eij_vdw
+                   Wij_vdw = fscale * Wij_vdw / 3.0_DP 
+                   Wij_vdw = Wij_vdw + &
+                        (8.0_DP * rijsq * rijsq * roffsq_rijsq * Eij_vdw * switch_factor1(ibox))/(3.0_DP)
+
+                END IF
+                               
+             ENDIF
+             
+          ENDIF LJ_12_4_calculation
+
+          LJ_9_6_calculation: IF (i_vdw == vdw_lj96) THEN
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             eps = vdw_param1_table(itype,jtype)
+             sig = vdw_param2_table(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                eps = vdw_in_param1_table(ia,ja,is)
+                sig = vdw_in_param2_table(ia,ja,is)
+                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                    eps = 0.0
+                ENDIF
+             ENDIF
+
+             SigOverR3 = (sig**3) / (rijsq * SQRT( rijsq ))
+             SigOverR6  = SigOverR3 * SigOverR3
+             SigOverR9  = SigOverR6 * SigOverR3
+
+             Wij_vdw = (3.0_DP * lj96pre * eps) * (3.0_DP*SigOverR9 - 2.0_DP*SigOverR6)
+
+             IF (i_vdw_sum == vdw_cut_switch) THEN
+                
+                IF ( (rijsq < ron_switch_sq(ibox) )) THEN
+                   
+                   fscale = 1.0_DP
+                   
+                ELSE IF ( rijsq <= roff_switch_sq(ibox)) THEN
+                   
+                   Eij_vdw = lj96pre * eps * (SigOverR9 - SigOverR6)
+
+                   roffsq_rijsq = roff_switch_sq(ibox) - rijsq
+                  
+                   roffsq_rijsq_sq = roffsq_rijsq * roffsq_rijsq
+
+                   factor2 = switch_factor2(ibox) + 2.0_DP * rijsq
+
+                   fscale = roffsq_rijsq_sq * factor2 * switch_factor1(ibox)
+
+                   Eij_vdw = fscale * Eij_vdw
+                   Wij_vdw = fscale * Wij_vdw / 3.0_DP 
+                   Wij_vdw = Wij_vdw + &
+                        (8.0_DP * rijsq * rijsq * roffsq_rijsq * Eij_vdw * switch_factor1(ibox))/(3.0_DP)
+
+                END IF
+
+             ENDIF
+             
+          ENDIF LJ_9_6_calculation
+
+          mie_calculation: IF (i_vdw == vdw_mie) THEN
+                eps = vdw_param1_table(itype,jtype)
+                sig = vdw_param2_table(itype,jtype)
+   
+                ! Apply intramolecular scaling if necessary
+                IF (is == js .AND. im == jm) THEN
+                   ! This controls 1-2, 1-3, and 1-4 interactions
+                   eps = vdw_in_param1_table(ia,ja,is)
+                   sig = vdw_in_param2_table(ia,ja,is)
+                   rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                   IF (rijsq >= rcutsq) THEN
+                       eps = 0.0
+                   ENDIF
+                ENDIF
+
                 rij = SQRT(rijsq)
 
                 mie_n = mie_nlist(mie_Matrix(is,js))
@@ -3715,36 +3903,26 @@ CONTAINS
                 SigOverRm = SigOverR ** mie_m
                 Wij_vdw = (mie_coeff * eps) *(mie_n * SigOverRn - mie_m * SigOverRm)
 
+          ENDIF mie_calculation
 
-             ELSE
-
-                fscale = 0.0_DP
-                Eij_vdw = 0.0_DP
-                Wij_vdw = 0.0_DP
-                
-                
-                               
-             ENDIF
-             
-             ! Add other potential types here
-          ENDIF LJ_12_6_calculation
-
-          Yukawa_calculation: IF (vdw_param9_table(itype,jtype) /= 0) THEN 
+          Yukawa_calculation: IF (i_vdw == vdw_yukawa) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param9_table(itype,jtype)
              kappa = vdw_param10_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN 
-      
+             IF (is == js .AND. im == jm) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
-      
-                eps = eps * vdw_intra_scale(ia,ja,is)
-
+                eps = vdw_in_param9_table(ia,ja,is)
+                kappa = vdw_in_param10_table(ia,ja,is)
+                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                   eps = 0.0
+                ENDIF
              ENDIF
 
-             IF (int_vdw_sum_style(ibox) == vdw_cut .OR. int_vdw_sum_style(ibox) == vdw_cut_tail .OR. &
-                 int_vdw_sum_style(ibox) == vdw_cut_shift) THEN 
+             IF (i_vdw_sum == vdw_cut .OR. i_vdw_sum == vdw_cut_tail .OR. &
+                 i_vdw_sum == vdw_cut_shift) THEN 
       
                    rij = SQRT(rijsq)
                    Wij_vdw = Wij_vdw + ( eps * exp(-kappa * rij) * (kappa + 1.0 / rij))
@@ -3752,8 +3930,35 @@ CONTAINS
             ENDIF
 
           ENDIF Yukawa_calculation
-          
+
        ENDIF VDW_calculation
+
+       hydration_calculation: IF (i_vdw == vdw_hydra) THEN
+          Hhyd = vdw_param4_table(itype,jtype)
+          Rhyd = vdw_param5_table(itype,jtype)
+          Shyd = vdw_param6_table(itype,jtype)
+
+          ! Apply intramolecular scaling if necessary
+          IF (is == js .AND. im == jm) THEN
+             ! This controls 1-2, 1-3, and 1-4 interactions
+             Hhyd = vdw_in_param4_table(ia,ja,is)
+             Rhyd = vdw_in_param5_table(ia,ja,is)
+             Shyd = vdw_in_param6_table(ia,ja,is)
+          ENDIF
+                
+          rij = SQRT(rijsq)
+
+          Preexph = Hhyd/(Shyd**3*(SQRT(twopi)))
+          rshift = (rij - Rhyd)
+          Powerh = (rshift**2)/(2.0_DP*(Shyd**2))
+          Wij_hyd = Preexph*EXP(-Powerh)*rij*rshift
+
+       ELSE
+          Wij_hyd = 0.0_DP
+       ENDIF hydration_calculation
+
+       Wij_vdw = Wij_vdw + Wij_hyd
+
        qq_calculation: IF (get_qq) THEN
 
           qi = nonbond_list(ia,is)%charge
@@ -3809,30 +4014,6 @@ CONTAINS
        ENDIF qq_calculation
 
     ENDIF ExistCheck
-!------------------------------------------------------------------------------
-  CONTAINS
-
-    FUNCTION erfc(x)
-      !**************************************************************************
-      !                                                                         *
-      ! Calculate the complementary error function for  a number
-      !                                                                         *
-      !**************************************************************************
-
-      REAL(DP) :: erfc
-      REAL(DP), PARAMETER :: A1 = 0.254829592_DP, A2 = -0.284496736_DP
-      REAL(DP), PARAMETER :: A3 = 1.421413741_DP, A4 = -1.453152027_DP
-      REAL(DP), PARAMETER :: A5 = 1.061405429_DP, P = 0.3275911_DP
-      REAL(DP) :: T, x, xsq, TP
-
-      T = 1.0_DP / (1.0_DP + P*x)
-      xsq = x*x
-
-      TP = T * (A1 + T * (A2 + T * (A3 + T * (A4 + T * A5))))
-
-      erfc = TP * EXP(-xsq)
-
-    END FUNCTION erfc
 !------------------------------------------------------------------------------
 
   END SUBROUTINE Pair_Force

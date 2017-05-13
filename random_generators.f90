@@ -56,8 +56,8 @@ IMPLICIT NONE
 INTEGER (KIND=8), INTENT(IN) :: i1, i3
 s1 = i1
 s3 = i3
-IF (IAND(s1,    INT(-2,8)) == 0) s1 = i1 - INT(8388607,8)
-IF (IAND(s3, INT(-4096,8)) == 0) s3 = i3 - INT(8388607,8)
+IF (IAND(s1,    INT(-2,8)) == 0) s1 = INT(i1 - 8388607, KIND=8)
+IF (IAND(s3, INT(-4096,8)) == 0) s3 = i3 - 8388607
 RETURN
 END SUBROUTINE init_seeds
 
@@ -102,8 +102,8 @@ END FUNCTION rranf
       ! LOCAL
       INTEGER :: ib, ia, ibc, ida, isum, iff, ie, ix, iy, ix2, ix1
 
-      ib= iseed/INT(65536,8)
-      ia= iseed - ib*INT(65536,8)
+      ib= INT( iseed/65536, 4)
+      ia= INT( iseed - ib*65536, 4)
       ibc= ib*63253
       ida= ia*24301
       isum= ibc - 2147483647 + ida
@@ -129,7 +129,7 @@ END FUNCTION rranf
           iseed = iseed - 1
       ENDIF
 
-      rranint = iseed
+      rranint = INT(iseed, 4)
   END FUNCTION rranint
 
   INTEGER FUNCTION random_range(low, high)
@@ -207,6 +207,42 @@ END FUNCTION rranf
 
   END SUBROUTINE Generate_Random_Sphere
 
-
+  function r8_normal_ab ( a, b )
+  !*****************************************************************************
+  !! R8_NORMAL_AB returns a scaled pseudonormal R8.
+  !
+  !  Discussion:
+  !    The normal probability distribution function (PDF) is sampled,
+  !    with mean A and standard deviation B.
+  !
+  !  Licensing:
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !    06 August 2013
+  !
+  !  Author:
+  !    John Burkardt
+  !
+  !  Parameters:
+  !    Input, real ( kind = 8 ) A, the mean of the PDF.
+  !    Input, real ( kind = 8 ) B, the standard deviation of the PDF.
+  !    Output, real ( kind = 8 ) R8_NORMAL_AB, a sample of the normal PDF.
+  !*****************************************************************************
+    USE Type_Definitions, ONLY : DP
+    USE Run_Variables, ONLY : twoPI
+    implicit none
+  
+    REAL(DP) :: a, b
+    REAL(DP) :: r1, r2, x
+    REAL(DP) :: r8_normal_ab
+  
+    r1 = rranf()
+    r2 = rranf()
+    x = sqrt ( - 2.0D+00 * log ( r1 ) ) * cos ( twoPI * r2 )
+  
+    r8_normal_ab = a + b * x
+  
+  end function
 
 end module random_generators
