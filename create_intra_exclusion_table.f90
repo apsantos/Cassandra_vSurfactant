@@ -86,8 +86,9 @@ SUBROUTINE Create_Intra_Exclusion_Table
   rcut_in_vdw_mix(:,:,:) = rcut_vdw(1)
   ALLOCATE(rcut_in_vdwsq_mix(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
   rcut_in_vdwsq_mix(:,:,:) = 0.0_DP
-  ALLOCATE(int_in_vdw_style_mix(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
-  int_in_vdw_style_mix(:,:,:) = int_vdw_style(1)
+  ALLOCATE(int_in_vdw_style_mix(max_natoms,max_natoms,nspecies,14), Stat=AllocateStatus)
+  int_in_vdw_style_mix(:,:,:,:) = .false.
+  int_in_vdw_style_mix(:,:,:,int_vdw_style(1)) = .true.
   ALLOCATE(int_in_vdw_sum_style_mix(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
   int_in_vdw_sum_style_mix(:,:,:) = int_vdw_sum_style(1)
 
@@ -385,11 +386,14 @@ SUBROUTINE Read_Intra_Exclusion_Table
                                   pot_type == 'LJ96') THEN
                   
                                   IF (pot_type == 'LJ' .or. pot_type == 'LJ126') THEN
-                                     int_in_vdw_style_mix(ia,ja,is) = vdw_lj
+                                     int_in_vdw_style_mix(ia,ja,is,vdw_lj) = .true.
+                                     int_in_vdw_style_mix(ja,ia,is,vdw_lj) = .true.
                                   ELSE IF (pot_type == 'LJ124') THEN
-                                     int_in_vdw_style_mix(ia,ja,is) = vdw_lj124
+                                     int_in_vdw_style_mix(ia,ja,is,vdw_lj124) = .true.
+                                     int_in_vdw_style_mix(ja,ia,is,vdw_lj124) = .true.
                                   ELSE IF (pot_type == 'LJ96') THEN
-                                     int_in_vdw_style_mix(ia,ja,is) = vdw_lj96
+                                     int_in_vdw_style_mix(ia,ja,is,vdw_lj96) = .true.
+                                     int_in_vdw_style_mix(ja,ia,is,vdw_lj96) = .true.
                                   END IF
 
                                   vdw_in_param1_table(ia,ja,is) = String_To_Double(line_array(i+1))
@@ -398,7 +402,8 @@ SUBROUTINE Read_Intra_Exclusion_Table
                                   vdw_in_param2_table(ja,ia,is) = vdw_in_param2_table(ia,ja,is)
                   
                               ELSEIF (pot_type == 'HYDR') THEN
-                                  int_in_vdw_style_mix(ia,ja,is) = vdw_hydra
+                                  int_in_vdw_style_mix(ia,ja,is,vdw_hydra) = .true.
+                                  int_in_vdw_style_mix(ja,ia,is,vdw_hydra) = .true.
                                   vdw_in_param3_table(ia,ja,is) = String_To_Double(line_array(i+1))
                                   vdw_in_param4_table(ia,ja,is) = String_To_Double(line_array(i+2))
                                   vdw_in_param5_table(ia,ja,is) = String_To_Double(line_array(i+3))
@@ -407,28 +412,30 @@ SUBROUTINE Read_Intra_Exclusion_Table
                                   vdw_in_param5_table(ja,ia,is) = vdw_in_param5_table(ia,ja,is)
                   
                               ELSEIF (pot_type == 'CORR') THEN
-                                  int_in_vdw_style_mix(ia,ja,is) = vdw_corr
+                                  int_in_vdw_style_mix(ia,ja,is,vdw_corr) = .true.
+                                  int_in_vdw_style_mix(ja,ia,is,vdw_corr) = .true.
                                   vdw_in_param6_table(ia,ja,is) = String_To_Double(line_array(i+1))
                                   vdw_in_param6_table(ja,ia,is) = vdw_in_param6_table(ia,ja,is)
                                   vdw_in_param7_table(ia,ja,is) = String_To_Double(line_array(i+1))
                                   vdw_in_param7_table(ja,ia,is) = vdw_in_param7_table(ia,ja,is)
                   
                               ELSEIF (pot_type == 'Yukawa') THEN
-                                  int_in_vdw_style_mix(ia,ja,is) = vdw_yukawa
+                                  int_in_vdw_style_mix(ia,ja,is,vdw_yukawa) = .true.
+                                  int_in_vdw_style_mix(ja,ia,is,vdw_yukawa) = .true.
                                   vdw_in_param8_table(ia,ja,is) = String_To_Double(line_array(i+1))
                                   vdw_in_param8_table(ja,ia,is) = vdw_in_param8_table(ia,ja,is)
                                   vdw_in_param9_table(ia,ja,is) = String_To_Double(line_array(i+2))
                                   vdw_in_param9_table(ja,ia,is) = vdw_in_param9_table(ia,ja,is)
                   
                               ELSEIF (pot_type == 'SW') THEN
-                                  int_in_vdw_style_mix(ia,ja,is) = vdw_sw
+                                  int_in_vdw_style_mix(ia,ja,is,vdw_sw) = .true.
+                                  int_in_vdw_style_mix(ja,ia,is,vdw_sw) = .true.
                                   vdw_in_param10_table(ia,ja,is) = String_To_Double(line_array(i+1))
                                   vdw_in_param10_table(ja,ia,is) = vdw_in_param10_table(ia,ja,is)
                                   vdw_in_param11_table(ia,ja,is) = String_To_Double(line_array(i+2))
                                   vdw_in_param11_table(ja,ia,is) = vdw_in_param11_table(ia,ja,is)
                   
                               ENDIF
-                              int_in_vdw_style_mix(ja,ia,is) = int_in_vdw_style_mix(ia,ja,is)
                   
                           ENDDO
                        ENDIF

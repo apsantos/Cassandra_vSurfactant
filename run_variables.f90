@@ -92,9 +92,9 @@ USE Type_Definitions
   CHARACTER(15), DIMENSION(:), ALLOCATABLE :: vdw_style, charge_style, vdw_sum_style, charge_sum_style
   INTEGER :: int_mix_rule, int_run_style
   INTEGER, DIMENSION(:), ALLOCATABLE :: int_vdw_style, int_vdw_sum_style
-  INTEGER, DIMENSION(:,:), ALLOCATABLE :: int_vdw_style_mix ! the length of the 3rd dimension is the largest vdw_type
+  LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: int_vdw_style_mix ! the length of the 3rd dimension is the largest vdw_type
   INTEGER, DIMENSION(:,:), ALLOCATABLE :: int_vdw_sum_style_mix ! type i and j sum style
-  INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: int_in_vdw_style_mix ! the length of the 3rd dimension is the largest vdw_type
+  LOGICAL, DIMENSION(:,:,:,:), ALLOCATABLE :: int_in_vdw_style_mix ! the length of the 3rd dimension is the largest vdw_type
   INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: int_in_vdw_sum_style_mix ! type i and j sum style
   INTEGER, DIMENSION(:), ALLOCATABLE :: int_charge_style, int_charge_sum_style
   INTEGER, PARAMETER :: run_equil = 0
