@@ -31,7 +31,7 @@ SUBROUTINE precalculate
     IMPLICIT NONE
     
     
-    INTEGER :: ibox
+    INTEGER :: ibox, itype, jtype, is, ia, ja
     ! Determine the direct sum maximum cutoff distances squared, beyond 
     ! which we ingore pairwise interactions. 
     ! Will need to alter when neighborlist added.
@@ -64,6 +64,19 @@ SUBROUTINE precalculate
           
           ELSE
              ! Compute the square for use in pair routines
+             DO itype = 1, nbr_atomtypes
+                DO jtype = 1, nbr_atomtypes
+                    rcut_vdwsq_mix(itype, jtype) = rcut_vdw_mix(itype, jtype)*rcut_vdw_mix(itype, jtype)
+                END DO
+             END DO
+             DO is = 1, nspecies
+                DO ia = 1, natoms(is)
+                    DO ja = 1, natoms(is)
+                       rcut_in_vdwsq_mix(ia, ja, is) = rcut_in_vdw_mix(ia, ja, is)*rcut_in_vdw_mix(ia, ja, is)
+                    END DO
+                END DO
+             END DO
+
              rcut_vdwsq(ibox) = rcut_vdw(ibox)*rcut_vdw(ibox)
              rcut_vdw3(ibox) = rcut_vdwsq(ibox) * rcut_vdw(ibox)
              rcut_vdw6(ibox) = rcut_vdw3(ibox) * rcut_vdw3(ibox)

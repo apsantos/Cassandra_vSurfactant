@@ -1554,7 +1554,8 @@ CONTAINS
     INTEGER :: is,im,ia,js,jm,ja,ibox
     LOGICAL :: get_vdw,get_qq
 
-    INTEGER :: i_vdw, i_vdw_sum
+    INTEGER :: i_vdw_sum
+    LOGICAL :: intra
 
     ! Returned
     REAL(DP) :: Eij_vdw,Eij_qq
@@ -1576,15 +1577,12 @@ CONTAINS
     Real(DP) :: qi,qj, qsc
     REAL(DP) :: this_lambda
 
-    LOGICAL :: fraction
-
 !FSL Local Hydration and WCA Parameters
     REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, kappa
 
   !------------------------------------------------------------------------------------------
     Eij_vdw = 0.0_DP
     Eij_qq = 0.0_DP
-    fraction = .false.
     this_lambda = 1.0_DP
     E_hyd = 0.0_DP
     Preexph = 0.0_DP
@@ -1600,18 +1598,19 @@ CONTAINS
        jtype = nonbond_list(ja,js)%atom_type_number
        
        IF (is == js .AND. im == jm) THEN
-          i_vdw = int_in_vdw_style_mix(ia,ja,is)
+          intra = .true.
           i_vdw_sum = int_in_vdw_sum_style_mix(ia,ja,is)
           rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
        ELSE
-          i_vdw = int_vdw_style_mix(itype,jtype)
+          intra = .false.
           i_vdw_sum = int_vdw_sum_style_mix(itype,jtype)
           rcutsq = rcut_vdwsq_mix(itype,jtype)
        END IF
 
        VDW_calculation: IF (get_vdw) THEN
 
-          LJ_12_6_calculation: IF (i_vdw == vdw_lj) THEN
+          LJ_12_6_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_lj)) .or. &
+                                    ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_lj)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
@@ -1681,7 +1680,8 @@ CONTAINS
 
           ENDIF LJ_12_6_calculation
 
-          LJ_12_4_calculation: IF (i_vdw == vdw_lj124) THEN
+          LJ_12_4_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_lj124)) .or. &
+                                    ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_lj124)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
@@ -1742,7 +1742,8 @@ CONTAINS
 
           ENDIF LJ_12_4_calculation
 
-          LJ_9_6_calculation: IF (i_vdw == vdw_lj96) THEN
+          LJ_9_6_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_lj96)) .or. &
+                                    ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_lj96)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
@@ -1803,7 +1804,8 @@ CONTAINS
 
           ENDIF LJ_9_6_calculation
 
-          mie_calculation: IF (i_vdw == vdw_mie) THEN
+          mie_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_mie)) .or. &
+                                ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_mie)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
@@ -1839,7 +1841,8 @@ CONTAINS
                 
           ENDIF mie_calculation
              
-          Yukawa_calculation: IF (i_vdw == vdw_yukawa) THEN
+          Yukawa_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_yukawa)) .or. &
+                                   ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_yukawa)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param9_table(itype,jtype)
              kappa = vdw_param10_table(itype,jtype)
@@ -1874,17 +1877,18 @@ CONTAINS
 
        ENDIF VDW_calculation
 !FSL Hydration Energy start
-       hydration_calculation: IF (i_vdw == vdw_hydra) THEN
-          Hhyd = vdw_param4_table(itype,jtype)
-          Rhyd = vdw_param5_table(itype,jtype)
-          Shyd = vdw_param6_table(itype,jtype)
+       hydration_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_hydra)) .or. &
+                                   ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_hydra)) ) THEN
+          Hhyd = vdw_param3_table(itype,jtype)
+          Rhyd = vdw_param4_table(itype,jtype)
+          Shyd = vdw_param5_table(itype,jtype)
 
           ! Apply intramolecular scaling if necessary
           IF (is == js .AND. im == jm) THEN
              ! This controls 1-2, 1-3, and 1-4 interactions
-             Hhyd = vdw_in_param4_table(ia,ja,is)
-             Rhyd = vdw_in_param5_table(ia,ja,is)
-             Shyd = vdw_in_param6_table(ia,ja,is)
+             Hhyd = vdw_in_param3_table(ia,ja,is)
+             Rhyd = vdw_in_param4_table(ia,ja,is)
+             Shyd = vdw_in_param5_table(ia,ja,is)
           ENDIF
                 
           rij = SQRT(rijsq)
@@ -1900,7 +1904,7 @@ CONTAINS
        Eij_vdw = Eij_vdw + E_hyd
 !FSL Hydration Energy end
 
-       qq_calculation: IF (get_qq) THEN
+       qq_calculation: IF ( get_qq ) THEN
           
           qi = nonbond_list(ia,is)%charge
           qj = nonbond_list(ja,js)%charge
@@ -1928,6 +1932,7 @@ CONTAINS
        
     ENDIF ExistCheck
 
+  !writE(*,*) E_hyd, nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), Eij_vdw, Eij_qq
   !writE(*,'(2A,F8.3,X,F11.5,X,F11.5)') nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), Eij_vdw, Eij_qq
 
   END SUBROUTINE Pair_Energy
@@ -1989,7 +1994,7 @@ CONTAINS
     Eij = (qi*qj/rij)*(qsc - erf_val)*charge_factor(ibox)
 
 !FSL QQ Cor start
-    QQ_cor_calculation: IF(vdw_param6_table(itype,jtype) /= 0) THEN
+    QQ_cor_calculation: IF ( int_vdw_style_mix(itype,jtype,vdw_corr) ) THEN
 
        Cqqcor = species_list(is)%total_charge*species_list(js)%total_charge
        Rqqcor = vdw_param6_table(itype,jtype)
@@ -3248,8 +3253,6 @@ CONTAINS
           epsij = vdw_param1_table(ia,ja)
           sigij = vdw_param2_table(ia,ja)
 
-          IF(vdw_param3_table(ia,ja) /= 0) CYCLE
-          
           sigij2 = sigij*sigij
           
           sigij6 = sigij2*sigij2*sigij2 
@@ -3665,7 +3668,7 @@ CONTAINS
     REAL(DP) :: rijsq
     REAL(DP) :: rcutsq
     INTEGER :: is,im,ia,js,jm,ja,ibox
-    LOGICAL :: get_vdw,get_qq, fraction
+    LOGICAL :: get_vdw,get_qq
 
     ! Returned
     REAL(DP) :: Wij_vdw,Wij_qq,Eij_vdw
@@ -3683,14 +3686,14 @@ CONTAINS
 !FSL Local Hydration and WCA Parameters
     REAL(DP) :: Wij_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, rshift
 
-    INTEGER :: i_vdw, i_vdw_sum
+    INTEGER :: i_vdw_sum
+    LOGICAL :: intra
 
   !------------------------------------------------------------------------------------------
 
     Eij_vdw = 0.0_DP
     Wij_vdw = 0.0_DP
     Wij_qq = 0.0_DP
-    fraction = .false.
     this_lambda = 1.0_DP
 
     ibox = molecule_list(im,is)%which_box
@@ -3703,16 +3706,17 @@ CONTAINS
        jtype = nonbond_list(ja,js)%atom_type_number
        
        IF (is == js .AND. im == jm) THEN
-          i_vdw = int_in_vdw_style_mix(ia,ja,is)
+          intra = .true.
           i_vdw_sum = int_in_vdw_sum_style_mix(ia,ja,is)
        ELSE
-          i_vdw = int_vdw_style_mix(itype,jtype)
+          intra = .false.
           i_vdw_sum = int_vdw_sum_style_mix(itype,jtype)
        END IF
 
        VDW_calculation: IF (get_vdw) THEN
 
-          LJ_12_6_calculation: IF (i_vdw == vdw_lj) THEN
+          LJ_12_6_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_lj)) .or. &
+                                    ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_lj)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
@@ -3776,7 +3780,8 @@ CONTAINS
              ! Add other potential types here
           ENDIF LJ_12_6_calculation
 
-          LJ_12_4_calculation: IF (i_vdw == vdw_lj124) THEN
+          LJ_12_4_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_lj124)) .or. &
+                                    ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_lj124)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
@@ -3827,7 +3832,8 @@ CONTAINS
              
           ENDIF LJ_12_4_calculation
 
-          LJ_9_6_calculation: IF (i_vdw == vdw_lj96) THEN
+          LJ_9_6_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_lj96)) .or. &
+                                    ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_lj96)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
@@ -3878,7 +3884,8 @@ CONTAINS
              
           ENDIF LJ_9_6_calculation
 
-          mie_calculation: IF (i_vdw == vdw_mie) THEN
+          mie_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_mie)) .or. &
+                                ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_mie)) ) THEN
                 eps = vdw_param1_table(itype,jtype)
                 sig = vdw_param2_table(itype,jtype)
    
@@ -3905,7 +3912,8 @@ CONTAINS
 
           ENDIF mie_calculation
 
-          Yukawa_calculation: IF (i_vdw == vdw_yukawa) THEN
+          Yukawa_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_yukawa)) .or. &
+                                   ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_yukawa)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param9_table(itype,jtype)
              kappa = vdw_param10_table(itype,jtype)
@@ -3933,17 +3941,18 @@ CONTAINS
 
        ENDIF VDW_calculation
 
-       hydration_calculation: IF (i_vdw == vdw_hydra) THEN
-          Hhyd = vdw_param4_table(itype,jtype)
-          Rhyd = vdw_param5_table(itype,jtype)
-          Shyd = vdw_param6_table(itype,jtype)
+       hydration_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_hydra)) .or. &
+                                   ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_hydra)) ) THEN
+          Hhyd = vdw_param3_table(itype,jtype)
+          Rhyd = vdw_param4_table(itype,jtype)
+          Shyd = vdw_param5_table(itype,jtype)
 
           ! Apply intramolecular scaling if necessary
           IF (is == js .AND. im == jm) THEN
              ! This controls 1-2, 1-3, and 1-4 interactions
-             Hhyd = vdw_in_param4_table(ia,ja,is)
-             Rhyd = vdw_in_param5_table(ia,ja,is)
-             Shyd = vdw_in_param6_table(ia,ja,is)
+             Hhyd = vdw_in_param3_table(ia,ja,is)
+             Rhyd = vdw_in_param4_table(ia,ja,is)
+             Shyd = vdw_in_param5_table(ia,ja,is)
           ENDIF
                 
           rij = SQRT(rijsq)
@@ -3959,7 +3968,7 @@ CONTAINS
 
        Wij_vdw = Wij_vdw + Wij_hyd
 
-       qq_calculation: IF (get_qq) THEN
+       qq_calculation: IF ( get_qq ) THEN
 
           qi = nonbond_list(ia,is)%charge
           qj = nonbond_list(ja,js)%charge
