@@ -796,6 +796,7 @@ SUBROUTINE Read_DCD(this_mc_step)
     REAL(4) :: delta
 
     this_box = 1
+    box = 0.0
 
     IF ( this_mc_step == -1 ) THEN 
        temp_n_equilsteps = n_equilsteps
@@ -831,11 +832,14 @@ SUBROUTINE Read_DCD(this_mc_step)
           err_msg(3) = "xyz: "//Int_To_String(xyz_natoms)
           CALL Clean_Abort(err_msg,'Read_DCD')
        END IF
+       IF(ICNTRL(11) .EQ. 1) THEN
+          read_dcd_box = .true.
+       END IF
 
     END IF
     
     ! Read the periodic bounday informatin if present (not used!)
-    IF(ICNTRL(11) .EQ. 1) THEN
+    IF(read_dcd_box) THEN
       READ(8,IOSTAT=ierr) (box(i),i=1,6)
     ENDIF
 
@@ -844,7 +848,6 @@ SUBROUTINE Read_DCD(this_mc_step)
     READ(8,IOSTAT=ierr) (pos(1, im),im=1,dcd_natoms)
     READ(8,IOSTAT=ierr) (pos(2, im),im=1,dcd_natoms)
     READ(8,IOSTAT=ierr) (pos(3, im),im=1,dcd_natoms)
-
 
     IF ( 1 == this_mc_step) THEN
         ! C is row-major, whereas Fortran is column major. Hence the following.

@@ -1620,7 +1620,6 @@ CONTAINS
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps  = vdw_in_param1_table(ia,ja,is)
                 sig  = vdw_in_param2_table(ia,ja,is)
-                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
                 IF (rijsq >= rcutsq) THEN
                     eps = 0.0
                 ENDIF
@@ -1685,14 +1684,12 @@ CONTAINS
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
-             rcutsq = rcut_vdwsq_mix(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
              IF (is == js .AND. im == jm) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param1_table(ia,ja,is)
                 sig = vdw_in_param2_table(ia,ja,is)
-                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
                 IF (rijsq >= rcutsq) THEN
                    eps = 0.0
                 ENDIF
@@ -1747,14 +1744,12 @@ CONTAINS
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
-             rcutsq = rcut_vdwsq_mix(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
              IF (is == js .AND. im == jm) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param1_table(ia,ja,is)
                 sig = vdw_in_param2_table(ia,ja,is)
-                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
                 IF (rijsq >= rcutsq) THEN
                     eps = 0.0
                 ENDIF
@@ -1809,14 +1804,12 @@ CONTAINS
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
              eps = vdw_param1_table(itype,jtype)
              sig = vdw_param2_table(itype,jtype)
-             rcutsq = rcut_vdwsq_mix(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
              IF (is == js .AND. im == jm) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param1_table(ia,ja,is)
                 sig = vdw_in_param2_table(ia,ja,is)
-                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
                 IF (rijsq >= rcutsq) THEN
                     eps = 0.0
                 ENDIF
@@ -1844,15 +1837,14 @@ CONTAINS
           Yukawa_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_yukawa)) .or. &
                                    ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_yukawa)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
-             eps = vdw_param9_table(itype,jtype)
-             kappa = vdw_param10_table(itype,jtype)
+             eps = vdw_param8_table(itype,jtype)
+             kappa = vdw_param9_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
              IF (is == js .AND. im == jm) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
-                eps = vdw_in_param9_table(ia,ja,is)
-                kappa = vdw_in_param10_table(ia,ja,is)
-                rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
+                eps = vdw_in_param8_table(ia,ja,is)
+                kappa = vdw_in_param9_table(ia,ja,is)
                 IF (rijsq >= rcutsq) THEN
                     eps = 0.0
                 ENDIF
@@ -3915,14 +3907,14 @@ CONTAINS
           Yukawa_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_yukawa)) .or. &
                                    ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_yukawa)) ) THEN
              ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
-             eps = vdw_param9_table(itype,jtype)
-             kappa = vdw_param10_table(itype,jtype)
+             eps = vdw_param8_table(itype,jtype)
+             kappa = vdw_param9_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
              IF (is == js .AND. im == jm) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
-                eps = vdw_in_param9_table(ia,ja,is)
-                kappa = vdw_in_param10_table(ia,ja,is)
+                eps = vdw_in_param8_table(ia,ja,is)
+                kappa = vdw_in_param9_table(ia,ja,is)
                 rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
                 IF (rijsq >= rcutsq) THEN
                    eps = 0.0
