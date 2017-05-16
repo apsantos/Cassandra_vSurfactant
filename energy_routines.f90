@@ -1904,8 +1904,7 @@ CONTAINS
        Eij_vdw = Eij_vdw + E_hyd
 !FSL Hydration Energy end
 
-       qq_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_corr)) .or. &
-                            ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_corr)) ) THEN
+       qq_calculation: IF ( get_qq ) THEN
           
           qi = nonbond_list(ia,is)%charge
           qj = nonbond_list(ja,js)%charge
@@ -3969,8 +3968,7 @@ CONTAINS
 
        Wij_vdw = Wij_vdw + Wij_hyd
 
-       qq_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_corr)) .or. &
-                            ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_corr)) ) THEN
+       qq_calculation: IF ( get_qq ) THEN
 
           qi = nonbond_list(ia,is)%charge
           qj = nonbond_list(ja,js)%charge
