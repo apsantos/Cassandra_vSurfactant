@@ -56,7 +56,7 @@ subroutine virialMC_Driver
   OPEN(991,file=virialfile)
   write(991,"(A)") '# distance   effective_potential (kJ/mol) virial_coefficient '
 
-  energy(1)%total = 100000.0 !energy between 2 molecule at small distance
+  energy(1)%total = 0.0
 
   en_min = 10.0
 
@@ -143,7 +143,7 @@ subroutine virialMC_Driver
                     ! Compute the distance of the atom farthest from COM
                     CALL Compute_Max_COM_Distance(im,is)
              
-                    CALL Compute_Total_System_Energy(1,.TRUE.,overlap)
+                    CALL Compute_Total_System_Energy(1,.FALSE.,overlap)
                     IF (overlap .eqv. .FALSE.) THEN
                         mcvirial%coefficient(idist) = mcvirial%coefficient(idist) + dexp(-1.0_DP * energy(1)%total * beta(1))
                         mcvirial%effective(idist) = mcvirial%effective(idist) + energy(1)%total
@@ -153,8 +153,9 @@ subroutine virialMC_Driver
                         endif
                         if (e_min > energy(1)%total) e_min = energy(1)%total
                         n_pos = n_pos+1
-                        !WRITE(logunit,*) 'Overlaping atoms at', dist, 'stopping computation'
-                        !EXIT dist_loop
+                    !ELSE
+                    !    WRITE(logunit,*) 'Overlaping atoms at', dist, 'stopping computation'
+                    !    EXIT dist_loop
                     END IF
     
                     CALL Rotate_Molecule_Eulerian(1,js)

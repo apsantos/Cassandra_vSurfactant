@@ -185,27 +185,27 @@ SUBROUTINE Create_Intra_Exclusion_Table
   IF (intrafile_name .NE. "") THEN
      CALL Read_Intra_Exclusion_Table
   ELSE
-  DO is=1,nspecies
-     DO ii=1,natoms(is)
-        itype = nonbond_list(ii,is)%atom_type_number
-        DO jj = 1,natoms(is)
-           jtype = nonbond_list(jj,is)%atom_type_number
-
-           vdw_in_param1_table(ii,jj,is) = vdw_param1_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-           vdw_in_param2_table(ii,jj,is) = vdw_param2_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-           vdw_in_param3_table(ii,jj,is) = vdw_param3_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-           vdw_in_param4_table(ii,jj,is) = vdw_param4_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-           vdw_in_param5_table(ii,jj,is) = vdw_param5_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-           vdw_in_param6_table(ii,jj,is) = vdw_param6_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-           vdw_in_param7_table(ii,jj,is) = vdw_param7_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-           vdw_in_param8_table(ii,jj,is) = vdw_param8_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-           vdw_in_param9_table(ii,jj,is) = vdw_param9_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-           vdw_in_param10_table(ii,jj,is) = vdw_param10_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-           vdw_in_param11_table(ii,jj,is) = vdw_param11_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-
+     DO is=1,nspecies
+        DO ii=1,natoms(is)
+           itype = nonbond_list(ii,is)%atom_type_number
+           DO jj = 1,natoms(is)
+              jtype = nonbond_list(jj,is)%atom_type_number
+   
+              vdw_in_param1_table(ii,jj,is) = vdw_param1_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+              vdw_in_param2_table(ii,jj,is) = vdw_param2_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+              vdw_in_param3_table(ii,jj,is) = vdw_param3_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+              vdw_in_param4_table(ii,jj,is) = vdw_param4_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+              vdw_in_param5_table(ii,jj,is) = vdw_param5_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+              vdw_in_param6_table(ii,jj,is) = vdw_param6_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+              vdw_in_param7_table(ii,jj,is) = vdw_param7_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+              vdw_in_param8_table(ii,jj,is) = vdw_param8_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+              vdw_in_param9_table(ii,jj,is) = vdw_param9_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+              vdw_in_param10_table(ii,jj,is) = vdw_param10_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+              vdw_in_param11_table(ii,jj,is) = vdw_param11_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+   
+           ENDDO
         ENDDO
      ENDDO
-  ENDDO
      
   ENDIF
 
