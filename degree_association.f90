@@ -48,6 +48,7 @@ CONTAINS
     REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp
 
     alpha%n_assoc = 0
+    alpha%n_clus = 0
 
     IF (cluster%n_clusters == 0) RETURN
 
@@ -74,6 +75,7 @@ CONTAINS
     
             rijsq = rxij*rxij + ryij*ryij + rzij*rzij
             
+            alpha%n_clus = alpha%n_clus + 1
             IF (rijsq < alpha%cutoff_sq) THEN
                 alpha%n_assoc = alpha%n_assoc + 1
                 

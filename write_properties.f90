@@ -435,9 +435,9 @@ CONTAINS
       ELSE IF (prop_written == 'Degree_Association') THEN
 
          IF (block_average) THEN
-            write_buff(ii+1) = alpha%n_assoc / REAL(nalpha_freq * nmols(alpha%assoc_species, this_box),DP)
+            write_buff(ii+1) = alpha%n_assoc / REAL(nalpha_freq * alpha%n_clus,DP)
          ELSE
-            write_buff(ii+1) = alpha%n_assoc / REAL(nmols(alpha%assoc_species, this_box), DP)
+            write_buff(ii+1) = alpha%n_assoc / REAL(alpha%n_clus, DP)
          END IF
 
 !      ELSE IF (prop_written == 'Virial_Coefficient') THEN
