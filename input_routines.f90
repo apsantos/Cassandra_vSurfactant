@@ -6322,6 +6322,7 @@ SUBROUTINE Get_Histogram_Info
         END IF
         n_energy_hist = String_To_Int(line_array(1))
         energy_hist_width = String_To_Double(line_array(2))
+        energy_hist_width = energy_hist_width * kjmol_to_atomic
 
         ALLOCATE( energy_hist(nspecies, -2:n_energy_hist, 0:MAXVAL(nmolecules)) )
         energy_hist = 0.0
