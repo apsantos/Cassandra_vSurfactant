@@ -85,7 +85,7 @@ CHARACTER(FILENAME_LEN) :: mixfile_name
 
 ! Name of the file that has the intra scaling values for specific types.
 INTEGER :: intrafile_unit = 17
-CHARACTER(FILENAME_LEN) :: intrafile_name
+CHARACTER(FILENAME_LEN), DIMENSION(:), ALLOCATABLE :: intrafile_name
 
 !Variables to hold unit number and filename for the crash file
 INTEGER :: crashunit = 30
