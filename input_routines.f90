@@ -2550,6 +2550,7 @@ SUBROUTINE Get_Fragment_Info(is)
   INTEGER, ALLOCATABLE :: anchor_id(:)
   CHARACTER(240) :: line_string, line_array(80)
 
+  frag_list(:,is)%natoms = 0
   line_nbr = 0
   ierr = 0
   REWIND(molfile_unit)
@@ -3021,6 +3022,7 @@ SUBROUTINE Get_Fragment_File_Info(is)
   frag_list(:,:)%rcut_vdwsq = 0.0_DP
   frag_list(:,:)%rcut_coulsq = 0.0_DP
   frag_list(:,:)%alpha_ewald = 0.0_DP
+  frag_list(:,is)%type = 0
 
   DO
 
@@ -3288,7 +3290,8 @@ SUBROUTINE Get_Intra_Scaling
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries, is
   CHARACTER(240) :: line_string, line_array(80)
-  LOGICAL :: intrascaling_set, intrascaling_read
+  LOGICAL :: intrascaling_set
+  LOGICAL :: intrascaling_read(nspecies)
 
 !********************************************************************************
   REWIND(inputunit)
@@ -3296,8 +3299,9 @@ SUBROUTINE Get_Intra_Scaling
   ierr = 0
   line_nbr = 0
   intrascaling_set = .false.
-  intrascaling_read = .false.
-  intrafile_name = ""
+  intrascaling_read(:) = .false.
+  ALLOCATE(intrafile_name(nspecies))
+  intrafile_name(:) = ""
   ALLOCATE(scale_1_2_vdw(nspecies));ALLOCATE(scale_1_3_vdw(nspecies))
   ALLOCATE(scale_1_4_vdw(nspecies));ALLOCATE(scale_1_N_vdw(nspecies))
   ALLOCATE(scale_1_2_charge(nspecies));ALLOCATE(scale_1_3_charge(nspecies))
@@ -3327,10 +3331,23 @@ SUBROUTINE Get_Intra_Scaling
                  err_msg = ""
                  err_msg(1) = "Error reading Intra_Scaling info."
                  CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
-              ELSEIF (line_array(1) == 'table') THEN
-                 intrafile_name = TRIM( line_array(2) )
-                 intrascaling_read = .true.
-                 EXIT
+              END IF
+
+              IF (line_array(1) == 'table') THEN
+                 intrafile_name(is) = TRIM( line_array(2) )
+                 intrascaling_read(is) = .true.
+
+                 scale_1_2_vdw(:) = 0.0
+                 scale_1_3_vdw(:) = 0.0
+                 scale_1_4_vdw(:) = 0.5
+                 scale_1_N_vdw(:) = 1.0
+
+                 scale_1_2_charge(:) = 0.0
+                 scale_1_3_charge(:) = 0.0
+                 scale_1_4_charge(:) = 0.5
+                 scale_1_N_charge(:) = 1.0
+
+                 CYCLE
               END IF
               
               ! Assign the vdw scaling
@@ -3349,11 +3366,23 @@ SUBROUTINE Get_Intra_Scaling
                  err_msg = ""
                  err_msg(1) = "Error reading Intra_Scaling info."
                  CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
+              END IF
 
-              ELSEIF (line_array(1) == 'table') THEN
-                 intrafile_name = TRIM( line_array(2) )
-                 intrascaling_read = .true.
-                 EXIT
+              IF (line_array(1) == 'table') THEN
+                 intrafile_name(is) = TRIM( line_array(2) )
+                 intrascaling_read(is) = .true.
+
+                 scale_1_2_vdw(:) = 0.0
+                 scale_1_3_vdw(:) = 0.0
+                 scale_1_4_vdw(:) = 0.5
+                 scale_1_N_vdw(:) = 1.0
+
+                 scale_1_2_charge(:) = 0.0
+                 scale_1_3_charge(:) = 0.0
+                 scale_1_4_charge(:) = 0.5
+                 scale_1_N_charge(:) = 1.0
+
+                 CYCLE
               END IF
               
               scale_1_2_charge(is) = String_To_Double(line_array(1))
@@ -3388,27 +3417,27 @@ SUBROUTINE Get_Intra_Scaling
 
   ENDDO
   ! Report to logfile what scaling is used.
-  IF (intrascaling_read) THEN
-     WRITE(logunit,*) 'intramolecular scaling factors explicitly set in', intrafile_name
+  IF (.not. intrascaling_set) THEN
+     WRITE(logunit,*) 'Using default intramolecular scaling factors, if required'
   ELSE
-     IF (intrascaling_set) THEN
-        WRITE(logunit,*) 'intramolecular scaling factors explicitly set'
-     ELSE
-        WRITE(logunit,*) 'Using default intramolecular scaling factors, if required'
-     ENDIF
-   
+     WRITE(logunit,*) 'intramolecular scaling factors explicitly set'
      DO is = 1, nspecies
-        WRITE(logunit,'(A,T50,I7)') 'Intra molecule scaling factors for species', is 
-        WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-2 scaling factor', scale_1_2_vdw(is)
-        WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-3 scaling factor', scale_1_3_vdw(is)
-        WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-4 scaling factor', scale_1_4_vdw(is) 
-        WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-N scaling factor', scale_1_N_vdw(is) 
+        IF (intrascaling_read(is)) THEN
+           WRITE(logunit,*) 'intramolecular scaling factors explicitly set in', intrafile_name(is)
    
-        WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-2 scaling factor', scale_1_2_charge(is) 
-        WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-3 scaling factor', scale_1_3_charge(is) 
-        WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-4 scaling factor', scale_1_4_charge(is) 
-        WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-N scaling factor', scale_1_N_charge(is)
-        WRITE(logunit,*) 
+        ELSE
+           WRITE(logunit,'(A,T50,I7)') 'Intra molecule scaling factors for species', is 
+           WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-2 scaling factor', scale_1_2_vdw(is)
+           WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-3 scaling factor', scale_1_3_vdw(is)
+           WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-4 scaling factor', scale_1_4_vdw(is) 
+           WRITE(logunit,'(A,T30,f7.3)') 'VDW 1-N scaling factor', scale_1_N_vdw(is) 
+      
+           WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-2 scaling factor', scale_1_2_charge(is) 
+           WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-3 scaling factor', scale_1_3_charge(is) 
+           WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-4 scaling factor', scale_1_4_charge(is) 
+           WRITE(logunit,'(A,T30,f7.3)') 'Coulomb 1-N scaling factor', scale_1_N_charge(is)
+           WRITE(logunit,*) 
+        ENDIF
      END DO
 
   WRITE(logunit,*)
