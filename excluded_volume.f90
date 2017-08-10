@@ -157,10 +157,10 @@ CONTAINS
        !*********************************************************************************
        !   Step 1) See if the test monomer is part of a cluster
        !*********************************************************************************
-       DO ispec = 1, cluster%n_species_type(1)
-           cs = cluster%species_type(1,ispec)
+       DO ispec = 1, cluster%n_species_type(3)
+           cs = cluster%species_type(3,ispec)
            DO i = 1, nmols(cs,this_box)
-               imol = locate(i,cs )
+               imol = locate(i, cs)
                IF (cs == is .and. imol == im) CYCLE
    
                in_cluster = Neighbor(3, imol, im, cs, is)
@@ -187,17 +187,17 @@ CONTAINS
        END IF
    
        !*********************************************************************************
-       !   Step 3) Accept or reject the test insertion
+       !   Step 3) Energetically disfavorable?
        !*********************************************************************************
    
        IF ( .not. exvol%distance) THEN
-           ln_pacc = beta(this_box) * delta_e 
        
-           IF (ln_pacc > exvol%criteria) THEN
-               !print*, 'ene', delta_e, i_ins
+           IF (delta_e > exvol%criteria) THEN
+               !print*, 'ene', delta_e, im
                exvol%excluded = exvol%excluded + 1
            END IF
        END IF
+       !print*, delta_e, exvol%excluded, im,is
 
   END SUBROUTINE Check_Excluded_Volume
 
@@ -301,7 +301,7 @@ CONTAINS
             IF( .NOT. molecule_list(t_im,is_clus)%live ) CYCLE MoleculeLoop
 
             ! IF the molecule is not in a cluster of the specified size
-            IF (cluster%N( cluster%clabel(t_im, is_clus) ) <= cluster%M_olig(is_clus)) THEN
+            IF (cluster%N( cluster%clabel(t_im, is_clus) ) < cluster%M_olig(is_clus)) THEN
 
                 CALL Get_Position_Molecule(this_box,is_clus,t_im,position)
                 DO k = imol + 1 - n_removed, SUM(nmols(is_clus,:))
@@ -346,11 +346,11 @@ CONTAINS
     E_inter_qq = 0.0_DP
     E_intra_vdw = 0.0_DP
     E_intra_qq = 0.0_DP
+    delta_e = 0.0_DP
 
     larson_lattice = .FALSE.
     IF (larson_lattice) THEN 
 
-        delta_e = 0.0_DP
         SpeciesLoop: DO js = 1, nspecies
             MoleculeLoop: DO jm = 1, nmolecules(js)
                 IF( .NOT. molecule_list(jm,js)%live ) CYCLE MoleculeLoop
@@ -469,7 +469,11 @@ CONTAINS
        ! Restore the total number of bead types
        nint_beads(:,this_box) = nbeads_in(:)
     END IF
+    !print*, E_inter_vdw, E_inter_qq, E_intra_vdw, E_intra_qq, E_bond, &
+    !        E_angle, E_dihedral, E_improper, E_self_move, E_reciprocal_move, &
+    !        energy(this_box)%ewald_reciprocal, e_lrc, energy(this_box)%lrc,delta_e
 
   END SUBROUTINE Get_Monomer_DeltaE
 
 END MODULE Excluded_Volume
+

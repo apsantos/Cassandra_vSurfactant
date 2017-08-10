@@ -2544,7 +2544,7 @@ SUBROUTINE Get_Fragment_Info(is)
 !
 !**********************************************************************************
 
-  INTEGER :: is, line_nbr, ierr, nbr_entries, ifrag, min_entries, iatom
+  INTEGER :: is, line_nbr, ierr, nbr_entries, ifrag, min_entries, iatom, ianchor
   INTEGER :: nanchors, iatoms, jatoms, ibonds, iatoms_bond
   INTEGER :: i_atom, j_atom, atom1, atom2
   INTEGER, ALLOCATABLE :: anchor_id(:)
@@ -2726,7 +2726,10 @@ SUBROUTINE Get_Fragment_Info(is)
      WRITE(logunit,*)
      WRITE(logunit,'(A32,1x,I4,A4,I4)') 'Number of anchors for fragment ', ifrag, 'is', &
           frag_list(ifrag,is)%nanchors
-     WRITE(logunit,'(A13,1x,I4)') 'Anchor id is:', frag_list(ifrag,is)%anchor(:)
+     WRITE(logunit,'(A13)', ADVANCE='NO') 'Anchor id is:'
+     DO ianchor = 1, frag_list(ifrag,is)%nanchors
+        WRITE(logunit,'(1x,I4)', ADVANCE='NO') frag_list(ifrag,is)%anchor(ianchor)
+     END DO
      
 
      IF (frag_list(ifrag,is)%nanchors > 1) THEN
@@ -3951,7 +3954,7 @@ SUBROUTINE Get_Fugacity_Info
         END DO
         !APS
         ! IF the species is inserted as a pair, set the corresponding chemical potential
-        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        CALL Parse_String(inputunit,line_nbr,0,nbr_entries,line_array,ierr)
         IF (ANY(species_list(:)%pair_insert) .eqv. .TRUE.) THEN
            IF (line_array(1) /= 'pair') THEN
               err_msg = ""
@@ -3994,9 +3997,11 @@ SUBROUTINE Get_Fugacity_Info
 
            END DO
 
-        ELSE IF (line_array(1) == 'pair') THEN
-           WRITE(logunit,'(A,A)') 'You have not defined the insertion probabilities,', &
+        ELSE IF (nbr_entries > 0) THEN
+            IF (line_array(1) == 'pair') THEN
+                WRITE(logunit,'(A,A)') 'You have not defined the insertion probabilities,', &
                                 'chemical potential information is not being used'
+            END IF
         END IF
 
         EXIT
@@ -6674,6 +6679,7 @@ EnLoop: DO ientry = 1, n_entries
             ALLOCATE( cluster%c_name(max_nmol), cluster%c_name_prev(max_nmol) )
             ALLOCATE( cluster%clabel_life(max_nmol), cluster%clabel_life_prev(max_nmol) )
             ALLOCATE( cluster%lifetime(max_nmol), cluster%n_clus_birth(max_nmol), cluster%n_clus_death(max_nmol) )
+            ALLOCATE( cluster%fission(max_nmol, max_nmol), cluster%fusion(max_nmol, max_nmol) )
             cluster%N_prev = 0
             cluster%clabel_prev(:,:) = 0
             cluster%clabel_life      = 0
@@ -6682,6 +6688,8 @@ EnLoop: DO ientry = 1, n_entries
             cluster%lifetime = 0
             cluster%n_clus_birth = 0
             cluster%n_clus_death = 0
+            cluster%fission = 0
+            cluster%fusion = 0
             i = 1
             cluster%names = (/ 'A', 'E', 'F', 'G', 'J', 'L', 'M', 'Q', 'R', 'T', 'V', 'W' /)
             IF (max_nmol < 12) THEN
@@ -7238,8 +7246,7 @@ SUBROUTINE Get_Bond_Histogram_Info
             exvol%distance = .true.
         ELSEIF ( line_array(1) == 'energy') THEN
             exvol%distance = .false.
-            exvol%criteria = String_To_Double(line_array(2))
-            exvol%criteria = LOG(exvol%criteria)
+            exvol%criteria = String_To_Double(line_array(2)) * kjmol_to_atomic
         ELSE
             err_msg = ''
             err_msg(1) = 'Excluded volume criteria is either distance [Angstrom] or energy [Atomistic]'
