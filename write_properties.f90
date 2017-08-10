@@ -683,7 +683,11 @@ SUBROUTINE Write_Cluster(this_box)
   END IF
 
   IF (ncluslife_freq > 0) THEN
-     WRITE(box_unit,'(A)', ADVANCE='NO') '  lifetime       n_birth   n_death'
+     WRITE(box_unit,'(5A)', ADVANCE='NO') '  lifetime       n_birth   n_death  ',&
+                                          'fusion M->1   fusion M->2  fusion M->3  fusion M->4  ',&
+                                          'fusion M->5  fusion M->6  fusion M->7  fusion M->8  ', &
+                                          'fission M->1   fission M->2  fission M->3  fission M->4  ',&
+                                          'fission M->5  fission M->6  fission M->7  fission M->8'
   END IF
 
   IF (nendclus_freq > 0) THEN
@@ -704,7 +708,11 @@ SUBROUTINE Write_Cluster(this_box)
         END IF
         
         IF (ncluslife_freq > 0) THEN
-            WRITE(box_unit,'(3I10)', ADVANCE='NO') cluster%lifetime(iM), cluster%n_clus_birth(iM), cluster%n_clus_death(iM)
+            WRITE(box_unit,'(19I10)', ADVANCE='NO') cluster%lifetime(iM), cluster%n_clus_birth(iM), cluster%n_clus_death(iM), &
+                                      cluster%fusion(iM,1), cluster%fusion(iM,2), cluster%fusion(iM,3), cluster%fusion(iM,4), &
+                                      cluster%fusion(iM,5), cluster%fusion(iM,6), cluster%fusion(iM,7), cluster%fusion(iM,8), &
+                                      cluster%fission(iM,1), cluster%fission(iM,2), cluster%fission(iM,3), cluster%fission(iM,4), &
+                                      cluster%fission(iM,5), cluster%fission(iM,6), cluster%fission(iM,7), cluster%fission(iM,8) 
         END IF
         
         IF (nendclus_freq > 0) THEN

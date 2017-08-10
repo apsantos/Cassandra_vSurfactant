@@ -565,7 +565,7 @@ CONTAINS
                 cluster%M( cluster%N(ic) ) = cluster%M( cluster%N(ic) ) + 1
     
                 ! Tally up the Nmols of oligomers and clustered
-                IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
+                IF (cluster%N(ic) < cluster%M_olig(is_clus)) THEN
                     cluster%n_oligomers = cluster%n_oligomers + cluster%N(ic)
                     cluster%n_olig_clus = cluster%n_olig_clus + 1
                 ELSE
@@ -1132,13 +1132,16 @@ CONTAINS
 
     INTEGER :: ic, jc, nc, is_clus, imol
     INTEGER :: itrue
+    INTEGER :: m,n
     INTEGER, ALLOCATABLE, DIMENSION(:,:) :: o_age, N_split
     INTEGER, ALLOCATABLE, DIMENSION(:) :: lab_c_to_p
     LOGICAL, ALLOCATABLE, DIMENSION(:) :: N_split_double
     INTEGER :: cn_index, max_N_split, max_nmolecules, half_N
 
+    m = 0
+    n = 0
     max_nmolecules = MAXVAL(nmolecules(:))
-    ! connects the previous cluster's clabel if it has essentiall changed
+    ! connects the previous cluster's clabel if it has essentially changed
     ALLOCATE( lab_c_to_p(max_nmolecules) )
     lab_c_to_p = 0
     ! keeps track of the number of molecules from the previous-label cluster
@@ -1293,6 +1296,20 @@ CONTAINS
 
                 ! The cluster grew or shrunk
                 ELSE IF (ic < 0) THEN
+                    
+                    ! Fission
+                    IF (cluster%N_prev(-ic) > cluster%N(nc)) THEN
+                        m = cluster%N_prev(-ic)
+                        n = cluster%N(nc)
+                        cluster%fission(m, n) = cluster%fission(m, n) + 1
+
+                    ! Fussion
+                    ELSE 
+                        m = max(cluster%N(nc) - cluster%N_prev(-ic), cluster%N_prev(-ic)) 
+                        n = max(cluster%N(nc) - cluster%N_prev(-ic), cluster%N_prev(-ic)) 
+                        cluster%fusion(m, n) = cluster%fusion(m, n) + 1
+                    END IF
+
                     cluster%n_clus_death(cluster%N_prev(-ic)) = cluster%n_clus_death(cluster%N_prev(-ic)) + 1
                     cluster%n_clus_birth(cluster%N(nc)) = cluster%n_clus_birth(cluster%N(nc)) + 1
                     cluster%c_name(nc) = cluster%c_name_prev(-ic)
@@ -1316,7 +1333,7 @@ CONTAINS
                      END IF
                 END IF
     
-                IF (cluster%N(nc) <= cluster%M_olig(is_clus)) THEN
+                IF (cluster%N(nc) < cluster%M_olig(is_clus)) THEN
                     cluster%c_name(nc) = 'Z'
                 END IF
             END IF
@@ -1348,7 +1365,7 @@ CONTAINS
                 cluster%clabel_life_max = cluster%clabel_life_max + 1
                 cluster%clabel_life(nc) = cluster%clabel_life_max
 
-                IF (cluster%N(nc) <= cluster%M_olig(is_clus)) THEN
+                IF (cluster%N(nc) < cluster%M_olig(is_clus)) THEN
                     cluster%c_name(nc) = 'Z'
                 END IF
             END IF
@@ -1438,12 +1455,12 @@ CONTAINS
     cluster%olig_nn_dist = 0.0
     cluster%n_olig_dist = 0
     DO WHILE ( cluster%N(ic) /= 0 )
-        IF (cluster%N(ic) <= cluster%M_olig(is_clus)) THEN
+        IF (cluster%N(ic) < cluster%M_olig(is_clus)) THEN
             jc = 1
             IF (jc == ic) jc = ic + 1
             rijmin = max_length
             DO WHILE ( cluster%N(jc) /= 0 )
-                IF (cluster%N(jc) <= cluster%M_olig(is_clus)) THEN
+                IF (cluster%N(jc) < cluster%M_olig(is_clus)) THEN
                     ! Get the positions of the COM of the two molecule species
                     rxijp = cluster%com_x(ic) - cluster%com_x(jc)
                     ryijp = cluster%com_y(ic) - cluster%com_y(jc)

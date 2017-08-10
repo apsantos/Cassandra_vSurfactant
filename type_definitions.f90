@@ -573,6 +573,7 @@ MODULE Type_Definitions
     ! cluster kinetics
     INTEGER  :: mic_life, n_mic_death, clabel_life_max
     INTEGER, DIMENSION(:), ALLOCATABLE :: N_prev, lifetime, n_clus_birth, n_clus_death
+    INTEGER, DIMENSION(:,:), ALLOCATABLE :: fission, fusion
     INTEGER, DIMENSION(:), ALLOCATABLE :: clabel_life, clabel_life_prev
     INTEGER, DIMENSION(:,:), ALLOCATABLE :: clabel_prev, age
     CHARACTER(24), DIMENSION(:), ALLOCATABLE :: c_name, c_name_prev
