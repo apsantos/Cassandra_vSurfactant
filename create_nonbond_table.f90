@@ -587,7 +587,7 @@ SUBROUTINE Read_Nonbond_Table
                 int_vdw_style_mix(itype,jtype,vdw_corr) = .true.
                 int_vdw_style_mix(jtype,itype,vdw_corr) = .true.
                 vdw_param6_table(itype,jtype) = String_To_Double(line_array(i+1))
-                vdw_param7_table(itype,jtype) = String_To_Double(line_array(i+1))
+                vdw_param7_table(itype,jtype) = String_To_Double(line_array(i+2))
                 vdw_param6_table(jtype,itype) = vdw_param6_table(itype,jtype)
                 vdw_param7_table(jtype,itype) = vdw_param7_table(itype,jtype)
 

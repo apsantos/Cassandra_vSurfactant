@@ -56,7 +56,7 @@ CONTAINS
         cm = locate(i, alpha%clus_species)
         IF( .NOT. molecule_list(cm, alpha%clus_species)%live ) CYCLE
 
-        IF (cluster%N( cluster%clabel(cm, alpha%clus_species) ) <= cluster%M_olig(alpha%clus_species)) CYCLE
+        IF (cluster%N( cluster%clabel(cm, alpha%clus_species) ) < cluster%M_olig(alpha%clus_species)) CYCLE
 
         DO j = 1, nmolecules(alpha%assoc_species)
             am = locate(j, alpha%assoc_species)

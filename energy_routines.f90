@@ -1511,7 +1511,6 @@ CONTAINS
 
           IF (.NOT. get_interaction) CYCLE moleculeLOOP       
           
-          
           CALL Compute_Molecule_Pair_Interaction(im,is,this_locate,ispecies,this_box, &
                Eij_vdw,Eij_qq,my_overlap)
           
@@ -1616,7 +1615,7 @@ CONTAINS
              sig = vdw_param2_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps  = vdw_in_param1_table(ia,ja,is)
                 sig  = vdw_in_param2_table(ia,ja,is)
@@ -1686,7 +1685,7 @@ CONTAINS
              sig = vdw_param2_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param1_table(ia,ja,is)
                 sig = vdw_in_param2_table(ia,ja,is)
@@ -1746,7 +1745,7 @@ CONTAINS
              sig = vdw_param2_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param1_table(ia,ja,is)
                 sig = vdw_in_param2_table(ia,ja,is)
@@ -1806,7 +1805,7 @@ CONTAINS
              sig = vdw_param2_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param1_table(ia,ja,is)
                 sig = vdw_in_param2_table(ia,ja,is)
@@ -1841,7 +1840,7 @@ CONTAINS
              kappa = vdw_param9_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param8_table(ia,ja,is)
                 kappa = vdw_in_param9_table(ia,ja,is)
@@ -1876,7 +1875,7 @@ CONTAINS
           Shyd = vdw_param5_table(itype,jtype)
 
           ! Apply intramolecular scaling if necessary
-          IF (is == js .AND. im == jm) THEN
+          IF (intra) THEN
              ! This controls 1-2, 1-3, and 1-4 interactions
              Hhyd = vdw_in_param3_table(ia,ja,is)
              Rhyd = vdw_in_param4_table(ia,ja,is)
@@ -1905,9 +1904,11 @@ CONTAINS
           IF (int_charge_sum_style(ibox) == charge_cut .OR. igas_flag) THEN
              ! Apply charge scaling for intramolecular energies
              qsc = 1.0_DP
-             IF ( is == js .AND. im == jm ) THEN
+
+             IF (intra) THEN
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
+
              Eij_qq = qsc*charge_factor(ibox)*(qi*qj)/SQRT(rijsq)
           ELSEIF (int_charge_sum_style(ibox) == charge_ewald .AND. ( .NOT. igas_flag) ) THEN
              ! Real space Ewald part
@@ -1925,7 +1926,8 @@ CONTAINS
     ENDIF ExistCheck
 
   !writE(*,*) E_hyd, nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), Eij_vdw, Eij_qq
-  !writE(*,'(2A,F8.3,X,F11.5,X,F11.5)') nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), Eij_vdw, Eij_qq
+  !writE(*,'(2A,F8.3,X,F11.5,X,F11.5,X,F11.5)') nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), &
+  !                                          Eij_vdw, Eij_qq, E_hyd
 
   END SUBROUTINE Pair_Energy
 
