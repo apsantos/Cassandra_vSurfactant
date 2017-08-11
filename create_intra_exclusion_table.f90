@@ -57,6 +57,8 @@ SUBROUTINE Create_Intra_Exclusion_Table
   max_natoms = MAXVAL(natoms)
   ALLOCATE(vdw_intra_scale(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
   ALLOCATE(charge_intra_scale(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
+  vdw_intra_scale(:,:,:) = 0.0_DP
+  charge_intra_scale(:,:,:) = 0.0_DP
 
   ALLOCATE(vdw_in_param1_table(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
   ALLOCATE(vdw_in_param2_table(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
@@ -181,11 +183,8 @@ SUBROUTINE Create_Intra_Exclusion_Table
      
   ENDDO SpeciesLoop
 
-  ! Overwrite values if defined by the user
-  IF (intrafile_name .NE. "") THEN
-     CALL Read_Intra_Exclusion_Table
-  ELSE
   DO is=1,nspecies
+     ! set all values based on scaling
      DO ii=1,natoms(is)
         itype = nonbond_list(ii,is)%atom_type_number
         DO jj = 1,natoms(is)
@@ -205,9 +204,13 @@ SUBROUTINE Create_Intra_Exclusion_Table
 
         ENDDO
      ENDDO
+
+     ! Overwrite default values if defined by the user
+     IF (intrafile_name(is) .NE. "") THEN
+        CALL Read_Intra_Exclusion_Table(is)
+     ENDIF
   ENDDO
      
-  ENDIF
 
   ! report info to log
   WRITE(logunit,*)
@@ -233,7 +236,7 @@ SUBROUTINE Create_Intra_Exclusion_Table
 
 END SUBROUTINE Create_Intra_Exclusion_Table
 
-SUBROUTINE Read_Intra_Exclusion_Table
+SUBROUTINE Read_Intra_Exclusion_Table(is)
   !-----------------------------------------------------------------------------
   ! Reads in a file that explicitly defines the intra scaling of user-defined
   ! atoms.
@@ -258,279 +261,232 @@ SUBROUTINE Read_Intra_Exclusion_Table
 
   IMPLICIT NONE
 
-  INTEGER :: is,ia,ii,jj,js,ja, i
+  INTEGER, INTENT(in) :: is
+  INTEGER :: ia,ii,jj,js,ja, i
   INTEGER :: ierr,nbr_entries, i_line
-  INTEGER :: t_atoms, itype, jtype
   INTEGER, ALLOCATABLE, DIMENSION(:,:) :: temp_type
 
   CHARACTER(120) :: line_string, line_array(20)
   CHARACTER(120) :: temp_name, pot_type
 !-----------------------------------------------------------------------------
-    ! Open intra scalingfile and find the line where the data begins
-    OPEN(UNIT=intrafile_unit,FILE=intrafile_name,STATUS="OLD",IOSTAT=openstatus,ACTION="READ")
-    CALL Read_String(intrafile_unit,line_string,ierr)
-    IF (ierr .NE. 0) THEN
-        err_msg = ""
-        err_msg(1) = "Error reading intra scaling values."
-        CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
-    END IF
-    i_line = 1
-    ALLOCATE(temp_type( SUM(natoms(:)), nspecies ) )
-    temp_type = 0
-    DO 
-        IF (ierr < 0) EXIT
-        IF (line_string(1:12) == '# Atom_Types') THEN
-            DO is = 1, nspecies
-               DO ia = 1, natoms(is)
-                  CALL Parse_String(intrafile_unit, i_line, 1, nbr_entries, line_array, ierr)
-                  temp_name = line_array(1)
-                  IF (ANY(temp_name == nonbond_list(:,is)%atom_name ) .eqv. .FALSE.) THEN
-                     err_msg(1) = "Atom name and type in Intra Scaling table (" &
-                                   //TRIM(temp_name)//") does not match the MCF file."
-                     err_msg(2) = "Make sure the atom list in the file starts with "// &
-                                  "species 1 then 2 and so on."
-                     CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
-                  ENDIF
+  ! Open intra scalingfile and find the line where the data begins
+  OPEN(UNIT=intrafile_unit,FILE=intrafile_name(is),STATUS="OLD",IOSTAT=openstatus,ACTION="READ")
+  CALL Read_String(intrafile_unit,line_string,ierr)
+  IF (ierr .NE. 0) THEN
+      err_msg = ""
+      err_msg(1) = "Error reading intra scaling values."
+      err_msg(2) = intrafile_name(is)
+      CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+  END IF
+  i_line = 1
+  ALLOCATE(temp_type( SUM(natoms(:)), nspecies ) )
+  temp_type = 0
+  DO 
+      IF (ierr < 0) EXIT
 
-                  temp_type(ia, is) = String_To_Int(line_array(2)) 
+      IF (line_string(1:12) == '# Atom_Types') THEN
+         DO ia = 1, natoms(is)
+            CALL Parse_String(intrafile_unit, i_line, 1, nbr_entries, line_array, ierr)
+            temp_name = line_array(1)
+            IF (ANY(temp_name == nonbond_list(:,is)%atom_name ) .eqv. .FALSE.) THEN
+               err_msg(1) = "Atom name and type in Intra Scaling table (" &
+                             //TRIM(temp_name)//") does not match the MCF file."
+               err_msg(2) = "Make sure the atom list in the file starts with "// &
+                            "species 1 then 2 and so on."
+               CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+            ENDIF
 
-                  i_line = i_line + 1
-               ENDDO
+            temp_type(ia, is) = String_To_Int(line_array(2)) 
+
+            i_line = i_line + 1
+         ENDDO
+         DO js = is+1, nspecies
+            IF (ANY(temp_type(:natoms(is),is) == temp_type(:natoms(js),js))) THEN
+               err_msg(1) = "Atom types between among species"
+               err_msg(2) = "must be unique in the intra scaling table."
+               CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+            ENDIF
+         ENDDO
+
+      ELSEIF (line_string(1:15) == '# Intra_Scaling') THEN
+         ! read in values
+         DO
+            CALL Parse_String(intrafile_unit, i_line, 2, nbr_entries, line_array, ierr)
+            IF (TRIM(line_array(2)) == 'Done_Intra_Scaling') THEN
+              EXIT
+            ENDIF
+ 
+            ii = String_To_Int(line_array(1))
+            jj = String_To_Int(line_array(2))
+
+            IF (( ANY(ii == temp_type(:,is)) .eqv. .FALSE.) .or. &
+                ( ANY(jj == temp_type(:,is)) .eqv. .FALSE.)) THEN
+               err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule."
+               CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+               EXIT
+            ENDIF
+
+            DO ia = 1, natoms(is)
+               IF ( ii == temp_type(ia,is)) THEN
+                  DO ja = 1, natoms(is)
+                     IF ( jj == temp_type(ja,is)) THEN
+                        IF (int_vdw_style(1) /= vdw_none) THEN
+                           vdw_intra_scale(ia,ja,is) = String_To_Double(line_array(3))
+                           vdw_intra_scale(ja,ia,is) = String_To_Double(line_array(3))
+                        ENDIF
+                        IF (int_charge_style(1) /= charge_none) THEN
+                           IF (nbr_entries == 4) THEN
+                              charge_intra_scale(ia,ja,is) = String_To_Double(line_array(4))
+                              charge_intra_scale(ja,ia,is) = String_To_Double(line_array(4))
+                           ELSE
+                              charge_intra_scale(ia,ja,is) = String_To_Double(line_array(3))
+                              charge_intra_scale(ja,ia,is) = String_To_Double(line_array(3))
+                           ENDIF
+                        ENDIF
+                     ENDIF
+                  ENDDO
+               ENDIF
             ENDDO
-            DO is = 1, nspecies
-               DO js = is+1, nspecies
-                  IF (ANY(temp_type(:natoms(is),is) == temp_type(:natoms(js),js))) THEN
-                     err_msg(1) = "Atom types between among species"
-                     err_msg(2) = "must be unique in the intra scaling table."
-                     CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
-                  ENDIF
-               ENDDO
+            i_line = i_line + 1
+         ENDDO
+
+      ELSEIF (line_string(1:15) == '# Mixing_Values') THEN
+         ! read in values
+         DO
+            CALL Parse_String(intrafile_unit, i_line, 2, nbr_entries, line_array, ierr)
+            IF (TRIM(line_array(2)) == 'Done_Mixing_Values') THEN
+              EXIT
+            ENDIF
+ 
+            ii = String_To_Int(line_array(1))
+            jj = String_To_Int(line_array(2))
+
+            IF (( ANY(ii == temp_type(:,is)) .eqv. .FALSE.) .or. &
+                ( ANY(jj == temp_type(:,is)) .eqv. .FALSE.)) THEN
+               err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule."
+               CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+               EXIT
+            ENDIF
+
+            DO ia = 1, natoms(is)
+               IF ( ii == temp_type(ia,is)) THEN
+                  DO ja = 1, natoms(is)
+                     IF ( jj == temp_type(ja,is)) THEN
+                        DO i = 3, SIZE(line_array)
+                            pot_type = line_array(i)
+                
+                            IF (pot_type == 'LJ' .or. pot_type == 'LJ126' .or. &
+                                pot_type == 'LJ124' .or. &
+                                pot_type == 'LJ96') THEN
+                
+                                IF (pot_type == 'LJ' .or. pot_type == 'LJ126') THEN
+                                   int_in_vdw_style_mix(ia,ja,is,vdw_lj) = .true.
+                                   int_in_vdw_style_mix(ja,ia,is,vdw_lj) = .true.
+                                ELSE IF (pot_type == 'LJ124') THEN
+                                   int_in_vdw_style_mix(ia,ja,is,vdw_lj124) = .true.
+                                   int_in_vdw_style_mix(ja,ia,is,vdw_lj124) = .true.
+                                ELSE IF (pot_type == 'LJ96') THEN
+                                   int_in_vdw_style_mix(ia,ja,is,vdw_lj96) = .true.
+                                   int_in_vdw_style_mix(ja,ia,is,vdw_lj96) = .true.
+                                END IF
+
+                                vdw_in_param1_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                vdw_in_param2_table(ia,ja,is) = String_To_Double(line_array(i+2))
+                                vdw_in_param1_table(ja,ia,is) = vdw_in_param1_table(ia,ja,is)
+                                vdw_in_param2_table(ja,ia,is) = vdw_in_param2_table(ia,ja,is)
+                
+                            ELSEIF (pot_type == 'HYDR') THEN
+                                int_in_vdw_style_mix(ia,ja,is,vdw_hydra) = .true.
+                                int_in_vdw_style_mix(ja,ia,is,vdw_hydra) = .true.
+                                vdw_in_param3_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                vdw_in_param4_table(ia,ja,is) = String_To_Double(line_array(i+2))
+                                vdw_in_param5_table(ia,ja,is) = String_To_Double(line_array(i+3))
+                                vdw_in_param3_table(ja,ia,is) = vdw_in_param3_table(ia,ja,is)
+                                vdw_in_param4_table(ja,ia,is) = vdw_in_param4_table(ia,ja,is)
+                                vdw_in_param5_table(ja,ia,is) = vdw_in_param5_table(ia,ja,is)
+                
+                            ELSEIF (pot_type == 'CORR') THEN
+                                int_in_vdw_style_mix(ia,ja,is,vdw_corr) = .true.
+                                int_in_vdw_style_mix(ja,ia,is,vdw_corr) = .true.
+                                vdw_in_param6_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                vdw_in_param6_table(ja,ia,is) = vdw_in_param6_table(ia,ja,is)
+                                vdw_in_param7_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                vdw_in_param7_table(ja,ia,is) = vdw_in_param7_table(ia,ja,is)
+                
+                            ELSEIF (pot_type == 'Yukawa') THEN
+                                int_in_vdw_style_mix(ia,ja,is,vdw_yukawa) = .true.
+                                int_in_vdw_style_mix(ja,ia,is,vdw_yukawa) = .true.
+                                vdw_in_param8_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                vdw_in_param8_table(ja,ia,is) = vdw_in_param8_table(ia,ja,is)
+                                vdw_in_param9_table(ia,ja,is) = String_To_Double(line_array(i+2))
+                                vdw_in_param9_table(ja,ia,is) = vdw_in_param9_table(ia,ja,is)
+                
+                            ELSEIF (pot_type == 'SW') THEN
+                                int_in_vdw_style_mix(ia,ja,is,vdw_sw) = .true.
+                                int_in_vdw_style_mix(ja,ia,is,vdw_sw) = .true.
+                                vdw_in_param10_table(ia,ja,is) = String_To_Double(line_array(i+1))
+                                vdw_in_param10_table(ja,ia,is) = vdw_in_param10_table(ia,ja,is)
+                                vdw_in_param11_table(ia,ja,is) = String_To_Double(line_array(i+2))
+                                vdw_in_param11_table(ja,ia,is) = vdw_in_param11_table(ia,ja,is)
+                
+                            ENDIF
+                
+                        ENDDO
+                     ENDIF
+                  ENDDO
+               ENDIF
             ENDDO
-        ELSEIF (line_string(1:15) == '# Intra_Scaling') THEN
-           ! read in values
-           DO
-              CALL Parse_String(intrafile_unit, i_line, 2, nbr_entries, line_array, ierr)
-              IF (TRIM(line_array(2)) == 'Done_Intra_Scaling') THEN
-                EXIT
-              ENDIF
-   
-              ii = String_To_Int(line_array(1))
-              jj = String_To_Int(line_array(2))
-              t_atoms = 0
-              DO is = 1, nspecies
-                 t_atoms = t_atoms + temp_type(natoms(is),is)
-                 IF ( ii <= t_atoms ) THEN
-                    IF ( jj > t_atoms .OR. jj <= (t_atoms - natoms(is)) ) THEN
-                       err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule."
-                       CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
-                    ENDIF
-                    EXIT
-                 ENDIF
-              ENDDO
+            i_line = i_line + 1
+         ENDDO
 
-              DO ia = 1, natoms(is)
-                 IF ( ii == temp_type(ia,is)) THEN
-                    DO ja = 1, natoms(is)
-                       IF ( jj == temp_type(ja,is)) THEN
-                          IF (int_vdw_style(1) /= vdw_none) THEN
-                             vdw_intra_scale(ia,ja,is) = String_To_Double(line_array(3))
-                             vdw_intra_scale(ja,ia,is) = String_To_Double(line_array(3))
-                          ENDIF
-                          IF (int_charge_style(1) /= charge_none) THEN
-                             IF (nbr_entries == 4) THEN
-                                charge_intra_scale(ia,ja,is) = String_To_Double(line_array(4))
-                                charge_intra_scale(ja,ia,is) = String_To_Double(line_array(4))
-                             ELSE
-                                charge_intra_scale(ia,ja,is) = String_To_Double(line_array(3))
-                                charge_intra_scale(ja,ia,is) = String_To_Double(line_array(3))
-                             ENDIF
-                          ENDIF
-                       ENDIF
-                    ENDDO
-                 ENDIF
-              ENDDO
-              i_line = i_line + 1
-           ENDDO
+      ELSEIF (line_string(1:11) == '# VDW_Style') THEN
+         ! read in values
+         DO
+            CALL Parse_String(intrafile_unit, i_line, 2, nbr_entries, line_array, ierr)
+            IF (TRIM(line_array(2)) == 'Done_VDW_Style') THEN
+              EXIT
+            ENDIF
+ 
+            ii = String_To_Int(line_array(1))
+            jj = String_To_Int(line_array(2))
 
-        ELSEIF (line_string(1:15) == '# Mixing_Values') THEN
-           ! read in values
-           DO
-              CALL Parse_String(intrafile_unit, i_line, 2, nbr_entries, line_array, ierr)
-              IF (TRIM(line_array(2)) == 'Done_Mixing_Values') THEN
-                EXIT
-              ENDIF
-   
-              ii = String_To_Int(line_array(1))
-              jj = String_To_Int(line_array(2))
-              t_atoms = 0
-              DO is = 1, nspecies
-                 t_atoms = t_atoms + temp_type(natoms(is),is)
-                 IF ( ii <= t_atoms ) THEN
-                    IF ( jj > t_atoms .OR. jj <= (t_atoms - natoms(is)) ) THEN
-                       err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule."
-                       CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
-                    ENDIF
-                    EXIT
-                 ENDIF
-              ENDDO
+            IF (( ANY(ii == temp_type(:,is)) .eqv. .FALSE.) .or. &
+                ( ANY(jj == temp_type(:,is)) .eqv. .FALSE.)) THEN
+               err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule."
+               CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
+               EXIT
+            ENDIF
 
-              DO ia = 1, natoms(is)
-                 IF ( ii == temp_type(ia,is)) THEN
-                    DO ja = 1, natoms(is)
-                       IF ( jj == temp_type(ja,is)) THEN
-                          DO i = 3, SIZE(line_array)
-                              pot_type = line_array(i)
-                  
-                              IF (pot_type == 'LJ' .or. pot_type == 'LJ126' .or. &
-                                  pot_type == 'LJ124' .or. &
-                                  pot_type == 'LJ96') THEN
-                  
-                                  IF (pot_type == 'LJ' .or. pot_type == 'LJ126') THEN
-                                     int_in_vdw_style_mix(ia,ja,is,vdw_lj) = .true.
-                                     int_in_vdw_style_mix(ja,ia,is,vdw_lj) = .true.
-                                  ELSE IF (pot_type == 'LJ124') THEN
-                                     int_in_vdw_style_mix(ia,ja,is,vdw_lj124) = .true.
-                                     int_in_vdw_style_mix(ja,ia,is,vdw_lj124) = .true.
-                                  ELSE IF (pot_type == 'LJ96') THEN
-                                     int_in_vdw_style_mix(ia,ja,is,vdw_lj96) = .true.
-                                     int_in_vdw_style_mix(ja,ia,is,vdw_lj96) = .true.
-                                  END IF
+            DO ia = 1, natoms(is)
+               IF ( ii == temp_type(ia,is)) THEN
+                  DO ja = 1, natoms(is)
+                     IF ( jj == temp_type(ja,is)) THEN
+                        rcut_in_vdw_mix(ia,ja,is) = String_To_Double(line_array(4))
+                        rcut_in_vdw_mix(ja,ia,is) = String_To_Double(line_array(4))
 
-                                  vdw_in_param1_table(ia,ja,is) = String_To_Double(line_array(i+1))
-                                  vdw_in_param2_table(ia,ja,is) = String_To_Double(line_array(i+2))
-                                  vdw_in_param1_table(ja,ia,is) = vdw_in_param1_table(ia,ja,is)
-                                  vdw_in_param2_table(ja,ia,is) = vdw_in_param2_table(ia,ja,is)
-                  
-                              ELSEIF (pot_type == 'HYDR') THEN
-                                  int_in_vdw_style_mix(ia,ja,is,vdw_hydra) = .true.
-                                  int_in_vdw_style_mix(ja,ia,is,vdw_hydra) = .true.
-                                  vdw_in_param3_table(ia,ja,is) = String_To_Double(line_array(i+1))
-                                  vdw_in_param4_table(ia,ja,is) = String_To_Double(line_array(i+2))
-                                  vdw_in_param5_table(ia,ja,is) = String_To_Double(line_array(i+3))
-                                  vdw_in_param3_table(ja,ia,is) = vdw_in_param3_table(ia,ja,is)
-                                  vdw_in_param4_table(ja,ia,is) = vdw_in_param4_table(ia,ja,is)
-                                  vdw_in_param5_table(ja,ia,is) = vdw_in_param5_table(ia,ja,is)
-                  
-                              ELSEIF (pot_type == 'CORR') THEN
-                                  int_in_vdw_style_mix(ia,ja,is,vdw_corr) = .true.
-                                  int_in_vdw_style_mix(ja,ia,is,vdw_corr) = .true.
-                                  vdw_in_param6_table(ia,ja,is) = String_To_Double(line_array(i+1))
-                                  vdw_in_param6_table(ja,ia,is) = vdw_in_param6_table(ia,ja,is)
-                                  vdw_in_param7_table(ia,ja,is) = String_To_Double(line_array(i+1))
-                                  vdw_in_param7_table(ja,ia,is) = vdw_in_param7_table(ia,ja,is)
-                  
-                              ELSEIF (pot_type == 'Yukawa') THEN
-                                  int_in_vdw_style_mix(ia,ja,is,vdw_yukawa) = .true.
-                                  int_in_vdw_style_mix(ja,ia,is,vdw_yukawa) = .true.
-                                  vdw_in_param8_table(ia,ja,is) = String_To_Double(line_array(i+1))
-                                  vdw_in_param8_table(ja,ia,is) = vdw_in_param8_table(ia,ja,is)
-                                  vdw_in_param9_table(ia,ja,is) = String_To_Double(line_array(i+2))
-                                  vdw_in_param9_table(ja,ia,is) = vdw_in_param9_table(ia,ja,is)
-                  
-                              ELSEIF (pot_type == 'SW') THEN
-                                  int_in_vdw_style_mix(ia,ja,is,vdw_sw) = .true.
-                                  int_in_vdw_style_mix(ja,ia,is,vdw_sw) = .true.
-                                  vdw_in_param10_table(ia,ja,is) = String_To_Double(line_array(i+1))
-                                  vdw_in_param10_table(ja,ia,is) = vdw_in_param10_table(ia,ja,is)
-                                  vdw_in_param11_table(ia,ja,is) = String_To_Double(line_array(i+2))
-                                  vdw_in_param11_table(ja,ia,is) = vdw_in_param11_table(ia,ja,is)
-                  
-                              ENDIF
-                  
-                          ENDDO
-                       ENDIF
-                    ENDDO
-                 ENDIF
-              ENDDO
-              i_line = i_line + 1
-           ENDDO
+                        IF (line_array(3) == 'cut') THEN
+                           int_in_vdw_sum_style_mix(ia,ja,is) = vdw_cut
+                        ELSE IF (line_array(3) == 'cut_shift') THEN
+                           int_in_vdw_sum_style_mix(ia,ja,is) = vdw_cut_shift
+                        ELSE IF (line_array(3) == 'cut_switch') THEN
+                           int_in_vdw_sum_style_mix(ia,ja,is) = vdw_cut_switch
+                        ELSE IF (line_array(3) == 'CHARMM') THEN
+                           int_in_vdw_sum_style_mix(ia,ja,is) = vdw_charmm
+                        ENDIF
+                        int_in_vdw_sum_style_mix(ja,ia,is) = int_in_vdw_sum_style_mix(ia,ja,is)
+                
+                     ENDIF
+                  ENDDO
+               ENDIF
+            ENDDO
+            i_line = i_line + 1
+         ENDDO
 
-        ELSEIF (line_string(1:11) == '# VDW_Style') THEN
-           ! read in values
-           DO
-              CALL Parse_String(intrafile_unit, i_line, 2, nbr_entries, line_array, ierr)
-              IF (TRIM(line_array(2)) == 'Done_VDW_Style') THEN
-                EXIT
-              ENDIF
-   
-              ii = String_To_Int(line_array(1))
-              jj = String_To_Int(line_array(2))
-              t_atoms = 0
-              DO is = 1, nspecies
-                 t_atoms = t_atoms + temp_type(natoms(is),is)
-                 IF ( ii <= t_atoms ) THEN
-                    IF ( jj > t_atoms .OR. jj <= (t_atoms - natoms(is)) ) THEN
-                       err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule."
-                       CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
-                    ENDIF
-                    EXIT
-                 ENDIF
-              ENDDO
+      ENDIF
 
-              DO ia = 1, natoms(is)
-                 IF ( ii == temp_type(ia,is)) THEN
-                    DO ja = 1, natoms(is)
-                       IF ( jj == temp_type(ja,is)) THEN
-                          rcut_in_vdw_mix(ia,ja,is) = String_To_Double(line_array(4))
-                          rcut_in_vdw_mix(ja,ia,is) = String_To_Double(line_array(4))
-
-                          IF (line_array(3) == 'cut') THEN
-                             int_in_vdw_sum_style_mix(ia,ja,is) = vdw_cut
-                          ELSE IF (line_array(3) == 'cut_shift') THEN
-                             int_in_vdw_sum_style_mix(ia,ja,is) = vdw_cut_shift
-                          ELSE IF (line_array(3) == 'cut_switch') THEN
-                             int_in_vdw_sum_style_mix(ia,ja,is) = vdw_cut_switch
-                          ELSE IF (line_array(3) == 'CHARMM') THEN
-                             int_in_vdw_sum_style_mix(ia,ja,is) = vdw_charmm
-                          ENDIF
-                          int_in_vdw_sum_style_mix(ja,ia,is) = int_in_vdw_sum_style_mix(ia,ja,is)
-                  
-                       ENDIF
-                    ENDDO
-                 ENDIF
-              ENDDO
-              i_line = i_line + 1
-           ENDDO
-
-        ENDIF
-
-        i_line = i_line + 1
-        CALL Read_String(intrafile_unit,line_string,ierr)
-    ENDDO
-    CLOSE(UNIT=intrafile_unit)
-
-    DO is=1,nspecies
-       DO ii=1,natoms(is)
-          itype = nonbond_list(ii,is)%atom_type_number
-          DO jj = 1,natoms(is)
-             jtype = nonbond_list(jj,is)%atom_type_number
-  
-             IF      (vdw_in_param1_table(ii,jj,is) == 0) THEN
-                vdw_in_param1_table(ii,jj,is) = vdw_param1_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             ELSE IF (vdw_in_param2_table(ii,jj,is) == 0) THEN
-                 vdw_in_param2_table(ii,jj,is) = vdw_param2_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             ELSE IF (vdw_in_param3_table(ii,jj,is) == 0) THEN
-                 vdw_in_param3_table(ii,jj,is) = vdw_param3_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             ELSE IF (vdw_in_param4_table(ii,jj,is) == 0) THEN
-                 vdw_in_param4_table(ii,jj,is) = vdw_param4_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             ELSE IF (vdw_in_param5_table(ii,jj,is) == 0) THEN
-                 vdw_in_param5_table(ii,jj,is) = vdw_param5_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             ELSE IF (vdw_in_param6_table(ii,jj,is) == 0) THEN
-                 vdw_in_param6_table(ii,jj,is) = vdw_param6_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             ELSE IF (vdw_in_param7_table(ii,jj,is) == 0) THEN
-                 vdw_in_param7_table(ii,jj,is) = vdw_param7_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             ELSE IF (vdw_in_param8_table(ii,jj,is) == 0) THEN
-                 vdw_in_param8_table(ii,jj,is) = vdw_param8_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             ELSE IF (vdw_in_param9_table(ii,jj,is) == 0) THEN
-                 vdw_in_param9_table(ii,jj,is) = vdw_param9_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             ELSE IF (vdw_in_param10_table(ii,jj,is) == 0) THEN
-                 vdw_in_param10_table(ii,jj,is) = vdw_param10_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             ELSE IF (vdw_in_param11_table(ii,jj,is) == 0) THEN
-                 vdw_in_param11_table(ii,jj,is) = vdw_param11_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
-             END IF
-  
-          ENDDO
-       ENDDO
-    ENDDO
+      i_line = i_line + 1
+      CALL Read_String(intrafile_unit,line_string,ierr)
+  ENDDO
+  CLOSE(UNIT=intrafile_unit)
 
 END SUBROUTINE Read_Intra_Exclusion_Table

@@ -1404,7 +1404,7 @@ SUBROUTINE Get_Insertion_Style(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(120) :: line_string, line_array(30)
+  CHARACTER(120) :: line_string, line_array(20)
 
   REWIND(molfile_unit)
 
@@ -2452,7 +2452,7 @@ SUBROUTINE Get_Fragment_Anchor_Info(is)
 
   REWIND(molfile_unit)
 
-  frag_list(:,:)%nanchors = 0
+  frag_list(:,is)%nanchors = 0
   DO
      line_nbr = line_nbr + 1
      CALL Read_String(molfile_unit,line_string,ierr)
@@ -2553,7 +2553,7 @@ SUBROUTINE Get_Fragment_Info(is)
   ierr = 0
   REWIND(molfile_unit)
 
-  frag_list(:,:)%natoms = 0
+  frag_list(:,is)%natoms = 0
   DO
      line_nbr = line_nbr + 1
      CALL Read_String(molfile_unit,line_string,ierr)
@@ -2719,7 +2719,7 @@ SUBROUTINE Get_Fragment_Info(is)
 
   ! Output info
 
-  frag_list(:,:)%ring = .FALSE.
+  frag_list(:,is)%ring = .FALSE.
 
   DO ifrag = 1,nfragments(is)
      WRITE(logunit,*)
@@ -3018,10 +3018,10 @@ SUBROUTINE Get_Fragment_File_Info(is)
 ! declare that all the fragments are not ring fragments
 ! if it is then, it will be assigned a true flag later on
 
-  frag_list(:,:)%rcut_vdwsq = 0.0_DP
-  frag_list(:,:)%rcut_coulsq = 0.0_DP
-  frag_list(:,:)%alpha_ewald = 0.0_DP
-  frag_list(:,:)%type = 0
+  frag_list(:,is)%rcut_vdwsq = 0.0_DP
+  frag_list(:,is)%rcut_coulsq = 0.0_DP
+  frag_list(:,is)%alpha_ewald = 0.0_DP
+  frag_list(:,is)%type = 0
 
   DO
 
@@ -3297,7 +3297,8 @@ SUBROUTINE Get_Intra_Scaling
   line_nbr = 0
   intrascaling_set = .false.
   intrascaling_read = .false.
-  intrafile_name = ""
+  ALLOCATE(intrafile_name(nspecies))
+  intrafile_name(:) = ""
   ALLOCATE(scale_1_2_vdw(nspecies));ALLOCATE(scale_1_3_vdw(nspecies))
   ALLOCATE(scale_1_4_vdw(nspecies));ALLOCATE(scale_1_N_vdw(nspecies))
   ALLOCATE(scale_1_2_charge(nspecies));ALLOCATE(scale_1_3_charge(nspecies))
@@ -3328,7 +3329,7 @@ SUBROUTINE Get_Intra_Scaling
                  err_msg(1) = "Error reading Intra_Scaling info."
                  CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
               ELSEIF (line_array(1) == 'table') THEN
-                 intrafile_name = line_array(2)
+                 intrafile_name(is) = line_array(2)
                  intrascaling_read = .true.
                  EXIT
               END IF
@@ -3351,7 +3352,7 @@ SUBROUTINE Get_Intra_Scaling
                  CALL Clean_Abort(err_msg,'Get_Intra_Scaling_Info')
 
               ELSEIF (line_array(1) == 'table') THEN
-                 intrafile_name = line_array(2)
+                 intrafile_name(is) = line_array(2)
                  intrascaling_read = .true.
                  EXIT
               END IF
@@ -3389,7 +3390,7 @@ SUBROUTINE Get_Intra_Scaling
   ENDDO
   ! Report to logfile what scaling is used.
   IF (intrascaling_read) THEN
-     WRITE(logunit,*) 'intramolecular scaling factors explicitly set in', intrafile_name
+     WRITE(logunit,*) 'intramolecular scaling factors explicitly set in', intrafile_name(is)
   ELSE
      IF (intrascaling_set) THEN
         WRITE(logunit,*) 'intramolecular scaling factors explicitly set'
@@ -3997,7 +3998,7 @@ SUBROUTINE Get_Move_Probabilities
   INTEGER :: ierr, nbr_entries, line_nbr,i, j, ibox, is, vol_int
   INTEGER :: ks, js, n_pairs, pair_ins_species
   INTEGER ::  kbox, this_box
-  CHARACTER(120) :: line_string, line_array(30), line_string2
+  CHARACTER(120) :: line_string, line_array(20), line_string2
   CHARACTER(4) :: Symbol
 
   REAL(DP) :: total_mass, this_mass, prob_box_swap, sum_prob_species_ins_pair
