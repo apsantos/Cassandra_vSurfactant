@@ -434,7 +434,9 @@ CONTAINS
 
       ELSE IF (prop_written == 'Degree_Association') THEN
 
-         IF (block_average) THEN
+         IF (alpha%n_clus == 0) THEN
+            write_buff(ii+1) = 0.0
+         ELSE IF (block_average) THEN
             write_buff(ii+1) = alpha%n_assoc / REAL(nalpha_freq * alpha%n_clus,DP)
          ELSE
             write_buff(ii+1) = alpha%n_assoc / REAL(alpha%n_clus, DP)
