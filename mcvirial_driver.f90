@@ -80,7 +80,7 @@ subroutine virialMC_Driver
     e_max = -100000000.0
     n_pos = 0
     ! sample different configurations of molecule 1
-    DO iconf = 1, mcvirial%nconfs(1)
+    iconf_loop: DO iconf = 1, mcvirial%nconfs(1)
         
         ! Pull from the fragment reservoir with uniform probability
         this_fragment = INT(rranf() * itotal_frags) + 1
@@ -105,6 +105,9 @@ subroutine virialMC_Driver
     
         ! Compute the distance of the atom farthest from COM
         CALL Compute_Max_COM_Distance(im,is)
+        atom_list(:,im,is)%rxp = atom_list(:,im,is)%rxp - molecule_list(im,is)%xcom
+        atom_list(:,im,is)%ryp = atom_list(:,im,is)%ryp - molecule_list(im,is)%ycom
+        atom_list(:,im,is)%rzp = atom_list(:,im,is)%rzp - molecule_list(im,is)%zcom
 
         ! rotate species 1
         DO irot = 1, mcvirial%nrotations(1)
@@ -125,6 +128,11 @@ subroutine virialMC_Driver
                     atom_list(this_atom,jm,js)%exist = .TRUE.
                 END DO
             
+                CALL Get_COM(jm,js)
+                atom_list(:,jm,js)%rxp = atom_list(:,jm,js)%rxp - molecule_list(jm,js)%xcom
+                atom_list(:,jm,js)%ryp = atom_list(:,jm,js)%ryp - molecule_list(jm,js)%ycom
+                atom_list(:,jm,js)%rzp = atom_list(:,jm,js)%rzp - molecule_list(jm,js)%zcom
+
                 ! Turn on the molecule and its individual atoms
                 molecule_list(jm,js)%which_box = 1
                 molecule_list(jm,js)%molecule_type = int_normal
@@ -143,7 +151,7 @@ subroutine virialMC_Driver
                     ! Compute the distance of the atom farthest from COM
                     CALL Compute_Max_COM_Distance(im,is)
              
-                    CALL Compute_Total_System_Energy(1,.FALSE.,overlap)
+                    CALL Compute_Total_System_Energy(1,.TRUE.,overlap)
                     IF (overlap .eqv. .FALSE.) THEN
                         mcvirial%coefficient(idist) = mcvirial%coefficient(idist) + dexp(-1.0_DP * energy(1)%total * beta(1))
                         mcvirial%effective(idist) = mcvirial%effective(idist) + energy(1)%total
@@ -163,10 +171,10 @@ subroutine virialMC_Driver
                 END DO
         
             END DO
-            CALL Rotate_Molecule_Eulerian(1,is)
         END DO
-    END DO 
+    END DO iconf_loop
     
+    print*, dist, energy(1)%inter_vdw, energy(1)%inter_q, energy(1)%intra_vdw, energy(1)%intra
     write(991,"(3F20.7)") dist, mcvirial%effective(idist) * atomic_to_kJmol / total_n, mcvirial%coefficient(idist) / total_n!, e_max, e_min
 
     dist = dist - mcvirial%dist_step
