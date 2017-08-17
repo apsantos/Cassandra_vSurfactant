@@ -434,12 +434,12 @@ CONTAINS
 
       ELSE IF (prop_written == 'Degree_Association') THEN
 
-         IF (alpha%n_clus == 0) THEN
+         IF (cluster%n_clusters == 0) THEN
             write_buff(ii+1) = 0.0
          ELSE IF (block_average) THEN
-            write_buff(ii+1) = alpha%n_assoc / REAL(nalpha_freq * alpha%n_clus,DP)
+            write_buff(ii+1) = alpha%n_assoc / REAL(nalpha_freq * cluster%n_clusters,DP)
          ELSE
-            write_buff(ii+1) = alpha%n_assoc / REAL(alpha%n_clus, DP)
+            write_buff(ii+1) = alpha%n_assoc / REAL(cluster%n_clusters, DP)
          END IF
 
 !      ELSE IF (prop_written == 'Virial_Coefficient') THEN
