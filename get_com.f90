@@ -32,7 +32,7 @@
 !      This routine is used to determine values of intramolecular degrees
 !      of freedom of a molecule
 ! 
-!  Get_Max_Com_Distance
+!  Get_Max_COM_Distance
 !
 !      The routine calculates the distance between the COM and the atom
 !      furthest to it
@@ -74,13 +74,19 @@ SUBROUTINE Get_COM(alive,is)
   
   INTEGER :: k
   REAL(DP) :: total_mass, this_mass
-  
+  INTEGER :: cross_x, cross_y, cross_z, this_box
+  REAL(DP) :: xcom_new, ycom_new, zcom_new, xcom_old, ycom_old, zcom_old
+  this_box = 1
+
   total_mass = 0.0_DP
   
   molecule_list(alive,is)%xcom = 0.0_DP
   molecule_list(alive,is)%ycom = 0.0_DP
   molecule_list(alive,is)%zcom = 0.0_DP
   
+  cross_x = 0
+  cross_y = 0
+  cross_z = 0
   DO k = 1, natoms(is)
      
      ! Peform this part only for atoms that exist in the simulation box.
@@ -98,16 +104,101 @@ SUBROUTINE Get_COM(alive,is)
              atom_list(k,alive,is)%ryp
         molecule_list(alive,is)%zcom = molecule_list(alive,is)%zcom + this_mass * &
              atom_list(k,alive,is)%rzp
-          
+
+        ! If this is the 2nd or later atom in a molecule
+        IF (k > 1) THEN
+           ! If we do not know if the molecule been wrapped
+           IF ( cross_x == 0) THEN
+              ! The molecule is wrapped
+              IF ( ABS(atom_list(k,alive,is)%rxp - atom_list(k-1,alive,is)%rxp) > &
+                   box_list(1)%hlength(1,1) ) THEN
+                 ! The kth atom is greater than the center
+                 IF ( atom_list(k,alive,is)%rxp > 0) THEN
+                    cross_x = 1
+                 ! The kth atom is less than the center
+                 ELSE
+                    cross_x = -1
+                 END IF
+              END IF
+           END IF
+           IF ( cross_y == 0) THEN
+              IF ( ABS(atom_list(k,alive,is)%ryp - atom_list(k-1,alive,is)%ryp) > &
+                   box_list(1)%hlength(2,2) ) THEN
+                 IF ( atom_list(k,alive,is)%ryp > 0) THEN
+                    cross_y = 1
+                 ELSE
+                    cross_y = -1
+                 END IF
+              END IF
+           END IF
+           IF ( cross_z == 0) THEN
+              IF ( ABS(atom_list(k,alive,is)%rzp - atom_list(k-1,alive,is)%rzp) > &
+                   box_list(1)%hlength(3,3) ) THEN
+                 IF ( atom_list(k,alive,is)%rzp > 0) THEN
+                    cross_z = 1
+                 ELSE
+                    cross_z = -1
+                 END IF
+              END IF
+           END IF
+           ! IF part of the the molecule has wrapped around PBC
+           ! in the x-, y- or z-direction
+           IF ( cross_x == 1 ) THEN
+              ! if the position of x > 0 and it has been wrapped in that direction,
+              ! send them back to the otherside, which will be outside of the box
+              IF ( atom_list(k,alive,is)%rxp > 0) THEN
+                 molecule_list(alive,is)%xcom = molecule_list(alive,is)%xcom - &
+                                                this_mass * box_list(1)%length(1,1)
+              END IF
+           ELSE IF ( cross_x == -1 ) THEN
+              IF ( atom_list(k,alive,is)%rxp < 0) THEN
+                 molecule_list(alive,is)%xcom = molecule_list(alive,is)%xcom + &
+                                                this_mass * box_list(1)%length(1,1)
+              END IF
+           END IF
+           IF ( cross_y == 1 ) THEN
+              IF ( atom_list(k,alive,is)%ryp > 0) THEN
+              molecule_list(alive,is)%ycom = molecule_list(alive,is)%ycom - &
+                                  this_mass * box_list(1)%length(2,2)
+              END IF
+           ELSE IF ( cross_y == -1 ) THEN
+              IF ( atom_list(k,alive,is)%ryp < 0) THEN
+              molecule_list(alive,is)%ycom = molecule_list(alive,is)%ycom + &
+                                  this_mass * box_list(1)%length(2,2)
+              END IF
+           END IF
+           IF ( cross_z == 1 ) THEN
+              IF ( atom_list(k,alive,is)%rzp > 0) THEN
+              molecule_list(alive,is)%zcom = molecule_list(alive,is)%zcom - &
+                                  this_mass * box_list(1)%length(3,3)
+              END IF
+           ELSE IF ( cross_z == -1 ) THEN
+              IF ( atom_list(k,alive,is)%rzp < 0) THEN
+              molecule_list(alive,is)%zcom = molecule_list(alive,is)%zcom + &
+                                  this_mass * box_list(1)%length(3,3)
+              END IF
+           END IF
+        END IF
+
      END IF
-     
      
   END DO
   
   molecule_list(alive,is)%xcom = molecule_list(alive,is)%xcom / total_mass
   molecule_list(alive,is)%ycom = molecule_list(alive,is)%ycom / total_mass
   molecule_list(alive,is)%zcom = molecule_list(alive,is)%zcom / total_mass
-  
+
+  ! If the final center of mass of a split molecule is outside of the box, use PBC to put it back in
+  IF ( cross_x /= 0 .or. cross_y /= 0 .or. cross_z /= 0) THEN
+     xcom_old = molecule_list(alive,is)%xcom
+     ycom_old = molecule_list(alive,is)%ycom
+     zcom_old = molecule_list(alive,is)%zcom
+     CALL Apply_PBC_Anint(this_box,xcom_old,ycom_old,zcom_old, xcom_new, ycom_new, zcom_new)
+     molecule_list(alive,is)%xcom = xcom_new
+     molecule_list(alive,is)%ycom = ycom_new
+     molecule_list(alive,is)%zcom = zcom_new
+  END IF
+
 END SUBROUTINE Get_COM
 
 
@@ -206,7 +297,7 @@ SUBROUTINE Get_Internal_Coordinates(alive,ispecies)
 END SUBROUTINE Get_Internal_Coordinates
 !******************************************************************************
 
-SUBROUTINE Compute_Max_Com_Distance(alive,is)
+SUBROUTINE Compute_Max_COM_Distance(alive,is)
 
   !*****************************************************************************
   ! The program is used to compute the maximum distance of any psuedoatom from
@@ -265,7 +356,7 @@ SUBROUTINE Compute_Max_Com_Distance(alive,is)
 
   molecule_list(alive,is)%max_dcom = DSQRT(dmax)
 
-END SUBROUTINE Compute_Max_Com_Distance
+END SUBROUTINE Compute_Max_COM_Distance
      
 
   
