@@ -1423,12 +1423,21 @@ CONTAINS
           IF(molecule_list(this_im,is)%live  .AND. &
              molecule_list(this_im,is)%which_box == this_box ) THEN
              DO ia = 1, natoms(is)
+                if (ANY(cluster%species_type(1,:) == is)) THEN
                 WRITE(M_XYZ_unit,'(A3,F20.13,F20.13,F20.13,I5,I5,I8)') &
                      cluster%c_name(cluster%clabel(this_im, is)), &
                      atom_list(ia,this_im,is)%rxp, &
                      atom_list(ia,this_im,is)%ryp, &
                      atom_list(ia,this_im,is)%rzp, &
                      is, cluster%clabel(this_im, is), cluster%clabel_life(cluster%clabel(this_im, is))
+                else
+                WRITE(M_XYZ_unit,'(A3,F20.13,F20.13,F20.13,I5,I5,I8)') &
+                     "N", &
+                     atom_list(ia,this_im,is)%rxp, &
+                     atom_list(ia,this_im,is)%ryp, &
+                     atom_list(ia,this_im,is)%rzp, &
+                     is, 0, 0
+                end if
              END DO
           END IF
        END DO

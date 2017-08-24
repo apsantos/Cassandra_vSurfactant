@@ -6691,7 +6691,7 @@ EnLoop: DO ientry = 1, n_entries
             cluster%fission = 0
             cluster%fusion = 0
             i = 1
-            cluster%names = (/ 'A', 'E', 'F', 'G', 'J', 'L', 'M', 'Q', 'R', 'T', 'V', 'W' /)
+            cluster%names = (/ 'A', 'E', 'F', 'G', 'J', 'L', 'M', 'Q', 'R', 'T', 'Y', 'W' /)
             IF (max_nmol < 12) THEN
                 cluster%c_name(1:max_nmol) = names(1:max_nmol)
             ELSE
