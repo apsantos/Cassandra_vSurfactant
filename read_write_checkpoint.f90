@@ -284,9 +284,11 @@ SUBROUTINE Read_XTC(this_mc_step)
         im = im_atoms(i)
         is = is_atoms(i)
 
-        atom_list(ia,im,is)%rxp = pos(1,i) * 10.0_DP
-        atom_list(ia,im,is)%ryp = pos(2,i) * 10.0_DP
-        atom_list(ia,im,is)%rzp = pos(3,i) * 10.0_DP
+        this_box = molecule_list(im,is)%which_box
+
+        atom_list(ia,im,is)%rxp = pos(1,i) * 10.0_DP - box_list(this_box)%hlength(1,1)
+        atom_list(ia,im,is)%ryp = pos(2,i) * 10.0_DP - box_list(this_box)%hlength(2,2)
+        atom_list(ia,im,is)%rzp = pos(3,i) * 10.0_DP - box_list(this_box)%hlength(3,3)
     END DO
 
     deallocate(pos)
@@ -445,8 +447,6 @@ SUBROUTINE Read_GRO(this_mc_step)
 
        this_im = locate(im,is)
 
-       nonbond_list(ia,is)%element = TRIM( line_array(2) )
- 
        atom_list(ia,this_im,is)%rxp = String_To_Double(line_array(4)) * 10.0_DP
        atom_list(ia,this_im,is)%ryp = String_To_Double(line_array(5)) * 10.0_DP
        atom_list(ia,this_im,is)%rzp = String_To_Double(line_array(6)) * 10.0_DP
@@ -661,7 +661,7 @@ SUBROUTINE Read_XYZ(this_mc_step)
 
           IF (line_array(1) /= nonbond_list(ia,is)%element) THEN
              err_msg = ""
-             err_msg(1) = "An atom name in the xyz file does not match the name in the mcf file."
+             err_msg(1) = "An atom name in the xyz file ("//TRIM(line_array(1))//") does not match the name in the mcf file."
              err_msg(2) = "Consider the order..."
 
              CALL Clean_Abort(err_msg,'Read_XYZ')
@@ -673,8 +673,6 @@ SUBROUTINE Read_XYZ(this_mc_step)
           im_atoms(i_line) = this_im
           is_atoms(i_line) = is
           
-          nonbond_list(ia,is)%element = TRIM( line_array(1) )
-    
           atom_list(ia,this_im,is)%rxp = String_To_Double(line_array(2))
           atom_list(ia,this_im,is)%ryp = String_To_Double(line_array(3))
           atom_list(ia,this_im,is)%rzp = String_To_Double(line_array(4))
