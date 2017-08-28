@@ -719,7 +719,6 @@ CONTAINS
           edihed =  a0 + (a1 * cosine) + (a2 * cosine2) + (a3 * cosine2 * cosine) + &
                     (a4 * cosine4) + (a5 * cosine4 * cosine)
 
-
        ELSEIF (dihedral_list(idihed,species)%int_dipot_type == int_charmm ) THEN
 
           atom1 = dihedral_list(idihed,species)%atom1

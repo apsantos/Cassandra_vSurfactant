@@ -57,6 +57,14 @@ subroutine virialMC_Driver
   write(991,"(A)") '# distance   effective_potential (kJ/mol) virial_coefficient '
 
   energy(1)%total = 0.0
+  energy(1)%intra = 0.0_DP
+  energy(1)%bond  = 0.0_DP
+  energy(1)%angle = 0.0_DP
+  energy(1)%dihedral = 0.0_DP
+  energy(1)%improper = 0.0_DP
+  energy(1)%intra_vdw = 0.0_DP
+  energy(1)%intra_q = 0.0_DP
+  energy(1)%erf_self = 0.0_DP
 
   en_min = 10.0
 
@@ -151,9 +159,13 @@ subroutine virialMC_Driver
                     ! Compute the distance of the atom farthest from COM
                     CALL Compute_Max_COM_Distance(im,is)
              
-                    CALL Compute_Total_System_Energy(1,.TRUE.,overlap)
+                    ! do not compute intramolecular energy for B2, only use it for the configuration generation
+                    ! See Harismiadis & Szleifer, Mol. Phys., 1993
+                    CALL Compute_Total_System_Energy(1,.false.,overlap)
+                    
+    !write(*,"(5F15.3)") dist, energy(1)%total, energy(1)%intra, energy(1)%intra_vdw, energy(1)%inter_vdw
+                    mcvirial%coefficient(idist) = mcvirial%coefficient(idist) + dexp(-1.0_DP * energy(1)%total * beta(1))
                     IF (overlap .eqv. .FALSE.) THEN
-                        mcvirial%coefficient(idist) = mcvirial%coefficient(idist) + dexp(-1.0_DP * energy(1)%total * beta(1))
                         mcvirial%effective(idist) = mcvirial%effective(idist) + energy(1)%total
                         if (e_max < energy(1)%total) then
                             e_max = energy(1)%total
@@ -170,11 +182,14 @@ subroutine virialMC_Driver
                 
                 END DO
         
+                IF (energy(1)%intra_vdw > 0 ) THEN
+                    CALL Write_Coords(1)
+                    Exit iconf_loop
+                END IF
             END DO
         END DO
     END DO iconf_loop
     
-    print*, dist, energy(1)%inter_vdw, energy(1)%inter_q, energy(1)%intra_vdw, energy(1)%intra
     write(991,"(3F20.7)") dist, mcvirial%effective(idist) * atomic_to_kJmol / total_n, mcvirial%coefficient(idist) / total_n!, e_max, e_min
 
     dist = dist - mcvirial%dist_step
@@ -192,13 +207,12 @@ subroutine virialMC_Driver
   DO idist = 1, ndist-1
     b2 = b2 + ( (mcvirial%coefficient(idist) + mcvirial%coefficient(idist+1)) * dist**2.0)
     dist = dist + mcvirial%dist_step
-    mcvirial%coefficient(idist) =  dexp(-1.0_DP * mcvirial%effective(idist) / total_n * beta(1))
+    !mcvirial%coefficient(idist) =  dexp(-1.0_DP * mcvirial%effective(idist) / total_n * beta(1))
   END DO
-  mcvirial%coefficient(ndist) =  dexp(-1.0_DP * mcvirial%effective(ndist) / total_n * beta(1))
+  !mcvirial%coefficient(ndist) =  dexp(-1.0_DP * mcvirial%effective(ndist) / total_n * beta(1))
 
   b2 = -twoPI * (mcvirial%dist_step / 2.0_DP) * b2 
-  WRITE(logunit,'(A,2x,F20.7)') 'VIRIAL B2 <exp[-U*beta]-1>: '
-  WRITE(logunit,'(2x,F20.7)') b2
+  WRITE(logunit,'(A,2x,F20.7)') 'VIRIAL B2 <exp[-U*beta]-1>: ', b2
   WRITE(logunit, *)
 
 !  mcvirial%coefficient(:) = mcvirial%coefficient(:) - 1.0_DP
