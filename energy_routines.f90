@@ -2716,6 +2716,14 @@ CONTAINS
     INTEGER :: is,im, this_locate, ia,  this_box
     REAL(DP) :: charge
 
+    IF (int_sim_type == sim_nvt .OR. int_sim_type == sim_nvt_min .OR. &
+       int_sim_type == sim_npt .OR. &
+       int_sim_type == sim_frag .OR. int_sim_type == sim_ring .OR. &
+       int_sim_type == sim_mcf .OR. &
+       int_sim_type == sim_virial) THEN
+        IF (energy(this_box)%ewald_self_calc) RETURN
+    END IF
+
     energy(this_box)%ewald_self = 0.0_DP
     
     DO is = 1, nspecies
@@ -2745,6 +2753,7 @@ CONTAINS
     energy(this_box)%ewald_self = energy(this_box)%ewald_self * alpha_ewald(this_box) / rootPI
     energy(this_box)%ewald_self = -energy(this_box)%ewald_self * charge_factor(this_box)
 
+    energy(this_box)%ewald_self_calc = .true.
     ! Note that the ewald self constant computed here is slightly different than what is
     ! computed in APSS. It has a negative sign and is already multiplied by a the charge_factor(this_box)
     ! for proper unit conversion

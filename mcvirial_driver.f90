@@ -154,10 +154,10 @@ subroutine virialMC_Driver
             
                 DO jrot = 1, mcvirial%nrotations(2)
                     ! Recompute the COM in case the molecule was wrapped
-                    CALL Get_COM(im,is)
+                    !CALL Get_COM(im,is)
                 
                     ! Compute the distance of the atom farthest from COM
-                    CALL Compute_Max_COM_Distance(im,is)
+                    !CALL Compute_Max_COM_Distance(im,is)
              
                     ! do not compute intramolecular energy for B2, only use it for the configuration generation
                     ! See Harismiadis & Szleifer, Mol. Phys., 1993
@@ -190,7 +190,8 @@ subroutine virialMC_Driver
         END DO
     END DO iconf_loop
     
-    write(991,"(3F20.7)") dist, mcvirial%effective(idist) * atomic_to_kJmol / total_n, mcvirial%coefficient(idist) / total_n!, e_max, e_min
+    write(991,"(F11.4,F23.5,F15.8)") dist, mcvirial%effective(idist) * atomic_to_kJmol / total_n, &
+                                           mcvirial%coefficient(idist) / total_n
 
     dist = dist - mcvirial%dist_step
 

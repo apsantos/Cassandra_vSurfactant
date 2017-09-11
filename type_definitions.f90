@@ -479,10 +479,12 @@ MODULE Type_Definitions
     ! ewald_reciprocal  : reciprocal space component of Ewald summation
     ! ewald_self        : Ewald self energy component
     ! total             : total energy of the system
+    ! ewald_self_calc   : Ewald self energy component has been calculated
 
     REAL(DP) :: inter_vdw, lrc, inter_q, intra_vdw, intra_q
     REAL(DP) :: intra, ewald_reciprocal, ewald_self, total
     REAL(DP) :: bond, angle, dihedral, improper, erf_self
+    LOGICAL  :: ewald_self_calc
  
  END TYPE Energy_Class
  !------------------------------------------------------------------------------------------------
