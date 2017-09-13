@@ -1,0 +1,112 @@
+
+
+# Run_Name
+c8_mono_v1_scaling
+!--------------
+
+# Sim_Type
+NVT_MC
+!---------------
+
+# Nbr_Species
+1
+!----------------
+
+# VDW_Style
+LJ cut_tail 15.0
+!----------------
+
+# Charge_Style
+NONE
+!----------------
+
+# Intra_Scaling
+0.0 0.0 0.5 1.0
+!------------------
+
+# Mixing_Rule
+LB
+!----------------
+
+# Seed_Info
+1219130951 1219130952
+!-------------------
+
+# Rcutoff_Low
+2.0
+!----------------
+
+# Pair_Energy
+FALSE
+!-----------
+
+# Molecule_Files
+c8.mcf 1
+!------------------------
+
+# Box_Info
+1
+CUBIC
+35.0 35.0 35.0
+!-------------------------
+
+# Temperature_Info
+298.0
+!------------------
+
+# Move_Probability_Info
+
+# Prob_Regrowth
+1.0
+1.0
+
+# Done_Probability_Info
+!----------------------
+
+# Start_Type
+make_config
+1
+
+checkpoint
+c8_alltrans.chk
+!------------------
+
+# Run_Type
+Equilibration   600  
+!------------------
+
+# Average_Info
+1
+!-------------
+
+# Simulation_Length_Info
+Units     Steps
+Prop_Freq  1
+Coord_Freq   100
+MCsteps      10000
+# Done_Simulation_Length_Info
+!--------------------
+
+# Property_Info 1 
+Energy_Total
+Energy_LJ
+Energy_Elec
+Nmols
+
+!----------------
+
+# Fragment_Files
+species1/frag1/frag1.dat  1
+species1/frag2/frag2.dat  2
+species1/frag3/frag3.dat  3
+species1/frag4/frag4.dat  4
+species1/frag5/frag5.dat  5
+species1/frag6/frag6.dat  6
+
+# CBMC_Info
+kappa_ins 35
+kappa_rot 0
+kappa_dih 35
+rcut_cbmc 6.5
+ 
+END

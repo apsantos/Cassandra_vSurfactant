@@ -1,0 +1,118 @@
+# Run_Name
+NaDSt298Ewaldrcut0.5nF15nT15
+
+# Sim_Type
+virial_MC
+
+# Nbr_Species
+2
+
+# VDW_Style
+LJ cut 22.9
+LJ cut 22.9
+
+# Charge_Style
+coul Ewald 22.9 0.058 
+coul Ewald 22.9 0.058 
+
+coul cut 22.9
+coul cut 22.9
+
+# Dielectric_Permitivity
+fixed 78.0
+
+# Intra_Scaling
+table DS_jNawca_hg1_intra.mix
+table DS_jNawca_hg1_intra.mix
+
+# Mixing_Rule
+table DS_jNawca_hg1_intra.mix
+
+# Seed_Info
+293552 810952
+
+# Rcutoff_Low
+0.5
+
+# Pair_Energy
+FALSE
+
+# Molecule_Files
+ds_monomer_new_charge.mcf 1
+ds_monomer_new_charge.mcf 1
+
+# Box_Info
+1
+CUBIC
+153.0 153.0 153.0
+
+# Temperature_Info
+298
+
+# Chemical_Potential_Info
+0.010
+
+# Move_Probability_Info
+
+# Prob_Translation
+0.0
+10 10
+
+# Prob_Regrowth
+0.0
+0.0 0.0
+
+# Prob_Rotation
+0.0
+0 0
+
+# Prob_Insertion
+0.5
+insertion method
+reservoir
+insertion method
+reservoir
+
+# Prob_Deletion
+0.05
+
+# Done_Probability_Info
+
+# Start_Type
+make_config
+1 
+1
+
+# Run_Type
+Production   200  
+
+# Average_Info
+1
+
+# Frequency_Info
+freq_type    none
+Nthermofreq  10000
+Ncoordfreq   10000
+MCsteps      5000
+# Done_Frequency_Info
+
+# Property_Info 1 
+Nmols
+
+# Virial_Info
+0 0.1 40
+1 2
+15 15
+15 15
+
+# Fragment_Files
+/home/andrew/ionic_surfactants/ds_parameters/make_monomer_frag/DS_monomer_298_frag.dat 1
+/home/andrew/ionic_surfactants/ds_parameters/make_monomer_frag/DS_monomer_298_frag.dat 2
+
+# CBMC_Info
+kappa_ins 36
+kappa_rot 0
+kappa_dih 15
+rcut_cbmc 15  15
+ 
+END

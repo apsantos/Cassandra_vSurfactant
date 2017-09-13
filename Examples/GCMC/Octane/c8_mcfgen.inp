@@ -1,0 +1,105 @@
+# Run_Name
+octane_298
+!--------------
+
+# Sim_Type
+NVT
+!---------------
+
+# Nbr_Species
+1
+!----------------
+
+# VDW_Style
+LJ cut_tail 15.0
+!----------------
+
+# Charge_Style
+coul none
+!----------------
+
+# Intra_Scaling
+0.0 0.0 0.0 1.0
+0.0 0.0 0.0 1.0
+!------------------
+
+# Mixing_Rule
+LB
+!----------------
+
+# Seed_Info
+1219130951 1219130952
+!-------------------
+
+# Rcutoff_Low
+2.0
+!----------------
+
+# Pair_Energy
+TRUE
+!-----------
+
+# Molecule_Files
+c8.mcf 30
+!------------------------
+
+# Box_Info
+1
+CUBIC
+35.0 35.0 35.0
+!-------------------------
+
+# Temperature_Info
+298.0
+!------------------
+
+# Move_Probability_Info
+
+# Prob_Rotation
+0.3
+0.5
+
+# Prob_Regrowth
+0.7
+1.0
+
+# Done_Probability_Info
+!----------------------
+
+# Start_Type
+make_config
+30
+!------------------
+
+# Run_Type
+Equilibration   600  
+!------------------
+
+# Average_Info
+1
+!-------------
+
+# Frequency_Info
+freq_type    none
+Nthermofreq  1000
+Ncoordfreq   10000
+MCsteps      10000
+# Done_Frequency_Info
+!--------------------
+
+# Property_Info 1 
+Energy_Total
+Energy_LJ
+Energy_Elec
+Nmols
+Density
+Pressure
+!----------------
+
+# CBMC_Info
+kappa_ins 12
+kappa_rot 0
+kappa_dih 12
+rcut_cbmc 6.5 6.5
+ 
+END

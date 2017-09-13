@@ -1,0 +1,141 @@
+# Run_Name
+pair
+!--------------
+
+# Sim_Type
+GCMC
+!---------------
+
+# Nbr_Species
+3
+!----------------
+
+# VDW_Style
+LJ cut_tail 15.0
+!----------------
+
+# Charge_Style
+coul Ewald 15.0 0.00001
+!----------------
+
+# Dielectric_Permitivity
+fixed 78.00
+
+# Intra_Scaling
+0 0 0 0.5
+0 0 0 0.5
+0 0 0 0.5
+0 0 0 0.5
+0 0 0 0.5
+0 0 0 0.5
+!------------------
+
+# Mixing_Rule
+table salts.mix
+!----------------
+
+# Seed_Info
+1219130951 1219130952
+!-------------------
+
+# Rcutoff_Low
+1.0
+!----------------
+
+# Pair_Energy
+TRUE
+!-----------
+
+# Molecule_Files
+Na.mcf 200
+K.mcf 200
+Cl.mcf 200
+!------------------------
+
+# Box_Info
+1
+CUBIC
+60.0 60.0 60.0
+!-------------------------
+
+# Temperature_Info
+298.0
+!------------------
+
+# Chemical_Potential_Info
+-62.0 -62.0 -62.0
+pair
+1 2 -12
+1 3 -13
+2 3 -23
+!------------------------
+
+
+# Move_Probability_Info
+
+# Prob_Translation
+0.4
+10 10 10
+
+# Prob_Insertion
+0.3
+insertion method
+reservoir pair 
+3 0.4 2 0.2
+insertion method
+reservoir pair 
+3 0.4 1 0.2
+insertion method
+reservoir pair 
+1 0.4 2 0.4
+
+# Prob_Deletion
+0.3
+
+# Done_Probability_Info
+!----------------------
+
+# Start_Type
+make_config
+0
+0
+0
+!------------------
+
+# Run_Type
+Production   200  
+!------------------
+
+# Average_Info
+1
+!-------------
+
+# Frequency_Info
+freq_type    none
+Nthermofreq  1
+Ncoordfreq   1
+MCsteps      100
+# Done_Frequency_Info
+!--------------------
+
+# Property_Info 1 
+Nmols
+Energy_Total
+Energy_LJ
+Energy_Elec
+Energy_Intra
+
+!----------------
+
+# Fragment_Files
+Na.dat 1
+K.dat  2
+Cl.dat 3
+
+# CBMC_Info
+kappa_ins 36
+kappa_rot 0
+kappa_dih 15
+rcut_cbmc 15 15
+ 
+END

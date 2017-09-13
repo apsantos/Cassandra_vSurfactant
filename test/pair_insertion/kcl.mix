@@ -1,0 +1,9 @@
+! Mixed nonbonded interaction table of values
+# Atom_Types
+  K   1
+  Cl  2
+
+# Mixing_Values
+  1   1  LJ  43.6841 3.070 
+  1   2  LJ  50.1753 3.361 HYDR 1538.17 3.55 0.67  CORR 3.35
+  2   2  LJ  97.9108 3.487

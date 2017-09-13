@@ -1,0 +1,171 @@
+************** Beginning Cassandra simulation **************
+Version Cassandra 1.1                                                                                                           
+
+inputfile c8_monov1.inp                                                                                                           
+
+name of run: c8_mono_alltransv1
+
+  Month      Day      Year
+     01       08      2016
+ 
+ Time:  15:33:02
+ 
+machine: skyros
+
+
+Simulation type: NVT_MC              
+
+ Verbosity output to logfile set to  F
+ 
+ **** Copying Inputfile ****** 
+ # Run_Name
+ c8_mono_alltransv1
+ 
+ # Sim_Type
+ NVT_MC
+ 
+ # Nbr_Species
+ 1
+ 
+ # VDW_Style
+ LJ cut_tail 15.0
+ 
+ # Charge_Style
+ NONE
+ 
+ # Intra_Scaling
+ 0.0 0.0 0.0 1.0
+ 0.0 0.0 0.0 1.0
+ 
+ # Mixing_Rule
+ LB
+ 
+ # Seed_Info
+ 1219130951 1219130952
+ 
+ # Rcutoff_Low
+ 2.0
+ 
+ # Pair_Energy
+ TRUE
+ 
+ # Molecule_Files
+ c8.mcf 1
+ 
+ # Box_Info
+ 1
+ CUBIC
+ 35.0 35.0 35.0
+ 
+ # Temperature_Info
+ 298.0
+ 
+ # Move_Probability_Info
+ 
+ # Prob_Regrowth
+ 1.0
+ 1.0
+ 
+ # Done_Probability_Info
+ 
+ # Start_Type
+ checkpoint
+ c8_alltrans.chk
+ 
+ # Run_Type
+ Equilibration   600
+ 
+ # Average_Info
+ 1
+ 
+ # Simulation_Length_Info
+ Units     Steps
+ Prop_req  1
+ Coord_Freq   100
+ MCsteps      1
+ # Done_Simulation_Length_Info
+ 
+ # Property_Info 1
+ Energy_Total
+ Energy_LJ
+ Energy_Elec
+ Nmols
+ 
+ 
+ # Fragment_Files
+ species1/frag1/frag1.dat  1
+ species1/frag2/frag2.dat  2
+ species1/frag3/frag3.dat  3
+ species1/frag4/frag4.dat  4
+ species1/frag5/frag5.dat  5
+ species1/frag6/frag6.dat  6
+ 
+ # CBMC_Info
+ kappa_ins 12
+ kappa_rot 0
+ kappa_dih 12
+ rcut_cbmc 6.5
+ 
+ END
+ 
+ **** Finished writing input file *******
+ Number of species simulated:      1
+
+ *** Simulation box data ***
+number of simulation boxes     1
+ 
+Box number      1       Box Shape:      Cubic 
+Each Side Of :        35.0000     Angstrom
+ 
+Cell basis vector lengths in A,     35.0000      35.0000      35.0000
+Cosine of angles alpha, beta, gamma     0.0000       0.0000       0.0000
+Distance between box faces    35.0000      35.0000      35.0000
+Box volume, A^3         42875.0000
+ 
+ *** Finished loading box information ***
+ 
+   VDW style used is:   LJ             in box:  1
+   VDW sum style is:   cut_tail       in box:  1
+    rcut =    15.000   Angstrom
+ 
+   Charge style used is:   NONE           in box:  1
+ Charge style properly input
+ 
+ 
+ Pair interaction energy array storage enabled
+ 
+Lorentz-Berthelot mixing rule specified
+ 
+ Reading molecular connectivity information
+ Species:            1
+ Molecular connectivity file: 
+ c8.mcf                                                                         
+                                          
+   8 atom(s) specified.
+   7 bond(s) specified.
+   6 angle(s) specified.
+   5 dihedral(s) specified.
+   0 improper(s) specified.
+   6 fragments specified.
+   5  fragment bonds specified.
+ 
+Species  Nbr molecules
+-------  -------------
+     1              1
+ 
+L_Coul_CBMC not given for species    1
+ Defaulting to  T
+ 
+1st_Fragment_Ins_Style not specified for species    1
+using default of "COM" for this species.
+ *** Completed assigning atom info ***
+ 
+ *** Completed assigning bond info ***
+ 
+ 
+ *** Completed assigning angle info ***
+ 
+ *** Completed assigning dihedral info ***
+ 
+ *** Completed assigning improper info ***
+ 

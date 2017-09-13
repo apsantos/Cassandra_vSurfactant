@@ -1,0 +1,49 @@
+<?xml version ="1.0" encoding ="UTF-8" ?>
+<hoomd_xml version="1.4">
+<configuration time_step="0" dimensions="3" natoms="9">
+<box lx="50.000000" ly="50.000000" lz="50.000000" />
+<type num="9">
+OA
+EO
+EO
+EO
+EO
+EO
+EO
+CM
+CT
+</type>
+<body num="9">
+1
+1
+1
+1
+1
+1
+1
+1
+1
+</body>
+<bond num="8">
+bond 0 1
+bond 1 2
+bond 2 3
+bond 3 4
+bond 4 5
+bond 5 6
+bond 6 7
+bond 7 8
+</bond>
+<position num="9">
+-14.901000 -1.663000 0.004000
+-12.792000 0.164000 0.004000
+-9.545000 -0.299000 0.004000
+-7.028000 1.804000 0.004000
+-3.781000 1.342000 0.004000
+-1.264000 3.445000 0.004000
+1.983000 2.982000 0.004000
+5.186000 4.538000 0.004000
+8.659000 5.660000 0.021000
+</position>
+</configuration>
+</hoomd_xml>

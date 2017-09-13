@@ -1,0 +1,924 @@
+*** Beginning Cassandra simulation ***
+
+Version Cassandra 1.0                                                                                                           
+
+inputfile single_pair.inp                                                                                                         
+
+name of run: single_pair
+
+  Month      Day      Year
+     11       19      2015
+ 
+ Time:  15:20:21
+ 
+machine: skyros
+
+
+Simulation type: GCMC                
+
+ 
+ **** Copying Inputfile ****** 
+ # Run_Name
+ single_pair
+ 
+ # Sim_Type
+ GCMC
+ 
+ # Nbr_Species
+ 4
+ 
+ # VDW_Style
+ LJ cut_tail 15.0
+ 
+ # Charge_Style
+ coul Ewald 15.0 0.00001
+ 
+ # Dielectric_Permitivity
+ fixed 78.00
+ 
+ # Intra_Scaling
+ 0 0 0 0.5
+ 0 0 0 0.5
+ 0 0 0 0.5
+ 0 0 0 0.5
+ 0 0 0 0.5
+ 0 0 0 0.5
+ 0 0 0 0.5
+ 0 0 0 0.5
+ 
+ # Mixing_Rule
+ table salts_water.mix
+ 
+ # Seed_Info
+ 1219130951 1219130952
+ 
+ # Rcutoff_Low
+ 1.0
+ 
+ # Pair_Energy
+ TRUE
+ 
+ # Molecule_Files
+ cg_H2O.mcf 200
+ Na.mcf 200
+ K.mcf 200
+ Cl.mcf 200
+ 
+ # Box_Info
+ 1
+ CUBIC
+ 60.0 60.0 60.0
+ 
+ # Temperature_Info
+ 298.0
+ 
+ # Chemical_Potential_Info
+ -62.0 -62.0 -62.0 -62.0
+ pair
+ 2 4 -24.0
+ 3 4 -34.0
+ 
+ 
+ # Move_Probability_Info
+ 
+ # Prob_Translation
+ 0.4
+ 10 10 10 10
+ 
+ # Prob_Insertion
+ 0.3
+ insertion method
+ reservoir
+ insertion method
+ reservoir pair
+ 4 0.375
+ insertion method
+ reservoir pair
+ 4 0.375
+ insertion method
+ reservoir pair
+ 2 0.375 3 0.375
+ 
+ # Prob_Deletion
+ 0.3
+ 
+ # Done_Probability_Info
+ 
+ # Start_Type
+ make_config
+ 0
+ 0
+ 0
+ 0
+ 
+ # Run_Type
+ Production   200
+ 
+ # Average_Info
+ 1
+ 
+ # Frequency_Info
+ freq_type    none
+ Nthermofreq  1
+ Ncoordfreq   1
+ MCsteps      5
+ # Done_Frequency_Info
+ 
+ # Property_Info 1
+ Nmols
+ Energy_Total
+ Energy_LJ
+ Energy_Elec
+ Energy_Intra
+ 
+ 
+ # Fragment_Files
+ Na.dat 1
+ K.dat  2
+ Cl.dat 3
+ cg_H2O.dat 4
+ 
+ # CBMC_Info
+ kappa_ins 36
+ kappa_rot 0
+ kappa_dih 15
+ rcut_cbmc 15 15
+ 
+ END
+ 
+ **** Finished writing input file *******
+ Number of species simulated:      4
+
+ *** Simulation box data ***
+number of simulation boxes     1
+ 
+Box number      1       Box Shape:      Cubic 
+Each Side Of :        60.0000     Angstrom
+ 
+Cell basis vector lengths in A,     60.0000      60.0000      60.0000
+Cosine of angles alpha, beta, gamma     0.0000       0.0000       0.0000
+Distance between box faces    60.0000      60.0000      60.0000
+Box volume, A^3        216000.0000
+ 
+ *** Finished loading box information ***
+ 
+   VDW style used is:   LJ             in box:  1
+   VDW sum style is:   cut_tail       in box:  1
+    rcut =    15.000   Angstrom
+ VDW style properly input
+ 
+   Charge style used is:   coul           in box:  1
+    Charge sum style is   Ewald          in box:  1
+    Ewald real space cutoff is  15.000 Angstroms.
+  Ewald real space parameter is   0.226 inverse Angstroms
+    Ewald reciprocal cutoff is  1.5351 inverse Angstroms
+ Charge style properly input
+ 
+ 
+ Pair interaction energy array storage enabled
+ 
+Table of parameters specified in salts_water.mix                                                                                                         
+ 
+ Reading molecular connectivity information
+ Species:            1
+ Molecular connectivity file: 
+ cg_H2O.mcf                                                                     
+                                          
+   1 atom(s) specified.
+   0 bond(s) specified.
+   0 angle(s) specified.
+   0 dihedral(s) specified.
+   0 improper(s) specified.
+   1 fragments specified.
+   0  fragment bonds specified.
+ 
+ Reading molecular connectivity information
+ Species:            2
+ Molecular connectivity file: 
+ Na.mcf                                                                         
+                                          
+   1 atom(s) specified.
+   0 bond(s) specified.
+   0 angle(s) specified.
+   0 dihedral(s) specified.
+   0 improper(s) specified.
+   1 fragments specified.
+   0  fragment bonds specified.
+ 
+ Reading molecular connectivity information
+ Species:            3
+ Molecular connectivity file: 
+ K.mcf                                                                          
+                                          
+   1 atom(s) specified.
+   0 bond(s) specified.
+   0 angle(s) specified.
+   0 dihedral(s) specified.
+   0 improper(s) specified.
+   1 fragments specified.
+   0  fragment bonds specified.
+ 
+ Reading molecular connectivity information
+ Species:            4
+ Molecular connectivity file: 
+ Cl.mcf                                                                         
+                                          
+   1 atom(s) specified.
+   0 bond(s) specified.
+   0 angle(s) specified.
+   0 dihedral(s) specified.
+   0 improper(s) specified.
+   1 fragments specified.
+   0  fragment bonds specified.
+ 
+Species  Nbr molecules
+-------  -------------
+     1            200
+     2            200
+     3            200
+     4            200
+ 
+L_Coul_CBMC not given for species    1
+ Defaulting to true
+ default  T
+ 
+1st_Fragment_Ins_Style not specified for species    1
+using default of "COM" for this species.
+Species and atom number   1   1
+ atom name:             W     
+ element:               W 
+ mass:                     18.0200
+ charge:                    0.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:       117.7604
+ Sigma in A:                3.4870
+ 
+Total number of ring atoms in species     1    0
+Total number of exo atoms in species      1    1
+ Atom ids for ring atoms
+ Atom ids for exo atoms           1
+ *** Completed assigning atom info ***
+ 
+ No bonds in species            1
+ *** Completed assigning bond info ***
+ 
+ No angles in species            1
+ 
+Molecule    1  is defined to be linear
+ 
+ *** Completed assigning angle info ***
+ 
+ No dihedrals in species            1
+ *** Completed assigning dihedral info ***
+ 
+ No impropers in species            1
+ *** Completed assigning improper info ***
+ 
+ 
+Total number of atoms in the fragment     1  is   1
+Identity of these atoms are
+           1
+ 
+ ******* Finished loading fragment info ********
+ 
+ ******* Generating anchor info ****************
+ 
+ Number of anchors for fragment     1  is   0
+Anchor id is:
+ Fragment file for fragment 1 is
+ Na.dat                                                                         
+                                          
+ Fragment type           1
+L_Coul_CBMC not given for species    2
+ Defaulting to true
+ default  T
+ 
+1st_Fragment_Ins_Style not specified for species    2
+using default of "COM" for this species.
+Species and atom number   2   1
+ atom name:             Na    
+ element:               Na
+ mass:                      6.9400
+ charge:                    1.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:        14.3288
+ Sigma in A:                2.4430
+ 
+Total number of ring atoms in species     2    0
+Total number of exo atoms in species      2    1
+ Atom ids for ring atoms
+ Atom ids for exo atoms           1
+ *** Completed assigning atom info ***
+ 
+ No bonds in species            2
+ *** Completed assigning bond info ***
+ 
+ No angles in species            2
+ 
+Molecule    2  is defined to be linear
+ 
+ *** Completed assigning angle info ***
+ 
+ No dihedrals in species            2
+ *** Completed assigning dihedral info ***
+ 
+ No impropers in species            2
+ *** Completed assigning improper info ***
+ 
+ 
+Total number of atoms in the fragment     1  is   1
+Identity of these atoms are
+           1
+ 
+ ******* Finished loading fragment info ********
+ 
+ ******* Generating anchor info ****************
+ 
+ Number of anchors for fragment     1  is   0
+Anchor id is:
+ Fragment file for fragment 1 is
+ K.dat                                                                          
+                                          
+ Fragment type           2
+L_Coul_CBMC not given for species    3
+ Defaulting to true
+ default  T
+ 
+1st_Fragment_Ins_Style not specified for species    3
+using default of "COM" for this species.
+Species and atom number   3   1
+ atom name:             K     
+ element:               K 
+ mass:                     39.0983
+ charge:                    1.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:        52.5402
+ Sigma in A:                3.0700
+ 
+Total number of ring atoms in species     3    0
+Total number of exo atoms in species      3    1
+ Atom ids for ring atoms
+ Atom ids for exo atoms           1
+ *** Completed assigning atom info ***
+ 
+ No bonds in species            3
+ *** Completed assigning bond info ***
+ 
+ No angles in species            3
+ 
+Molecule    3  is defined to be linear
+ 
+ *** Completed assigning angle info ***
+ 
+ No dihedrals in species            3
+ *** Completed assigning dihedral info ***
+ 
+ No impropers in species            3
+ *** Completed assigning improper info ***
+ 
+ 
+Total number of atoms in the fragment     1  is   1
+Identity of these atoms are
+           1
+ 
+ ******* Finished loading fragment info ********
+ 
+ ******* Generating anchor info ****************
+ 
+ Number of anchors for fragment     1  is   0
+Anchor id is:
+ Fragment file for fragment 1 is
+ Cl.dat                                                                         
+                                          
+ Fragment type           3
+L_Coul_CBMC not given for species    4
+ Defaulting to true
+ default  T
+ 
+1st_Fragment_Ins_Style not specified for species    4
+using default of "COM" for this species.
+Species and atom number   4   1
+ atom name:             Cl    
+ element:               Cl
+ mass:                     35.4500
+ charge:                   -1.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:       117.7604
+ Sigma in A:                3.4870
+ 
+Total number of ring atoms in species     4    0
+Total number of exo atoms in species      4    1
+ Atom ids for ring atoms
+ Atom ids for exo atoms           1
+ *** Completed assigning atom info ***
+ 
+ No bonds in species            4
+ *** Completed assigning bond info ***
+ 
+ No angles in species            4
+ 
+Molecule    4  is defined to be linear
+ 
+ *** Completed assigning angle info ***
+ 
+ No dihedrals in species            4
+ *** Completed assigning dihedral info ***
+ 
+ No impropers in species            4
+ *** Completed assigning improper info ***
+ 
+ 
+Total number of atoms in the fragment     1  is   1
+Identity of these atoms are
+           1
+ 
+ ******* Finished loading fragment info ********
+ 
+ ******* Generating anchor info ****************
+ 
+ Number of anchors for fragment     1  is   0
+Anchor id is:
+ Fragment file for fragment 1 is
+ cg_H2O.dat                                                                     
+                                          
+ Fragment type           4
+ 
+ Maximum configurations stored           1
+ 
+ 
+ Finished loading fragment coordinates from
+ Na.dat                                                                         
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ K.dat                                                                          
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ Cl.dat                                                                         
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ cg_H2O.dat                                                                     
+                                          
+ 
+ intramolecular scaling factors explicitly set
+Intra molecule scaling factors for species             1
+VDW 1-2 scaling factor         0.000
+VDW 1-3 scaling factor         0.000
+VDW 1-4 scaling factor         0.000
+VDW 1-N scaling factor         0.500
+Coulomb 1-2 scaling factor     0.000
+Coulomb 1-3 scaling factor     0.000
+Coulomb 1-4 scaling factor     0.000
+Coulomb 1-N scaling factor     0.500
+ 
+Intra molecule scaling factors for species             2
+VDW 1-2 scaling factor         0.000
+VDW 1-3 scaling factor         0.000
+VDW 1-4 scaling factor         0.000
+VDW 1-N scaling factor         0.500
+Coulomb 1-2 scaling factor     0.000
+Coulomb 1-3 scaling factor     0.000
+Coulomb 1-4 scaling factor     0.000
+Coulomb 1-N scaling factor     0.500
+ 
+Intra molecule scaling factors for species             3
+VDW 1-2 scaling factor         0.000
+VDW 1-3 scaling factor         0.000
+VDW 1-4 scaling factor         0.000
+VDW 1-N scaling factor         0.500
+Coulomb 1-2 scaling factor     0.000
+Coulomb 1-3 scaling factor     0.000
+Coulomb 1-4 scaling factor     0.000
+Coulomb 1-N scaling factor     0.500
+ 
+Intra molecule scaling factors for species             4
+VDW 1-2 scaling factor         0.000
+VDW 1-3 scaling factor         0.000
+VDW 1-4 scaling factor         0.000
+VDW 1-N scaling factor         0.500
+Coulomb 1-2 scaling factor     0.000
+Coulomb 1-3 scaling factor     0.000
+Coulomb 1-4 scaling factor     0.000
+Coulomb 1-N scaling factor     0.500
+ 
+ 
+ *** Completed assigning intramolecular scaling factors ***
+ 
+ *** Creating VDW interaction table ***
+Mixing rule used is:    table          
+ 
+itype jtype vdw_param 1 2 3 4 5 6 7 8
+  1  1    11.9136     2.4430     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000
+  1  2    35.2617     2.7560   245.0000     3.0940     0.0000     0.0000     0.0000     0.0000
+  1  3    35.2617     2.7960     0.0000     0.0000  3408.9100     3.1000     0.5700     2.7000
+  1  4    35.2617     2.7960     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000
+  2  2    43.6841     3.0700     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000
+  2  3    50.1753     3.3610     0.0000     0.0000  1538.1700     3.5500     0.6700     3.3500
+  2  4    50.1753     3.3610     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000
+  3  3    97.9108     3.4870     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000
+  3  4    97.9108     3.4870     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000
+  4  4    97.9108     3.4870     0.0000     0.0000     0.0000     0.0000     0.0000     0.0000
+ 
+ *** Completed construction of VDW interaction table ***
+ 
+ 
+ *** Creating exclusion table ***
+ 
+     species   atom1      atom2  vdw scale q-q scale
+         1         1         1     0.000     0.000
+         2         1         1     0.000     0.000
+         3         1         1     0.000     0.000
+         4         1         1     0.000     0.000
+ 
+ *** Completed construction of exclusion table ***
+ 
+ 
+ ***** Reading seed info *********
+ 
+ The starting seed s1 is:    153587801
+ 
+ ****** Finished loading the seed ********
+ 
+ **** Simulation temperature information ****
+  Temperature assigned to box     1  is  298.000    K
+ 
+ *** Finished loading information for temperature ****
+ 
+User-defined dielectric permitivity used
+ 
+ ********* Move Probability Info******
+    Translation probability is   0.400000
+ 
+Maximum displacement width for species   1 in box  1  is     10.00000
+ 
+Maximum displacement width for species   2 in box  1  is     10.00000
+ 
+Maximum displacement width for species   3 in box  1  is     10.00000
+ 
+Maximum displacement width for species   4 in box  1  is     10.00000
+ 
+ 
+Probability for insertion move is          0.3000
+ 
+Insertion will be carried out for species   1
+ using the reservoir sampling
+ 
+Insertion will be carried out for species   2
+ using the reservoir sampling
+Pair insertion probability for species   2  and   4  is    0.375000
+ 
+Insertion will be carried out for species   3
+ using the reservoir sampling
+Pair insertion probability for species   3  and   4  is    0.375000
+ 
+Insertion will be carried out for species   4
+ using the reservoir sampling
+Pair insertion probability for species   4  and   2  is    0.375000
+Pair insertion probability for species   4  and   3  is    0.375000
+ 
+Total number of exchangeable species is    4
+ 
+ 
+Probability for deletion move is           0.3000
+ ***** Finished reading the move probability info *****
+Number of moves is :   3
+ 
+ 
+ *********** Fugactiy Info ***************
+ 
+Chemical Potential of sp  1 is    -0.620000000E+04in atomic units
+de Broglie wavelength of species    1  in box      1   is
+  0.2382396991   Angstrom
+ 
+Chemical Potential of sp  2 is    -0.620000000E+04in atomic units
+de Broglie wavelength of species    2  in box      1   is
+  0.3838944114   Angstrom
+ 
+Chemical Potential of sp  3 is    -0.620000000E+04in atomic units
+de Broglie wavelength of species    3  in box      1   is
+  0.1617381934   Angstrom
+ 
+Chemical Potential of sp  4 is    -0.620000000E+04in atomic units
+de Broglie wavelength of species    4  in box      1   is
+  0.1698569828   Angstrom
+ 
+Pair Chemical Potential of   2 and   4 is -0.240000000E+04 in atomic units
+ 
+Pair Chemical Potential of   3 and   4 is -0.340000000E+04 in atomic units
+ 
+ ******* Finished reading fugacity info ***********
+ 
+Thermodynamic quantities will written at every          1 MC steps.
+ 
+Coordinates will be written at every                    1 MC steps.
+ 
+movie header file for box    1 is      single_pair.box1.H
+movie_XYZ file for box       1 is      single_pair.box1.xyz
+ 
+The simulation will be run for                            5 MC steps.
+ 
+ *** Finished reading output info ******* 
+ 
+ *********** Average Information ***************
+ 
+ Instantaneous values will be output
+ 
+ *********** Ending Average Section ************
+ 
+ **** Writing property output information *****
+ 
+Total number of property files to be written is     1   for box 1
+ Maximum number of properties per file is    8
+ Writing the name of the property files and the corresponding property output
+ 
+ Property file    1   is  single_pair.box1.prp1
+ Properties output in these files are
+ 
+ Nmols
+ Nmols
+ Nmols
+ Nmols
+ Energy_Total
+ Energy_LJ
+ Energy_Elec
+ Energy_Intra
+ 
+ ***** Finished writing property information ******
+ 
+MC low cutoff distance is   1.000    Angstrom
+ 
+ *** Computed bond participation information ***
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ Number of atom in question           1
+ Total number of angles           0
+ Angles for this atom
+ 
+ Position of the atom in angles
+ 
+ Number of atom in question           1
+ Total number of angles           0
+ Angles for this atom
+ 
+ Position of the atom in angles
+ 
+ Number of atom in question           1
+ Total number of angles           0
+ Angles for this atom
+ 
+ Position of the atom in angles
+ 
+ Number of atom in question           1
+ Total number of angles           0
+ Angles for this atom
+ 
+ Position of the atom in angles
+ 
+ Number of atom in question           1
+ Total number of dihedrals           0
+ Dihedral angles for this atom
+ 
+ Position of the atom in dihedrals
+ 
+ Number of atom in question           1
+ Total number of dihedrals           0
+ Dihedral angles for this atom
+ 
+ Position of the atom in dihedrals
+ 
+ Number of atom in question           1
+ Total number of dihedrals           0
+ Dihedral angles for this atom
+ 
+ Position of the atom in dihedrals
+ 
+ Number of atom in question           1
+ Total number of dihedrals           0
+ Dihedral angles for this atom
+ 
+ Position of the atom in dihedrals
+ 
+ 
+ checking for dihedral_atoms_to_place
+ 
+ ***** reading CBMC info *********
+ 
+ Writing out CBMC_Info
+kappa for first bead insertion              36
+kappa for rotational bias                    0
+kappa for dihedral selection                15
+ 
+Smaller cutoff for CBMC for box          1       15.00
+ ****** finished loading CBMC_Info ********
+ 
+ ******Initial Coordinate Info **********
+ 
+ Initial configuration will be generated
+  Starting number of molecules of species   1   in box   1  is       0
+ 
+Total number of molecules of species   1   present initially is       0
+  Starting number of molecules of species   2   in box   1  is       0
+ 
+Total number of molecules of species   2   present initially is       0
+  Starting number of molecules of species   3   in box   1  is       0
+ 
+Total number of molecules of species   3   present initially is       0
+  Starting number of molecules of species   4   in box   1  is       0
+ 
+Total number of molecules of species   4   present initially is       0
+ 
+ *****Finished reading initial coordinate info *****
+ 
+ ****** Reading Run_Type Information ******
+ 
+ The input run type is Production
+ Update frequency is          200
+ 
+ ******* Finished reading run type information ******
+starting type make_config                                                                                                             
+
+ ******** Charge Neutrality Check *********#
+Species            1    has charge                0.00000000
+Species            2    has charge                1.00000000
+Species            3    has charge                1.00000000
+Species            4    has charge               -1.00000000
+Box                1    has charge                0.00000000
+ 
+ #********Charge Neutrality Check*********#
+ *****************************************
+  Starting energy components for box   1
+  Atomic units-Extensive
+ *****************************************
+ 
+Total system energy is                      0.000
+Intra molecular energy is                   0.000
+Bond energy is                              0.000
+Bond angle energy is                        0.000
+Dihedral angle energy is                    0.000
+Improper angle energy is                    0.000
+Intra nonbond vdw is                        0.000
+Intra nonbond elec is                       0.000
+Inter molecule vdw is                       0.000
+Long range correction is                    0.000
+Inter molecule q is                         0.000
+Reciprocal ewald is                         0.000
+Self ewald is                               0.000
+Number of vectors is                         6938
+ *******************************************
+ 
+ *********** Ending simulation *****************
+ 
+ 
+ ***** Insertion efficiency *****************
+  Total number of insertions for species   1  is           0
+ Successful insertions
+  Total number of insertions for species   2  is           2
+ Successful insertions
+  Total number of insertions for species   3  is           0
+ Successful insertions
+  Total number of insertions for species   4  is           2
+ Successful insertions
+ 
+ ***** Deletion efficiency *****************
+ Total number of deletions for species           1 is           0
+ Successful deletions           0
+ Total number of deletions for species           2 is           1
+ Successful deletions           0
+ Total number of deletions for species           3 is           0
+ Successful deletions           0
+ Total number of deletions for species           4 is           1
+ Successful deletions           0
+ 
+ *****************************************
+  Starting energy components for box   1
+  Atomic units-Extensive
+ *****************************************
+ 
+Total system energy is                   -211.443
+Intra molecular energy is                   0.000
+Bond energy is                              0.000
+Angle energy is                             0.000
+Dihedral enregy is                          0.000
+Improper angle energy is                    0.000
+Intra nonbond vdw is                        0.000
+Intra nonbond elec is                       0.000
+Inter molecule vdw is                       0.000
+Long range correction is                   -0.010
+Inter molecule q is                         0.000
+Reciprocal ewald is                       697.862
+Self ewald is                            -909.296
+ **************************************************
+ 
+ 
+ *****************************************
+ Components of energy from total energy call for box   1
+ Atomic units-Extensive
+ *****************************************
+ 
+Total system energy is                   -211.443
+Intra molecular energy is                   0.000
+Bond energy is                              0.000
+Angle energy is                             0.000
+Dihedral enregy is                          0.000
+Improper angle energy is                    0.000
+Intra nonbond vdw is                        0.000
+Intra nonbond elec is                       0.000
+Inter molecule vdw is                       0.000
+Long range correction is                   -0.010
+Inter molecule q is                         0.000
+Reciprocal ewald is                       697.862
+Self ewald is                            -909.296
+ 
+ 
+ Writing information for box   1
+  *********************************************
+ 
+ 
+  ******************************************
+  Writing information for species           1
+ 
+                Move      Trials     Success   % Success
+ **************************************
+ 
+ 
+  ******************************************
+  Writing information for species           2
+ 
+                Move      Trials     Success   % Success
+           Translate           1           1      100.00
+           Insertion           2           2      100.00
+            Deletion           1           0        0.00
+ **************************************
+ 
+ 
+  ******************************************
+  Writing information for species           3
+ 
+                Move      Trials     Success   % Success
+ **************************************
+ 
+ 
+  ******************************************
+  Writing information for species           4
+ 
+                Move      Trials     Success   % Success
+           Translate           1           1      100.00
+           Insertion           2           2      100.00
+            Deletion           1           0        0.00
+ **************************************
+ 
+ Writing information about fragments
+ 
+ *************************************
+Writing information for species   1
+  Fragment      Trials     Success   % Success
+ *********************************
+ 
+ *************************************
+Writing information for species   2
+  Fragment      Trials     Success   % Success
+ *********************************
+ 
+ *************************************
+Writing information for species   3
+  Fragment      Trials     Success   % Success
+ *********************************
+ 
+ *************************************
+Writing information for species   4
+  Fragment      Trials     Success   % Success
+ *********************************
+ *********** Ending simulation *****************
+ 
+ 
+ 
+ Writing information about subroutine times
+ 
+ ******************************************
+ 
+ Translation time =            0.004000 secs.
+ Insertion time =              0.028000 secs.
+ Deletion time =               0.016000 secs.
+ ********************************************
+ 
+ 
+ Program execution time
+         0      Years
+         0     Months
+         0       Days
+         0      Hours
+         0    Minutes
+         0    Seconds
+       948         ms

@@ -1,0 +1,448 @@
+************** Beginning Cassandra simulation **************
+Version Cassandra 1.1                                                                                                           
+
+inputfile c8_monov1.inp                                                                                                           
+
+name of run: c8_mono_v1_scaling
+
+  Month      Day      Year
+     01       15      2016
+ 
+ Time:  09:24:54
+ 
+machine: skyros
+
+
+Simulation type: NVT_MC              
+
+ Verbosity output to logfile set to  F
+ 
+ **** Copying Inputfile ****** 
+ 
+ 
+ # Run_Name
+ c8_mono_v1_scaling
+ 
+ # Sim_Type
+ NVT_MC
+ 
+ # Nbr_Species
+ 1
+ 
+ # VDW_Style
+ LJ cut_tail 15.0
+ 
+ # Charge_Style
+ NONE
+ 
+ # Intra_Scaling
+ 0.0 0.0 0.5 1.0
+ 
+ # Mixing_Rule
+ LB
+ 
+ # Seed_Info
+ 1219130951 1219130952
+ 
+ # Rcutoff_Low
+ 2.0
+ 
+ # Pair_Energy
+ FALSE
+ 
+ # Molecule_Files
+ c8.mcf 1
+ 
+ # Box_Info
+ 1
+ CUBIC
+ 35.0 35.0 35.0
+ 
+ # Temperature_Info
+ 298.0
+ 
+ # Move_Probability_Info
+ 
+ # Prob_Regrowth
+ 1.0
+ 1.0
+ 
+ # Done_Probability_Info
+ 
+ # Start_Type
+ make_config
+ 1
+ 
+ checkpoint
+ c8_alltrans.chk
+ 
+ # Run_Type
+ Equilibration   600
+ 
+ # Average_Info
+ 1
+ 
+ # Simulation_Length_Info
+ Units     Steps
+ Prop_Freq  1
+ Coord_Freq   100
+ MCsteps      10000
+ # Done_Simulation_Length_Info
+ 
+ # Property_Info 1
+ Energy_Total
+ Energy_LJ
+ Energy_Elec
+ Nmols
+ 
+ 
+ # Fragment_Files
+ species1/frag1/frag1.dat  1
+ species1/frag2/frag2.dat  2
+ species1/frag3/frag3.dat  3
+ species1/frag4/frag4.dat  4
+ species1/frag5/frag5.dat  5
+ species1/frag6/frag6.dat  6
+ 
+ # CBMC_Info
+ kappa_ins 35
+ kappa_rot 0
+ kappa_dih 35
+ rcut_cbmc 6.5
+ 
+ END
+ 
+ **** Finished writing input file *******
+ Number of species simulated:      1
+
+ *** Simulation box data ***
+number of simulation boxes     1
+ 
+Box number      1       Box Shape:      Cubic 
+Each Side Of :        35.0000     Angstrom
+ 
+Cell basis vector lengths in A,     35.0000      35.0000      35.0000
+Cosine of angles alpha, beta, gamma     0.0000       0.0000       0.0000
+Distance between box faces    35.0000      35.0000      35.0000
+Box volume, A^3         42875.0000
+ 
+ *** Finished loading box information ***
+ 
+   VDW style used is:   LJ             in box:  1
+   VDW sum style is:   cut_tail       in box:  1
+    rcut =    15.000   Angstrom
+ 
+   Charge style used is:   NONE           in box:  1
+ Charge style properly input
+ 
+ 
+ 
+Lorentz-Berthelot mixing rule specified
+ 
+ Pair interaction energy arrays will not be stored
+ Energy calculations will be done in a standard way
+ 
+ 
+ Reading molecular connectivity information
+ Species:            1
+ Molecular connectivity file: 
+ c8.mcf                                                                         
+                                          
+   8 atom(s) specified.
+   7 bond(s) specified.
+   6 angle(s) specified.
+   5 dihedral(s) specified.
+   0 improper(s) specified.
+   6 fragments specified.
+   5  fragment bonds specified.
+ 
+Species  Nbr molecules
+-------  -------------
+     1              1
+ 
+L_Coul_CBMC not given for species    1
+ Defaulting to  T
+ 
+1st_Fragment_Ins_Style not specified for species    1
+using default of "COM" for this species.
+ *** Completed assigning atom info ***
+ 
+ *** Completed assigning bond info ***
+ 
+ 
+ *** Completed assigning angle info ***
+ 
+ *** Completed assigning dihedral info ***
+ 
+ *** Completed assigning improper info ***
+ 
+ 
+Total number of atoms in the fragment     1  is   3
+ 
+Total number of atoms in the fragment     2  is   3
+ 
+Total number of atoms in the fragment     3  is   3
+ 
+Total number of atoms in the fragment     4  is   3
+ 
+Total number of atoms in the fragment     5  is   3
+ 
+Total number of atoms in the fragment     6  is   3
+ 
+ ******* Finished loading fragment info ********
+ 
+ Fragment file for fragment 1 is
+ species1/frag1/frag1.dat                                                       
+                                          
+ Fragment file for fragment 2 is
+ species1/frag2/frag2.dat                                                       
+                                          
+ Fragment file for fragment 3 is
+ species1/frag3/frag3.dat                                                       
+                                          
+ Fragment file for fragment 4 is
+ species1/frag4/frag4.dat                                                       
+                                          
+ Fragment file for fragment 5 is
+ species1/frag5/frag5.dat                                                       
+                                          
+ Fragment file for fragment 6 is
+ species1/frag6/frag6.dat                                                       
+                                          
+ 
+ library_coords array successfully allocated
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag1/frag1.dat                                                       
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag2/frag2.dat                                                       
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag3/frag3.dat                                                       
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag4/frag4.dat                                                       
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag5/frag5.dat                                                       
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag6/frag6.dat                                                       
+                                          
+ 
+ intramolecular scaling factors explicitly set
+Intra molecule scaling factors for species             1
+VDW 1-2 scaling factor         0.000
+VDW 1-3 scaling factor         0.000
+VDW 1-4 scaling factor         0.500
+VDW 1-N scaling factor         1.000
+Coulomb 1-2 scaling factor     0.000
+Coulomb 1-3 scaling factor     0.000
+Coulomb 1-4 scaling factor     0.000
+Coulomb 1-N scaling factor     0.000
+ 
+ 
+ *** Completed assigning intramolecular scaling factors ***
+ 
+ 
+ ***** Reading seed info *********
+ 
+ The starting seed s1 is:    153587801
+ 
+ ****** Finished loading the seed ********
+ 
+ **** Simulation temperature information ****
+  Temperature assigned to box     1  is  298.000    K
+ 
+ *** Finished loading information for temperature ****
+ 
+ 
+ ********* Move Probability Info******
+ 
+   Probability for regrowth is   1.000000
+ 
+   Cumulative probability for regrowth of species     1  is   1.000000
+ ***** Finished reading the move probability info *****
+Number of moves is :   1
+ 
+ 
+ ***** reading CBMC info *********
+ 
+ Writing out CBMC_Info
+kappa for first bead insertion              35
+Orientational bias not supported.            0tations is set to 
+kappa for dihedral selection                35
+ 
+Smaller cutoff for CBMC for box          1        6.50
+ ****** finished loading CBMC_Info ********
+ 
+Thermodynamic quantities will written at every          1 MC steps.
+ 
+Coordinates will be written at every                  100 MC steps.
+ 
+movie header file for box    1 is      c8_mono_v1_scaling.box1.H
+movie_XYZ file for box       1 is      c8_mono_v1_scaling.box1.xyz
+ 
+The simulation will be run for                        10000 MC steps.
+ 
+ *** Finished Reading Simulation Length Info ******* 
+ 
+ *********** Average Information ***************
+ 
+ Instantaneous values will be output
+ 
+ *********** Ending Average Section ************
+ 
+ **** Writing property output information *****
+ 
+Total number of property files to be written is     1   for box 1
+ Maximum number of properties per file is    4
+ Writing the name of the property files and the corresponding property output
+ 
+ Property file    1   is  c8_mono_v1_scaling.box1.prp1
+ Properties output in these files are
+ 
+ Energy_Total
+ Energy_LJ
+ Energy_Elec
+ Nmols
+ 
+ ***** Finished writing property information ******
+ 
+MC low cutoff distance is   2.000    Angstrom
+ 
+ 
+ ******Initial Coordinate Info **********
+ 
+ Initial configuration will be generated
+  Starting number of molecules of species   1   in box   1  is       1
+ 
+Total number of molecules of species   1   present initially is       1
+ 
+ *****Finished reading initial coordinate info *****
+ 
+ ****** Reading Run_Type Information ******
+ 
+ The input run type is Equilibration
+ Update frequency is          600
+ 
+ ******* Finished reading run type information ******
+starting type make_config                                                                                                             
+
+ ***************** Charge Neutrality Check *****************
+ Species           1    has charge                0.00000000
+ Box               1    has charge                0.00000000
+ 
+ ***************** Charge Neutrality Check *****************
+ ***********************************************************
+   Starting energy components for box   1
+  Atomic units-Extensive
+ 
+ Total system energy is                  1527.556
+ Intra molecular energy is               1669.360
+ Bond energy is                             0.000
+ Bond angle energy is                    1423.144
+ Dihedral angle energy is                 246.216
+ Improper angle energy is                   0.000
+ Intra nonbond vdw is                    -141.196
+ Intra nonbond elec is                      0.000
+ Inter molecule vdw is                      0.000
+ Long range correction is                  -0.608
+ Inter molecule q is                        0.000
+ Reciprocal ewald is                        0.000
+ Self ewald is                              0.000
+ ***********************************************************
+ 
+******************** END OF SIMULATION ********************
+ 
+ 
+ ***********************************************************
+ Ending energy components for box   1
+  Atomic units-Extensive
+ -----------------------------------------------------------
+ Total system energy is                  2598.605
+ Intra molecular energy is               2782.932
+ Bond energy is                             0.000
+ Angle energy is                         2412.786
+ Dihedral energy is                       370.146
+ Improper angle energy is                   0.000
+ Intra nonbond vdw is                    -183.719
+ Intra nonbond elec is                      0.000
+ Inter molecule vdw is                      0.000
+ Long range correction is                  -0.608
+ Inter molecule q is                        0.000
+ Reciprocal ewald is                        0.000
+ Self ewald is                              0.000
+ ***********************************************************
+ 
+ 
+ ***********************************************************
+ Energy components from total energy call for box   1
+  Atomic units-Extensive
+ -----------------------------------------------------------
+ Total system energy is                  2598.605
+ Intra molecular energy is               2782.932
+ Bond energy is                             0.000
+ Angle energy is                         2412.786
+ Dihedral energy is                       370.146
+ Improper angle energy is                   0.000
+ Intra nonbond vdw is                    -183.719
+ Intra nonbond elec is                      0.000
+ Inter molecule vdw is                      0.000
+ Long range correction is                  -0.608
+ Inter molecule q is                        0.000
+ Reciprocal ewald is                        0.000
+ Self ewald is                              0.000
+ ***********************************************************
+ 
+ 
+ Writing information for box  1
+ ***********************************************************
+ 
+ 
+ ***********************************************************
+ Writing information for species  1
+ 
+                Move      Trials     Success   % Success
+ ***********************************************************
+ 
+ Writing information about fragments
+ 
+ ***********************************************************
+ Writing information for species  1
+         # Fragments      Trials     Success   % Success
+                   1        1943        1885       97.01
+                   2        2045        1906       93.20
+                   3        2002        1836       91.71
+                   4        1990        1781       89.50
+                   5        2020        1783       88.27
+ ***********************************************************
+ 
+ Writing information about subroutine times
+ 
+ ***********************************************************
+ 
+ Regrowth time =               2.332000 secs.
+ ***********************************************************
+ 
+ 
+ Program execution time
+         0      Years
+         0     Months
+         0       Days
+         0      Hours
+         0    Minutes
+         7    Seconds
+        80         ms
