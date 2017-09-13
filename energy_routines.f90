@@ -1920,6 +1920,26 @@ CONTAINS
 
           ENDIF
 
+          Screen_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_screen)) .or. &
+                                   ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_screen)) ) THEN
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             kappa = vdw_param12_table(itype,jtype)
+             sig = vdw_param13_table(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                kappa = vdw_in_param12_table(ia,ja,is)
+                sig = vdw_in_param13_table(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                    eps = 0.0
+                ENDIF
+             ENDIF
+                
+             Eij_qq = Eij_qq * exp( -kappa * (rij - sig) )
+
+          ENDIF Screen_calculation
+
        ENDIF qq_calculation
        
     ENDIF ExistCheck

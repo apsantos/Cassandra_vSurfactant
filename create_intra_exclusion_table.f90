@@ -71,6 +71,8 @@ SUBROUTINE Create_Intra_Exclusion_Table
   ALLOCATE(vdw_in_param9_table(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
   ALLOCATE(vdw_in_param10_table(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
   ALLOCATE(vdw_in_param11_table(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param12_table(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
+  ALLOCATE(vdw_in_param13_table(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
 
   vdw_in_param1_table = 0.0_DP
   vdw_in_param2_table = 0.0_DP
@@ -83,6 +85,8 @@ SUBROUTINE Create_Intra_Exclusion_Table
   vdw_in_param9_table = 0.0_DP
   vdw_in_param10_table = 0.0_DP
   vdw_in_param11_table = 0.0_DP
+  vdw_in_param12_table = 0.0_DP
+  vdw_in_param13_table = 0.0_DP
 
   ALLOCATE(rcut_in_vdw_mix(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
   rcut_in_vdw_mix(:,:,:) = rcut_vdw(1)
@@ -201,6 +205,8 @@ SUBROUTINE Create_Intra_Exclusion_Table
            vdw_in_param9_table(ii,jj,is) = vdw_param9_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
            vdw_in_param10_table(ii,jj,is) = vdw_param10_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
            vdw_in_param11_table(ii,jj,is) = vdw_param11_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param12_table(ii,jj,is) = vdw_param12_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
+           vdw_in_param13_table(ii,jj,is) = vdw_param13_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
 
         ENDDO
      ENDDO
@@ -421,6 +427,15 @@ SUBROUTINE Read_Intra_Exclusion_Table(is)
                                 vdw_in_param9_table(ia,ja,is) = String_To_Double(line_array(i+2))
                                 vdw_in_param9_table(ja,ia,is) = vdw_in_param9_table(ia,ja,is)
                 
+                            ELSEIF (pot_type == 'SCR') THEN
+                                int_in_vdw_style_mix(ia,ja,is,vdw_screen) = .true.
+                                int_in_vdw_style_mix(ja,ia,is,vdw_screen) = .true.
+                                vdw_in_param12_table(ia,ja,is) = SQRT( String_To_Double(line_array(i+1)) / box_list(1)%volume * &
+                                                                       (charge_factor(1) * 8.0 * PI) / box_list(1)%volume / beta(1) )
+                                vdw_in_param13_table(ia,ja,is) = String_To_Double(line_array(i+2)) 
+                                vdw_in_param12_table(ja,ia,is) = vdw_in_param12_table(ia,ja,is)
+                                vdw_in_param13_table(ja,ia,is) = vdw_in_param13_table(ia,ja,is)
+
                             ELSEIF (pot_type == 'SW') THEN
                                 int_in_vdw_style_mix(ia,ja,is,vdw_sw) = .true.
                                 int_in_vdw_style_mix(ja,ia,is,vdw_sw) = .true.
