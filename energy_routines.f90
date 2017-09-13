@@ -1575,6 +1575,8 @@ CONTAINS
     Real(DP) :: qi,qj, qsc
     REAL(DP) :: this_lambda
 
+!FSL Local Coulomb Correction variables
+    REAL(DP) :: E_qqcor, Cqqcor, Rqqcor, Sqqcor, ED, tanhqqcor
 !FSL Local Hydration and WCA Parameters
     REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, kappa
 
@@ -1909,6 +1911,19 @@ CONTAINS
              END IF
 
              Eij_qq = qsc*charge_factor(ibox)*(qi*qj)/SQRT(rijsq)
+
+             QQ_cor_calculation: IF ( int_vdw_style_mix(itype,jtype,vdw_corr) ) THEN
+         
+                Cqqcor = species_list(is)%total_charge*species_list(js)%total_charge
+                Rqqcor = vdw_param6_table(itype,jtype)
+                Sqqcor = vdw_param7_table(itype,jtype)
+         
+                tanhqqcor = DTANH((rij - Rqqcor)/Sqqcor)
+                ED = (5.2_DP + static_perm(ibox))/2.0_DP + (static_perm(ibox) - 5.2_DP)/2.0_DP*tanhqqcor
+                E_qqcor = charge_factor(ibox)*(Cqqcor/rij)*((static_perm(ibox)/ED) - 1.0_DP)
+                Eij_qq = Eij_qq + E_qqcor
+             END IF QQ_cor_calculation
+
           ELSEIF (int_charge_sum_style(ibox) == charge_ewald .AND. ( .NOT. igas_flag) ) THEN
              ! Real space Ewald part
              this_box = molecule_list(im,is)%which_box
@@ -1919,6 +1934,26 @@ CONTAINS
              ! have been moved. 
 
           ENDIF
+
+          Screen_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_screen)) .or. &
+                                   ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_screen)) ) THEN
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             kappa = vdw_param12_table(itype,jtype)
+             sig = vdw_param13_table(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                kappa = vdw_in_param12_table(ia,ja,is)
+                sig = vdw_in_param13_table(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                    kappa = 0.0
+                ENDIF
+             ENDIF
+                
+             Eij_qq = Eij_qq * exp( -kappa * (rij - sig) )
+
+          ENDIF Screen_calculation
 
        ENDIF qq_calculation
        
@@ -1950,8 +1985,7 @@ CONTAINS
     REAL(DP) :: qi,qj,qsc,rijsq,rij,erf_val
     REAL(DP) :: Eij
 !FSL Local Coulomb Correction variables
-    REAL(DP) :: E_qqcor, Cqqcor, Rqqcor, Sqqcor, ED, &
-    ul, ll, tanhqqcor
+    REAL(DP) :: E_qqcor, Cqqcor, Rqqcor, Sqqcor, ED, tanhqqcor
     INTEGER :: itype, jtype
 
     qsc = 1.0_DP
@@ -1961,9 +1995,6 @@ CONTAINS
     tanhqqcor = 0.0_DP
     Rqqcor = 1.0_DP
     Sqqcor = 1.0_DP
-    ED = 0.0_DP
-    ul = 1.9_DP
-    ll = 0.1_DP
 
     itype = nonbond_list(ia,is)%atom_type_number
     jtype = nonbond_list(ja,js)%atom_type_number
@@ -1988,6 +2019,7 @@ CONTAINS
 
 !FSL QQ Cor start
     QQ_cor_calculation: IF ( int_vdw_style_mix(itype,jtype,vdw_corr) ) THEN
+       ED = 0.0_DP
 
        Cqqcor = species_list(is)%total_charge*species_list(js)%total_charge
        Rqqcor = vdw_param6_table(itype,jtype)
@@ -1996,9 +2028,9 @@ CONTAINS
        tanhqqcor = DTANH((rij - Rqqcor)/Sqqcor)
        ED = (5.2_DP + static_perm(ibox))/2.0_DP + (static_perm(ibox) - 5.2_DP)/2.0_DP*tanhqqcor
        E_qqcor = charge_factor(ibox)*(Cqqcor/rij)*((static_perm(ibox)/ED) - 1.0_DP)
+       Eij = Eij + E_qqcor
     END IF QQ_cor_calculation
 
-    Eij = Eij + E_qqcor
 !FSL QQ Cor end    
 !------------------------------------------------------------------------------
 
@@ -3724,7 +3756,7 @@ CONTAINS
              sig = vdw_param2_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param1_table(ia,ja,is)
                 sig = vdw_in_param2_table(ia,ja,is)
@@ -3789,7 +3821,7 @@ CONTAINS
              sig = vdw_param2_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param1_table(ia,ja,is)
                 sig = vdw_in_param2_table(ia,ja,is)
@@ -3841,7 +3873,7 @@ CONTAINS
              sig = vdw_param2_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param1_table(ia,ja,is)
                 sig = vdw_in_param2_table(ia,ja,is)
@@ -3892,7 +3924,7 @@ CONTAINS
                 sig = vdw_param2_table(itype,jtype)
    
                 ! Apply intramolecular scaling if necessary
-                IF (is == js .AND. im == jm) THEN
+                IF (intra) THEN
                    ! This controls 1-2, 1-3, and 1-4 interactions
                    eps = vdw_in_param1_table(ia,ja,is)
                    sig = vdw_in_param2_table(ia,ja,is)
@@ -3921,7 +3953,7 @@ CONTAINS
              kappa = vdw_param9_table(itype,jtype)
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
                 ! This controls 1-2, 1-3, and 1-4 interactions
                 eps = vdw_in_param8_table(ia,ja,is)
                 kappa = vdw_in_param9_table(ia,ja,is)
@@ -3950,7 +3982,7 @@ CONTAINS
           Shyd = vdw_param5_table(itype,jtype)
 
           ! Apply intramolecular scaling if necessary
-          IF (is == js .AND. im == jm) THEN
+          IF (intra) THEN
              ! This controls 1-2, 1-3, and 1-4 interactions
              Hhyd = vdw_in_param3_table(ia,ja,is)
              Rhyd = vdw_in_param4_table(ia,ja,is)
@@ -3979,7 +4011,7 @@ CONTAINS
           IF (int_charge_sum_style(ibox) == charge_cut) THEN
              ! Apply charge scaling for intramolecular energies
              qsc = 1.0_DP
-             IF ( is == js .AND. im == jm ) THEN
+             IF ( intra ) THEN
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
              Wij_qq = qsc*charge_factor(ibox)*(qi*qj)/SQRT(rijsq)
@@ -3990,7 +4022,7 @@ CONTAINS
              ibox = molecule_list(im,is)%which_box 
 
              ! Apply intramolecular scaling if necessary
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
        
                 ! Intramolecular charge scaling
                 qsc = charge_intra_scale(ia,ja,is)
@@ -4009,7 +4041,7 @@ CONTAINS
              erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
              Wij_qq = qi*qj*( (qsc - erf_val)/rij + ewald_constant*exp_const )
 
-             IF (is == js .AND. im == jm) THEN
+             IF (intra) THEN
 
                 Wij_self = (qsc - 1.0_DP) * qi*qj * (erf_val/rij - ewald_constant * exp_const)
                 Wij_qq = Wij_qq + Wij_self
@@ -4021,6 +4053,24 @@ CONTAINS
              ! have been moved. 
 
           ENDIF
+
+          Screen_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_screen)) .or. &
+                                   ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_screen)) ) THEN
+             ! For now, assume all interactions are the same. Use the lookup table created in Compute_Nonbond_Table
+             kappa = vdw_param12_table(itype,jtype)
+             sig = vdw_param13_table(itype,jtype)
+
+             ! Apply intramolecular scaling if necessary
+             IF (is == js .AND. im == jm) THEN
+                ! This controls 1-2, 1-3, and 1-4 interactions
+                kappa = vdw_in_param12_table(ia,ja,is)
+                sig = vdw_in_param13_table(ia,ja,is)
+                IF (rijsq >= rcutsq) THEN
+                    kappa = 0.0
+                ENDIF
+             ENDIF
+                
+          ENDIF Screen_calculation
 
        ENDIF qq_calculation
 

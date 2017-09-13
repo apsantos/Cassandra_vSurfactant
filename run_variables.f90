@@ -119,6 +119,7 @@ USE Type_Definitions
   INTEGER, PARAMETER :: vdw_corr = 12
   INTEGER, PARAMETER :: vdw_yukawa = 13
   INTEGER, PARAMETER :: vdw_sw = 14
+  INTEGER, PARAMETER :: vdw_screen = 15
 
 
   INTEGER, PARAMETER :: charge_none = 0
@@ -152,6 +153,8 @@ USE Type_Definitions
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param8_table, vdw_param9_table
   ! Square-Well potential
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param10_table, vdw_param11_table
+  ! Yukawa Screened electrostatics
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param12_table, vdw_param13_table
 
 
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alpha_ewald, h_ewald_cut
@@ -180,6 +183,8 @@ USE Type_Definitions
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param8_table, vdw_in_param9_table
   ! Square-Well potential
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param10_table, vdw_in_param11_table
+  ! Yukawa Screened electrostatics
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: vdw_in_param12_table, vdw_in_param13_table
 
   ! Gromacs file parameters
   INTEGER, DIMENSION(:), ALLOCATABLE :: ndx_type
