@@ -1,5 +1,5 @@
 # Run_Name
-C7E6t303mu2
+C7E6t303mu5
 
 # Sim_Type
 GCMC
@@ -37,13 +37,13 @@ W.mcf 14000
 # Box_Info
 1
 CUBIC
-208.6 208.6 208.6
+109.1 109.1 109.1
 
 # Temperature_Info
 303.0
 
 # Chemical_Potential_Info
--100.0 -10.0
+-100.0 100.0
 
 # Move_Probability_Info
 
@@ -74,7 +74,7 @@ reservoir
 # Start_Type
 make_config
 100
-10000
+13690
 
 # Run_Type
 Production   200  
@@ -84,8 +84,8 @@ Production   200
 
 # Frequency_Info
 freq_type    none
-Nthermofreq  100
-Ncoordfreq   1000
+Nthermofreq  10
+Ncoordfreq   100
 MCsteps      50000
 # Done_Frequency_Info
 
