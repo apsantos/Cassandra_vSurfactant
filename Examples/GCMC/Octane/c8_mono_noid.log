@@ -1,0 +1,4602 @@
+*** Beginning Cassandra simulation ***
+
+Version Cassandra 1.0                                                                                                           
+
+inputfile c8_mono.inp                                                                                                             
+
+name of run: c8_mono_noid
+
+  Month      Day      Year
+     01       08      2016
+ 
+ Time:  11:25:18
+ 
+machine: skyros
+
+
+Simulation type: NVT_MC              
+
+ 
+ **** Copying Inputfile ****** 
+ 
+ # Run_Name
+ c8_mono_noid
+ 
+ # Sim_Type
+ NVT_MC
+ 
+ # Nbr_Species
+ 1
+ 
+ # VDW_Style
+ LJ cut_tail 15.0
+ 
+ # Charge_Style
+ NONE
+ 
+ # Intra_Scaling
+ 0.0 0.0 0.0 1.0
+ 0.0 0.0 0.0 1.0
+ 
+ # Mixing_Rule
+ LB
+ 
+ # Seed_Info
+ 1219130951 1219130952
+ 
+ # Rcutoff_Low
+ 2.0
+ 
+ # Pair_Energy
+ TRUE
+ 
+ # Molecule_Files
+ c8.mcf 1
+ 
+ # Box_Info
+ 1
+ CUBIC
+ 35.0 35.0 35.0
+ 
+ # Temperature_Info
+ 560.0
+ 
+ # Move_Probability_Info
+ 
+ # Prob_Translation
+ 0.7
+ 0.5
+ 
+ # Prob_Regrowth
+ 0.3
+ 1.0
+ 
+ # Done_Probability_Info
+ 
+ # Start_Type
+ make_config
+ 1
+ 
+ # Run_Type
+ Equilibration   600
+ 
+ # Average_Info
+ 1
+ 
+ # Frequency_Info
+ freq_type    none
+ Nthermofreq  1000
+ Ncoordfreq   10000
+ MCsteps      1000000
+ # Done_Frequency_Info
+ 
+ # Property_Info 1
+ Energy_Total
+ Energy_LJ
+ Energy_Elec
+ Nmols
+ 
+ 
+ # Fragment_Files
+ species1/frag1/frag1.dat  1
+ species1/frag2/frag2.dat  2
+ species1/frag3/frag3.dat  3
+ species1/frag4/frag4.dat  4
+ species1/frag5/frag5.dat  5
+ species1/frag6/frag6.dat  6
+ 
+ # CBMC_Info
+ kappa_ins 12
+ kappa_rot 0
+ kappa_dih 12
+ rcut_cbmc 6.5 6.5
+ 
+ END
+ 
+ **** Finished writing input file *******
+ Number of species simulated:      1
+
+ *** Simulation box data ***
+number of simulation boxes     1
+ 
+Box number      1       Box Shape:      Cubic 
+Each Side Of :        35.0000     Angstrom
+ 
+Cell basis vector lengths in A,     35.0000      35.0000      35.0000
+Cosine of angles alpha, beta, gamma     0.0000       0.0000       0.0000
+Distance between box faces    35.0000      35.0000      35.0000
+Box volume, A^3         42875.0000
+ 
+ *** Finished loading box information ***
+ 
+   VDW style used is:   LJ             in box:  1
+   VDW sum style is:   cut_tail       in box:  1
+    rcut =    15.000   Angstrom
+ VDW style properly input
+ 
+   Charge style used is:   NONE           in box:  1
+ Charge style properly input
+ 
+ 
+ Pair interaction energy array storage enabled
+ 
+Lorentz-Berthelot mixing rule specified
+ 
+ Reading molecular connectivity information
+ Species:            1
+ Molecular connectivity file: 
+ c8.mcf                                                                         
+                                          
+   8 atom(s) specified.
+   7 bond(s) specified.
+   6 angle(s) specified.
+   5 dihedral(s) specified.
+   0 improper(s) specified.
+   6 fragments specified.
+   5  fragment bonds specified.
+ 
+Species  Nbr molecules
+-------  -------------
+     1              1
+ 
+L_Coul_CBMC not given for species    1
+ Defaulting to true
+ default  T
+ 
+1st_Fragment_Ins_Style not specified for species    1
+using default of "COM" for this species.
+Species and atom number   1   1
+ atom name:             CH3_s1
+ element:               C 
+ mass:                     12.0110
+ charge:                    0.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:        98.0000
+ Sigma in A:                3.7500
+ 
+Species and atom number   1   2
+ atom name:             CH2_s1
+ element:               C 
+ mass:                     12.0110
+ charge:                    0.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:        46.0000
+ Sigma in A:                3.9500
+ 
+Species and atom number   1   3
+ atom name:             CH2_s1
+ element:               C 
+ mass:                     12.0110
+ charge:                    0.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:        46.0000
+ Sigma in A:                3.9500
+ 
+Species and atom number   1   4
+ atom name:             CH2_s1
+ element:               C 
+ mass:                     12.0110
+ charge:                    0.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:        46.0000
+ Sigma in A:                3.9500
+ 
+Species and atom number   1   5
+ atom name:             CH2_s1
+ element:               C 
+ mass:                     12.0110
+ charge:                    0.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:        46.0000
+ Sigma in A:                3.9500
+ 
+Species and atom number   1   6
+ atom name:             CH2_s1
+ element:               C 
+ mass:                     12.0110
+ charge:                    0.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:        46.0000
+ Sigma in A:                3.9500
+ 
+Species and atom number   1   7
+ atom name:             CH2_s1
+ element:               C 
+ mass:                     12.0110
+ charge:                    0.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:        46.0000
+ Sigma in A:                3.9500
+ 
+Species and atom number   1   8
+ atom name:             CH3_s1
+ element:               C 
+ mass:                     12.0110
+ charge:                    0.0000
+ vdw type:              LJ                  
+ Epsilon / kB in K:        98.0000
+ Sigma in A:                3.7500
+ 
+Total number of ring atoms in species     1    0
+Total number of exo atoms in species      1    8
+ Atom ids for ring atoms
+ Atom ids for exo atoms           1           2           3           4
+           5           6           7           8
+ *** Completed assigning atom info ***
+ 
+Species and bond number   1   1
+ atom1:                   1
+ atom2:                   2
+ bond type:             fixed               
+Bond fixed between atoms:      1      2 in species   1
+Fixed bond length, in A:    1.5400
+ 
+Species and bond number   1   2
+ atom1:                   2
+ atom2:                   3
+ bond type:             fixed               
+Bond fixed between atoms:      2      3 in species   1
+Fixed bond length, in A:    1.5400
+ 
+Species and bond number   1   3
+ atom1:                   3
+ atom2:                   4
+ bond type:             fixed               
+Bond fixed between atoms:      3      4 in species   1
+Fixed bond length, in A:    1.5400
+ 
+Species and bond number   1   4
+ atom1:                   4
+ atom2:                   5
+ bond type:             fixed               
+Bond fixed between atoms:      4      5 in species   1
+Fixed bond length, in A:    1.5400
+ 
+Species and bond number   1   5
+ atom1:                   5
+ atom2:                   6
+ bond type:             fixed               
+Bond fixed between atoms:      5      6 in species   1
+Fixed bond length, in A:    1.5400
+ 
+Species and bond number   1   6
+ atom1:                   6
+ atom2:                   7
+ bond type:             fixed               
+Bond fixed between atoms:      6      7 in species   1
+Fixed bond length, in A:    1.5400
+ 
+Species and bond number   1   7
+ atom1:                   7
+ atom2:                   8
+ bond type:             fixed               
+Bond fixed between atoms:      7      8 in species   1
+Fixed bond length, in A:    1.5400
+ 
+ *** Completed assigning bond info ***
+ 
+Species and angle number  1   1
+ atom1:                   1
+ atom2:                   2
+ atom3:                   3
+ angle type:            harmonic            
+ K_angle in K/rad^2:    31250.0000
+ theta0 in degrees:       114.0000
+ 
+Species and angle number  1   2
+ atom1:                   2
+ atom2:                   3
+ atom3:                   4
+ angle type:            harmonic            
+ K_angle in K/rad^2:    31250.0000
+ theta0 in degrees:       114.0000
+ 
+Species and angle number  1   3
+ atom1:                   3
+ atom2:                   4
+ atom3:                   5
+ angle type:            harmonic            
+ K_angle in K/rad^2:    31250.0000
+ theta0 in degrees:       114.0000
+ 
+Species and angle number  1   4
+ atom1:                   4
+ atom2:                   5
+ atom3:                   6
+ angle type:            harmonic            
+ K_angle in K/rad^2:    31250.0000
+ theta0 in degrees:       114.0000
+ 
+Species and angle number  1   5
+ atom1:                   5
+ atom2:                   6
+ atom3:                   7
+ angle type:            harmonic            
+ K_angle in K/rad^2:    31250.0000
+ theta0 in degrees:       114.0000
+ 
+Species and angle number  1   6
+ atom1:                   6
+ atom2:                   7
+ atom3:                   8
+ angle type:            harmonic            
+ K_angle in K/rad^2:    31250.0000
+ theta0 in degrees:       114.0000
+ 
+ 
+Molecule    1  is NOT defined to be linear
+ 
+ *** Completed assigning angle info ***
+ 
+Species and dihedral num  1   1
+ atom1:                   1
+ atom2:                   2
+ atom3:                   3
+ atom4:                   4
+ dihedral type:         OPLS                
+ a0, kJ/mol:                0.0000
+ a1, kJ/mol:                2.9500
+ a2, kJ/mol:               -0.5700
+ a3, kJ/mol:                6.5800
+ 
+Species and dihedral num  1   2
+ atom1:                   2
+ atom2:                   3
+ atom3:                   4
+ atom4:                   5
+ dihedral type:         OPLS                
+ a0, kJ/mol:                0.0000
+ a1, kJ/mol:                2.9500
+ a2, kJ/mol:               -0.5700
+ a3, kJ/mol:                6.5800
+ 
+Species and dihedral num  1   3
+ atom1:                   3
+ atom2:                   4
+ atom3:                   5
+ atom4:                   6
+ dihedral type:         OPLS                
+ a0, kJ/mol:                0.0000
+ a1, kJ/mol:                2.9500
+ a2, kJ/mol:               -0.5700
+ a3, kJ/mol:                6.5800
+ 
+Species and dihedral num  1   4
+ atom1:                   4
+ atom2:                   5
+ atom3:                   6
+ atom4:                   7
+ dihedral type:         OPLS                
+ a0, kJ/mol:                0.0000
+ a1, kJ/mol:                2.9500
+ a2, kJ/mol:               -0.5700
+ a3, kJ/mol:                6.5800
+ 
+Species and dihedral num  1   5
+ atom1:                   5
+ atom2:                   6
+ atom3:                   7
+ atom4:                   8
+ dihedral type:         OPLS                
+ a0, kJ/mol:                0.0000
+ a1, kJ/mol:                2.9500
+ a2, kJ/mol:               -0.5700
+ a3, kJ/mol:                6.5800
+ 
+ *** Completed assigning dihedral info ***
+ 
+ No impropers in species            1
+ *** Completed assigning improper info ***
+ 
+ 
+Total number of atoms in the fragment     1  is   3
+Identity of these atoms are
+           2           1           3
+ 
+Total number of atoms in the fragment     2  is   3
+Identity of these atoms are
+           3           2           4
+ 
+Total number of atoms in the fragment     3  is   3
+Identity of these atoms are
+           4           3           5
+ 
+Total number of atoms in the fragment     4  is   3
+Identity of these atoms are
+           5           4           6
+ 
+Total number of atoms in the fragment     5  is   3
+Identity of these atoms are
+           6           5           7
+ 
+Total number of atoms in the fragment     6  is   3
+Identity of these atoms are
+           7           6           8
+ 
+ ******* Finished loading fragment info ********
+ 
+ ******* Generating anchor info ****************
+ 
+ Number of anchors for fragment     1  is   1
+Anchor id is:    2
+ 
+ Number of anchors for fragment     2  is   1
+Anchor id is:    3
+ 
+ Number of anchors for fragment     3  is   1
+Anchor id is:    4
+ 
+ Number of anchors for fragment     4  is   1
+Anchor id is:    5
+ 
+ Number of anchors for fragment     5  is   1
+Anchor id is:    6
+ 
+ Number of anchors for fragment     6  is   1
+Anchor id is:    7
+ Fragment file for fragment 1 is
+ species1/frag1/frag1.dat                                                       
+                                          
+ Fragment type           1
+ Fragment file for fragment 2 is
+ species1/frag2/frag2.dat                                                       
+                                          
+ Fragment type           2
+ Fragment file for fragment 3 is
+ species1/frag3/frag3.dat                                                       
+                                          
+ Fragment type           3
+ Fragment file for fragment 4 is
+ species1/frag4/frag4.dat                                                       
+                                          
+ Fragment type           4
+ Fragment file for fragment 5 is
+ species1/frag5/frag5.dat                                                       
+                                          
+ Fragment type           5
+ Fragment file for fragment 6 is
+ species1/frag6/frag6.dat                                                       
+                                          
+ Fragment type           6
+Species and fragment bond number   1   1
+ fragment 1:              1
+ fragment 2:              2
+Species and fragment bond number   1   2
+ fragment 1:              2
+ fragment 2:              3
+Species and fragment bond number   1   3
+ fragment 1:              3
+ fragment 2:              4
+Species and fragment bond number   1   4
+ fragment 1:              4
+ fragment 2:              5
+Species and fragment bond number   1   5
+ fragment 1:              5
+ fragment 2:              6
+ 
+ Number of connections of fragment    1  is   1
+ These fragments are:
+           2
+ 
+ Number of connections of fragment    2  is   2
+ These fragments are:
+           1           3
+ 
+ Number of connections of fragment    3  is   2
+ These fragments are:
+           2           4
+ 
+ Number of connections of fragment    4  is   2
+ These fragments are:
+           3           5
+ 
+ Number of connections of fragment    5  is   2
+ These fragments are:
+           4           6
+ 
+ Number of connections of fragment    6  is   1
+ These fragments are:
+           5
+ 
+ Maximum configurations stored      100000
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag1/frag1.dat                                                       
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag2/frag2.dat                                                       
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag3/frag3.dat                                                       
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag4/frag4.dat                                                       
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag5/frag5.dat                                                       
+                                          
+ 
+ 
+ Finished loading fragment coordinates from
+ species1/frag6/frag6.dat                                                       
+                                          
+ 
+ intramolecular scaling factors explicitly set
+Intra molecule scaling factors for species             1
+VDW 1-2 scaling factor         0.000
+VDW 1-3 scaling factor         0.000
+VDW 1-4 scaling factor         0.000
+VDW 1-N scaling factor         1.000
+Coulomb 1-2 scaling factor     0.000
+Coulomb 1-3 scaling factor     0.000
+Coulomb 1-4 scaling factor     0.000
+Coulomb 1-N scaling factor     0.000
+ 
+ 
+ *** Completed assigning intramolecular scaling factors ***
+ 
+  There are 2 different atom types in the system 
+     1  CH3_s1
+     2  CH2_s1
+ 
+ 
+species number and name:  1   c8.mcf                                                                                                                  
+ Name      number
+ ------    ------
+CH3_s1      1
+CH2_s1      2
+CH2_s1      2
+CH2_s1      2
+CH2_s1      2
+CH2_s1      2
+CH2_s1      2
+CH3_s1      1
+ 
+ 
+ *** Creating VDW interaction table ***
+Mixing rule used is:    LB             
+ 
+Atom 1     Atom 2  epsilon (amu A^2/ps^2)        sigma (A)
+CH3_s1     CH3_s1     81.4818                        3.7500
+CH3_s1     CH2_s1     55.8247                        3.8500
+CH2_s1     CH3_s1     55.8247                        3.8500
+CH2_s1     CH2_s1     38.2466                        3.9500
+ 
+ *** Completed construction of VDW interaction table ***
+ 
+ 
+ *** Creating exclusion table ***
+ 
+     species   atom1      atom2  vdw scale q-q scale
+         1         1         1     0.000     0.000
+         1         1         2     0.000     0.000
+         1         1         3     0.000     0.000
+         1         1         4     0.000     0.000
+         1         1         5     1.000     0.000
+         1         1         6     1.000     0.000
+         1         1         7     1.000     0.000
+         1         1         8     1.000     0.000
+         1         2         1     0.000     0.000
+         1         2         2     0.000     0.000
+         1         2         3     0.000     0.000
+         1         2         4     0.000     0.000
+         1         2         5     0.000     0.000
+         1         2         6     1.000     0.000
+         1         2         7     1.000     0.000
+         1         2         8     1.000     0.000
+         1         3         1     0.000     0.000
+         1         3         2     0.000     0.000
+         1         3         3     0.000     0.000
+         1         3         4     0.000     0.000
+         1         3         5     0.000     0.000
+         1         3         6     0.000     0.000
+         1         3         7     1.000     0.000
+         1         3         8     1.000     0.000
+         1         4         1     0.000     0.000
+         1         4         2     0.000     0.000
+         1         4         3     0.000     0.000
+         1         4         4     0.000     0.000
+         1         4         5     0.000     0.000
+         1         4         6     0.000     0.000
+         1         4         7     0.000     0.000
+         1         4         8     1.000     0.000
+         1         5         1     1.000     0.000
+         1         5         2     0.000     0.000
+         1         5         3     0.000     0.000
+         1         5         4     0.000     0.000
+         1         5         5     0.000     0.000
+         1         5         6     0.000     0.000
+         1         5         7     0.000     0.000
+         1         5         8     0.000     0.000
+         1         6         1     1.000     0.000
+         1         6         2     1.000     0.000
+         1         6         3     0.000     0.000
+         1         6         4     0.000     0.000
+         1         6         5     0.000     0.000
+         1         6         6     0.000     0.000
+         1         6         7     0.000     0.000
+         1         6         8     0.000     0.000
+         1         7         1     1.000     0.000
+         1         7         2     1.000     0.000
+         1         7         3     1.000     0.000
+         1         7         4     0.000     0.000
+         1         7         5     0.000     0.000
+         1         7         6     0.000     0.000
+         1         7         7     0.000     0.000
+         1         7         8     0.000     0.000
+         1         8         1     1.000     0.000
+         1         8         2     1.000     0.000
+         1         8         3     1.000     0.000
+         1         8         4     1.000     0.000
+         1         8         5     0.000     0.000
+         1         8         6     0.000     0.000
+         1         8         7     0.000     0.000
+         1         8         8     0.000     0.000
+ 
+ *** Completed construction of exclusion table ***
+ 
+ 
+ ***** Reading seed info *********
+ 
+ The starting seed s1 is:    153587801
+ 
+ ****** Finished loading the seed ********
+ 
+ **** Simulation temperature information ****
+  Temperature assigned to box     1  is  560.000    K
+ 
+ *** Finished loading information for temperature ****
+ 
+ 
+ ********* Move Probability Info******
+    Translation probability is   0.700000
+ 
+Maximum displacement width for species   1 in box  1  is      0.50000
+ 
+ 
+   Probability for regrowth is   0.300000
+ 
+   Cumulative probability for regrowth of species     1  is   1.000000
+ ***** Finished reading the move probability info *****
+Number of moves is :   2
+ 
+ 
+ ***** reading CBMC info *********
+ 
+ Writing out CBMC_Info
+kappa for first bead insertion              12
+kappa for rotational bias                    0
+kappa for dihedral selection                12
+ 
+Smaller cutoff for CBMC for box          1        6.50
+ ****** finished loading CBMC_Info ********
+ 
+Thermodynamic quantities will written at every       1000 MC steps.
+ 
+Coordinates will be written at every                10000 MC steps.
+ 
+movie header file for box    1 is      c8_mono_noid.box1.H
+movie_XYZ file for box       1 is      c8_mono_noid.box1.xyz
+ 
+The simulation will be run for                      1000000 MC steps.
+ 
+ *** Finished reading output info ******* 
+ 
+ *********** Average Information ***************
+ 
+ Instantaneous values will be output
+ 
+ *********** Ending Average Section ************
+ 
+ **** Writing property output information *****
+ 
+Total number of property files to be written is     1   for box 1
+ Maximum number of properties per file is    4
+ Writing the name of the property files and the corresponding property output
+ 
+ Property file    1   is  c8_mono_noid.box1.prp1
+ Properties output in these files are
+ 
+ Energy_Total
+ Energy_LJ
+ Energy_Elec
+ Nmols
+ 
+ ***** Finished writing property information ******
+ 
+MC low cutoff distance is   2.000    Angstrom
+ 
+ *** Computed bond participation information ***
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         1       1            1                 2
+ 
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         2       1            1                 1
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         2       2            2                 3
+ 
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         3       1            2                 2
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         3       2            3                 4
+ 
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         4       1            3                 3
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         4       2            4                 5
+ 
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         5       1            4                 4
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         5       2            5                 6
+ 
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         6       1            5                 5
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         6       2            6                 7
+ 
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         7       1            6                 6
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         7       2            7                 8
+ 
+ species, atom, local bond nbr, global bond nbr, atom bonded 
+    1         8       1            7                 7
+ 
+ 
+ 
+ For species           1
+  Number of atoms that can be displaced           2
+             Atom ID     Reference Atom ID
+                   1                     2
+                   8                     7
+ 
+ Number of atom in question           1
+ Total number of angles           1
+ Angles for this atom
+           1
+ Position of the atom in angles
+           1
+ Number of atom in question           2
+ Total number of angles           2
+ Angles for this atom
+           1           2
+ Position of the atom in angles
+           2           1
+ Number of atom in question           3
+ Total number of angles           3
+ Angles for this atom
+           1           2           3
+ Position of the atom in angles
+           3           2           1
+ Number of atom in question           4
+ Total number of angles           3
+ Angles for this atom
+           2           3           4
+ Position of the atom in angles
+           3           2           1
+ Number of atom in question           5
+ Total number of angles           3
+ Angles for this atom
+           3           4           5
+ Position of the atom in angles
+           3           2           1
+ Number of atom in question           6
+ Total number of angles           3
+ Angles for this atom
+           4           5           6
+ Position of the atom in angles
+           3           2           1
+ Number of atom in question           7
+ Total number of angles           2
+ Angles for this atom
+           5           6
+ Position of the atom in angles
+           3           2
+ Number of atom in question           8
+ Total number of angles           1
+ Angles for this atom
+           6
+ Position of the atom in angles
+           3
+ Number of atom in question           1
+ Total number of dihedrals           1
+ Dihedral angles for this atom
+           1
+ Position of the atom in dihedrals
+           1
+ Number of atom in question           2
+ Total number of dihedrals           2
+ Dihedral angles for this atom
+           1           2
+ Position of the atom in dihedrals
+           2           1
+ Number of atom in question           3
+ Total number of dihedrals           3
+ Dihedral angles for this atom
+           1           2           3
+ Position of the atom in dihedrals
+           3           2           1
+ Number of atom in question           4
+ Total number of dihedrals           4
+ Dihedral angles for this atom
+           1           2           3           4
+ Position of the atom in dihedrals
+           4           3           2           1
+ Number of atom in question           5
+ Total number of dihedrals           4
+ Dihedral angles for this atom
+           2           3           4           5
+ Position of the atom in dihedrals
+           4           3           2           1
+ Number of atom in question           6
+ Total number of dihedrals           3
+ Dihedral angles for this atom
+           3           4           5
+ Position of the atom in dihedrals
+           4           3           2
+ Number of atom in question           7
+ Total number of dihedrals           2
+ Dihedral angles for this atom
+           4           5
+ Position of the atom in dihedrals
+           4           3
+ Number of atom in question           8
+ Total number of dihedrals           1
+ Dihedral angles for this atom
+           5
+ Position of the atom in dihedrals
+           4
+ information about angle           1
+ the atom that is moved is           1
+ atoms that change their position due to this move
+           1
+ the atoms is moved is           3
+ atoms that change their position due to this move
+           3           4           5           6           7           8
+ information about angle           2
+ the atom that is moved is           2
+ atoms that change their position due to this move
+           2           1
+ the atoms is moved is           4
+ atoms that change their position due to this move
+           4           5           6           7           8
+ information about angle           3
+ the atom that is moved is           3
+ atoms that change their position due to this move
+           3           2           1
+ the atoms is moved is           5
+ atoms that change their position due to this move
+           5           6           7           8
+ information about angle           4
+ the atom that is moved is           4
+ atoms that change their position due to this move
+           4           3           2           1
+ the atoms is moved is           6
+ atoms that change their position due to this move
+           6           7           8
+ information about angle           5
+ the atom that is moved is           5
+ atoms that change their position due to this move
+           5           4           3           2           1
+ the atoms is moved is           7
+ atoms that change their position due to this move
+           7           8
+ information about angle           6
+ the atom that is moved is           6
+ atoms that change their position due to this move
+           6           5           4           3           2           1
+ the atoms is moved is           8
+ atoms that change their position due to this move
+           8
+ 
+ checking for dihedral_atoms_to_place
+ dihedral, atom1, atom2, atom3, atom4
+           1           1           2           3           4
+ 
+ natoms to place if atom 1 moves and the moving atom numbers
+           1           1           0           0           0           0
+           0           0           0
+ natoms to place if atom 4 moves and the moving atom numbers
+           5           4           5           6           7           8
+           0           0           0
+ 
+ dihedral, atom1, atom2, atom3, atom4
+           2           2           3           4           5
+ 
+ natoms to place if atom 1 moves and the moving atom numbers
+           2           2           1           0           0           0
+           0           0           0
+ natoms to place if atom 4 moves and the moving atom numbers
+           4           5           6           7           8           0
+           0           0           0
+ 
+ dihedral, atom1, atom2, atom3, atom4
+           3           3           4           5           6
+ 
+ natoms to place if atom 1 moves and the moving atom numbers
+           3           3           2           1           0           0
+           0           0           0
+ natoms to place if atom 4 moves and the moving atom numbers
+           3           6           7           8           0           0
+           0           0           0
+ 
+ dihedral, atom1, atom2, atom3, atom4
+           4           4           5           6           7
+ 
+ natoms to place if atom 1 moves and the moving atom numbers
+           4           4           3           2           1           0
+           0           0           0
+ natoms to place if atom 4 moves and the moving atom numbers
+           2           7           8           0           0           0
+           0           0           0
+ 
+ dihedral, atom1, atom2, atom3, atom4
+           5           5           6           7           8
+ 
+ natoms to place if atom 1 moves and the moving atom numbers
+           5           5           4           3           2           1
+           0           0           0
+ natoms to place if atom 4 moves and the moving atom numbers
+           1           8           0           0           0           0
+           0           0           0
+ 
+ 
+ ******Initial Coordinate Info **********
+ 
+ Initial configuration will be generated
+  Starting number of molecules of species   1   in box   1  is       1
+ 
+Total number of molecules of species   1   present initially is       1
+ 
+ *****Finished reading initial coordinate info *****
+ 
+ ****** Reading Run_Type Information ******
+ 
+ The input run type is Equilibration
+ Update frequency is          600
+ 
+ ******* Finished reading run type information ******
+starting type make_config                                                                                                             
+
+ ******** Charge Neutrality Check *********#
+Species            1    has charge                0.00000000
+Box                1    has charge                0.00000000
+ 
+ #********Charge Neutrality Check*********#
+ *****************************************
+  Starting energy components for box   1
+  Atomic units-Extensive
+ *****************************************
+ 
+Total system energy is                   2918.738
+Intra molecular energy is                3056.993
+Bond energy is                              0.000
+Bond angle energy is                     1102.948
+Dihedral angle energy is                 1954.045
+Improper angle energy is                    0.000
+Intra nonbond vdw is                     -137.648
+Intra nonbond elec is                       0.000
+Inter molecule vdw is                       0.000
+Long range correction is                   -0.608
+Inter molecule q is                         0.000
+Reciprocal ewald is                         0.000
+Self ewald is                               0.000
+ *******************************************
+ 
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 :  1.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 :  2.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 :  4.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 :  8.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ 
+Success ratio, translation of species   1 in box 1 :  1.00000
+Maximum width, translation of species   1 in box 1 : 15.00000
+ *********** Ending simulation *****************
+ 
+ 
+ 
+ *****************************************
+    Ending energy components for box   1
+  Atomic units - Extensive
+ *****************************************
+ 
+Total system energy is                   3391.393
+Intra molecular energy is                3610.844
+Bond energy is                              0.000
+Angle energy is                           801.816
+Dihedral energy is                       2809.028
+Improper energy is                          0.000
+Intra nonbond vdw is                     -218.843
+Intra nonbond elec is                       0.000
+Inter molecule vdw is                       0.000
+Long range correction is                   -0.608
+Inter molecule q is                         0.000
+Reciprocal ewald is                         0.000
+Self ewald is                               0.000
+ **************************************************
+ 
+ 
+ *****************************************
+ Components of energy from total energy call for box   1
+ Atomic units-Extensive
+ *****************************************
+ 
+Total system energy is                   3391.393
+Intra molecular energy is                3610.844
+Bond energy is                              0.000
+Angle energy is                           801.816
+Dihedral energy is                       2809.028
+Improper energy is                          0.000
+Intra nonbond vdw is                     -218.843
+Intra nonbond elec is                       0.000
+Inter molecule vdw is                       0.000
+Long range correction is                   -0.608
+Inter molecule q is                         0.000
+Reciprocal ewald is                         0.000
+Self ewald is                               0.000
+ 
+ 
+ 
+ Writing information for box   1
+  *********************************************
+ 
+ 
+  ******************************************
+  Writing information for species           1
+ 
+                Move      Trials     Success   % Success
+           Translate      700019      700019      100.00
+ **************************************
+ 
+ Writing information about fragments
+ 
+ *************************************
+Writing information for species   1
+  Fragment      Trials     Success   % Success
+         1       60393       59552       98.61
+         2       59970       55224       92.09
+         3       59795       53465       89.41
+         4       60205       52775       87.66
+         5       59618       51292       86.03
+ *********************************
+ *********** Ending simulation *****************
+ 
+ 
+ 
+ Writing information about subroutine times
+ 
+ ******************************************
+ 
+ Translation time =           13.877936 secs.
+ Regrowth time =              53.054377 secs.
+ ********************************************
+ 
+ 
+ Program execution time
+         0      Years
+         0     Months
+         0       Days
+         0      Hours
+         8    Minutes
+        25    Seconds
+       475         ms

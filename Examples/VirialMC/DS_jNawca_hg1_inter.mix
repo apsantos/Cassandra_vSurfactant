@@ -1,0 +1,27 @@
+# Atom_Types
+ ME 1
+ C  2
+ C  2
+ C  2
+ C  2
+ C  2
+ C  2
+ C  2
+ C  2
+ C  2
+ C  2
+ HG 3
+# Done_Atom_Types
+
+# Mixing_Values
+  1  1 LJ 480.000 3.95
+  1  2 LJ  49.000 3.95
+  1  3 LJ 245.000 4.690
+  2  2 LJ  49.000 3.95
+  2  3 LJ 245.000 4.690 
+  3  3 LJ 123.900 5.43 HYDR 76.00 7.80 0.47
+
+# VDW_Style
+1 3  cut_shift 5.26435
+2 3  cut_shift 5.26435
+# Done_VDW_Style

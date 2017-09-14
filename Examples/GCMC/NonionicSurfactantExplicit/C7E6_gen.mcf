@@ -1,0 +1,85 @@
+!*******************************************************************************
+!Molecular connectivity file for sdk C7E6.cml
+!*******************************************************************************
+!Atom Format
+!index type element mass charge type parameters
+!type="LJ96", parms=epsilon sigma
+
+# Atom_Info
+9
+1    CT_s1_s1_s1    C    15.035    0.000    LJ96    236.01145    4.585
+2    CM_s1_s1_s1    C    42.081    0.000    LJ96    211.35354    4.506
+3    EO_s1_s1_s1    E    44.053    0.000    LJ96    203.80520    4.250
+4    EO_s1_s1_s1    E    44.053    0.000    LJ96    203.80520    4.250
+5    EO_s1_s1_s1    E    44.053    0.000    LJ96    203.80520    4.250
+6    EO_s1_s1_s1    E    44.053    0.000    LJ96    203.80520    4.250
+7    EO_s1_s1_s1    E    44.053    0.000    LJ96    203.80520    4.250
+8    EO_s1_s1_s1    E    44.053    0.000    LJ96    203.80520    4.250
+9    OA_s1_s1_s1    O    31.034    0.000    LJ96    225.99732    3.713
+
+!Bond Format
+!index i j type parameters
+!type="fixed", parms=bondLength
+
+# Bond_Info
+8
+1     1     2     harmonic     3.65  6199.7039
+2     2     3     harmonic     3.56  7145.7626
+3     3     4     harmonic     3.28  4931.5826
+4     4     5     harmonic     3.28  4931.5826
+5     5     6     harmonic     3.28  4931.5826
+6     6     7     harmonic     3.28  4931.5826
+7     7     8     harmonic     3.28  4931.5826
+8     8     9     harmonic     2.79 15096.6815
+
+!Angle Format
+!index i j k type parameters
+!type="fixed", parms=equilibrium_angle
+!type="harmonic", parms=force_constant equilibrium_angle
+
+# Angle_Info
+7
+1     1     2     3     harmonic   1509.6682 172
+2     2     3     4     harmonic   3220.6254 146
+3     3     4     5     harmonic   3421.9145 132
+4     4     5     6     harmonic   3421.9145 132
+5     5     6     7     harmonic   3421.9145 132
+6     6     7     8     harmonic   3421.9145 132 
+7     7     8     9     harmonic   3019.3363 131
+
+!Dihedral Format
+!index i j k l type parameters
+!type="none"
+!type="CHARMM", parms=a0 a1 delta
+!type="OPLS", parms=c0 c1 c2 c3
+!type="harmonic", parms=force_constant equilibrium_dihedral
+
+# Dihedral_Info
+0
+
+# Improper_Info
+0
+
+!Fragment Format
+!index number_of_atoms_in_fragment branch_point other_atoms
+
+# Fragment_Info
+7
+1    3    2    1    3
+2    3    3    2    4
+3    3    4    3    5
+4    3    5    4    6
+5    3    6    5    7
+6    3    7    6    8
+7    3    8    7    9
+
+# Fragment_Connectivity
+6
+1    1    2
+2    2    3
+3    3    4
+4    4    5
+5    5    6
+6    6    7
+
+END

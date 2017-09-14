@@ -1,0 +1,6 @@
+TO convert a xyz to xml file from cassandra use this command
+
+convert_config.py -i <xyzfilename> -b -<half_box> <half_box> -<half_box> <half_box> -<half_box> <half_box> --mcf <surfactant_mcf> <solvent_mcf>  --xml_d 1 --xml_e 1 --xml_m 1  -o xml --special_pair 1-3 --start_frame 1 --end_frame 1
+
+convert_config.py -i C7E6t303mu3.box1.xyz -b -45.0 45.0 -45.0 45.0 -45.0 45.0 --mcf C7E6.mcf W.mcf  --xml_d 1 --xml_e 1 --xml_m 1  -o xml --special_pair 1-3 --start_frame 1 --end_frame 1
+

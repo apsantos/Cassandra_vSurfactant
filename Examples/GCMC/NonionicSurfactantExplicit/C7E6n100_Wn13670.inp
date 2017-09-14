@@ -1,0 +1,114 @@
+# Run_Name
+C7E6t303mu5
+
+# Sim_Type
+GCMC
+
+# Nbr_Species
+2
+
+# VDW_Style
+LJ96 cut_shift 15.0
+LJ96 cut_shift 15.0
+
+# Charge_Style
+NONE
+NONE
+
+# Intra_Scaling
+table C7E6_intra.mix
+
+# Mixing_Rule
+table C7E6W.mix
+
+# Seed_Info
+1219130951 1219130952
+
+# Rcutoff_Low
+1.0
+
+# Pair_Energy
+FALSE
+
+# Molecule_Files
+C7E6.mcf 100
+W.mcf 14000
+
+# Box_Info
+1
+CUBIC
+109.1 109.1 109.1
+
+# Temperature_Info
+303.0
+
+# Chemical_Potential_Info
+-100.0 100.0
+
+# Move_Probability_Info
+
+# Prob_Translation
+0.0
+1.0 6.0
+
+# Prob_Regrowth
+0.0
+1.0 0
+
+# Prob_Rotation
+0.0
+10 0
+
+# Prob_Insertion
+0.5
+insertion method
+none
+insertion method
+reservoir
+
+# Prob_Deletion
+0.5
+
+# Done_Probability_Info
+
+# Start_Type
+make_config
+100
+13690
+
+# Run_Type
+Production   200  
+
+# Average_Info
+1
+
+# Frequency_Info
+freq_type    none
+Nthermofreq  10
+Ncoordfreq   100
+MCsteps      50000
+# Done_Frequency_Info
+
+# Property_Info 1 
+Nmols
+Energy_Total
+Energy_LJ
+Energy_Intra
+
+# Fragment_Files
+C7E6_303/frag1/frag1.dat  1
+C7E6_303/frag2/frag2.dat  2
+C7E6_303/frag3/frag3.dat  3
+C7E6_303/frag4/frag4.dat  4
+C7E6_303/frag5/frag5.dat  5
+C7E6_303/frag6/frag6.dat  6
+C7E6_303/frag7/frag7.dat  7
+W.dat  8
+
+# CBMC_Info
+kappa_ins 36
+kappa_rot 15
+kappa_dih 15
+rcut_cbmc 15 0
+ 
+END

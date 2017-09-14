@@ -1,0 +1,365 @@
+\documentclass[12pt,twoside]{article}
+%\usepackage[usenames,dvipsnames,svgnames,table]{xcolor,graphicx}
+% Additional math typesetting, symbols, and image tools
+\usepackage{amsmath,amssymb,xcolor,graphicx,float,enumitem}  
+\usepackage[superscript]{cite}
+\usepackage[pdftex]{hyperref}
+%\usepackage[left=1.25in,
+%right=0.75in,
+%top=1.1in,
+%bottom=0.75in]{geometry}
+\usepackage[left=0.9in,
+right=0.9in,
+top=1in,
+bottom=0.9in]{geometry}
+\linespread{1.0}
+\setcounter{tocdepth}{2}
+\hypersetup{colorlinks,%
+	citecolor=black,%
+	filecolor=black,%
+	linkcolor=black,%
+	urlcolor=black,%
+	pdftex}
+\title{Cassandra vSurfactant + PostProcessing Documentation}
+\date{\today}
+\author{Andrew P. Santos~(apsantos@princeton.edu)}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\tableofcontents
+\newpage
+\section{Cassandra vSurfactant User Manual}
+
+\subsection{Pair Insertions}
+\begin{verbatim}
+# Prob_Insertion
+Real(1)
+insertion method
+reservoir pair
+Integer(i,1) Real(i,2)
+
+# Chemical_Potential_Info
+Real(1) ...
+pair
+Integer(1) Integer(2) Real(3)
+.
+.
+.
+\end{verbatim}
+Defines pairs of species which should be inserted.
+\newline\noindent For example,
+\begin{verbatim}
+# Chemical_Potential_Info
+-103.5 -103.5 -103.5
+pair
+1 2 -103.5
+
+# Prob_Insertion
+0.225
+insertion method
+reservoir pair
+2 1.0
+insertion method
+reservoir pair
+1 1.0
+insertion method
+none
+\end{verbatim}
+Would insert pairs of species 1 and 2 (for example an ionic surfactant and its coion) with a chemical potential of -103.5 kJ/mol 100 \% of the insertion moves and would not insert the 3rd species (for example water), regardless of the value reported.
+\newline\noindent Another example,
+\begin{verbatim}
+# Chemical_Potential_Info
+-103.5 -103.5 -103.5 -103.5
+pair
+1 2 -103.5
+2 3 -30.5
+
+# Prob_Insertion
+0.225
+insertion method
+reservoir pair
+2 0.5
+insertion method
+reservoir pair
+1 0.5
+3 0.5
+insertion method
+none
+\end{verbatim}
+Would insert pairs of species 1 and 2 (for example an ionic surfactant and its counterion) with a chemical potential of -103.5 kJ/mol 50 \% of the insertion moves, species 2 and 3 (for example the counterion and its coion) 50 \% of the insertion moves and would not insert the 4th species (for example water), regardless of the value reported.
+\newline\noindent Another example,
+\begin{verbatim}
+# Chemical_Potential_Info
+-103.5 -103.5 -103.5 -103.5
+pair
+1 2 -103.5
+2 3 -30.5
+
+# Prob_Insertion
+0.225
+insertion method
+reservoir pair
+2 0.4
+insertion method
+reservoir pair
+1 0.4
+3 0.4
+insertion method
+reservoir
+\end{verbatim}
+Would insert pairs of species 1 and 2 (for example an ionic surfactant and its counterion) with a chemical potential of -103.5 kJ/mol 40 \% of the insertion moves, species 2 and 3 (for example the counterion and its coion) 40 \% of the insertion moves and would insert the 4th species (for example water) 20 \% of the insertion moves, regardless of the value reported.
+
+\subsection{Interaction tables}
+\begin{verbatim}
+# Intra_Scaling
+table Character(i,2)
+
+# Mixing_Rule
+table Character(1)
+\end{verbatim}
+Gives Information on how inter-molecular and intra-molecular interactions are defined by the user in tables.  \texttt{Character(i,2)} gives the intra-molecular interactions for every species in the simulation, while \texttt{Character(1)} under  \texttt{\# Mixing\_Rule} tells the inter-molecular between all species.
+\newline\noindent For example,
+\begin{verbatim}
+# Intra_Scaling
+table DS.mix
+table Na.mix
+# Mixing_Rule
+table NaDS.mix
+\end{verbatim}
+The format for the intra-molecular table is as follows":
+\begin{verbatim}
+# Atom_Types
+Character(i,1) Integer(i)
+# Done_Atom_Types
+
+# Mixing_Values
+Integer(i,1)  Integer(i,2) {Character(i,3) Real(i,4) ...} ...
+# Done_Mixing_Values
+
+# VDW_Style
+Integer(i,1)  Integer(i,2) Character(i,3) Real(i,4)
+# Done_VDW_Style
+\end{verbatim}
+Under \texttt{\# Atom\_Types} \texttt{Character(i,1)} is the atom name, as it appears in the corresponding mcf, and  \texttt{Integer(i)} is the atom type.  Values are assumed to be the same as those for inter-molecular interactions with zero 1-4 interactions.  If a pair within a species molecule is different define so in \texttt{\# Mixing\_Values}, where \texttt{Integer(i,1)} is the atom type one and \texttt{Integer(i,2)} is the other atom type, \texttt{Character(i,3)} is the interaction type name and \texttt{Integer(i,3)} and beyond are the relevant parameters for the interaction type.  Multiple interaction types can be defined in one line. \texttt{\# VDW\_Styles} is optional and tells if the style, and cutoff values are different for different pairs.
+\newline\noindent The format for the inter-molecular table is essentially the same.
+
+\subsection{Added property output}
+\begin{verbatim}
+# Property_Info 1
+Noligomers
+NclustersOlig
+NclustersMicelle
+MicelleSize
+Degree_Association
+Excluded_Volume
+\end{verbatim}
+These are new keywords for properties written to ``prp''. 
+\begin{itemize}
+	\item \texttt{Noligomers} is the number of molecules in oligomeric clusters.
+	\item \texttt{NclustersOlig}* is the number of oligomeric clusters.
+	\item \texttt{NclustersMicelle}* is the number of micellar clusters (sizes greater than or equal to \texttt{Oligomer\_cutoff}).
+	\item \texttt{MicelleSize}* is the average size of the micelles at that time.
+	\item \texttt{Degree\_Association}* is the number of associated species (usually ions) that are bound to the clustered species (usually surfactants).
+	\item \texttt{Excluded\_Volume}* Excluded volume.
+\end{itemize}
+* - only available in PostProcessing
+
+\subsection{Clustering}
+\begin{verbatim}
+# Clustering
+count no_criteria
+type no_type_parameters
+type_parameters
+move  no_criteria
+type no_type_parameters
+type_parameters
+exvol  no_criteria
+type no_type_parameters
+type_parameters
+\end{verbatim}
+These keywords giver information on how to determine if clustering is occurring.
+\newline\noindent Form *xvg
+r example,
+\begin{verbatim}
+# Clustering
+count 1
+skh
+5.0 6.25 7.0 ME CC
+0.0 0.0 0.0 Na
+0 0 0 ME CC
+move 0
+skh
+5.0 6.25 7.0 ME CC
+0.0 0.0 0.0 Na
+0 0 0 ME CC
+exvol 0
+\end{verbatim}
+Would have 5000 energy bins with 50.0 kJ/mol spacing.
+\newline\noindent For example,
+\begin{verbatim}
+# Clustering
+count 1
+com
+5.0 0.0 0.0
+0.0 0.0 0.0 
+0 0 0  
+move 1
+com
+5.0 0.0 0.0
+0.0 0.0 0.0 
+0 0 0  
+exvol 1
+com
+0.0 0.0 7.0
+0.0 0.0 0.0
+7.0 0.0 0.0  
+\end{verbatim}
+Would have 5000 energy bins with 50.0 kJ/mol spacing.
+\newline\noindent For example,
+\begin{verbatim}
+# Clustering
+count 1
+type 1
+1 ME 1 ME 12
+move 0
+exvol 1
+type 1
+1 ME 2 ME 12
+\end{verbatim}
+Would have 5000 energy bins with 50.0 kJ/mol spacing.
+
+\subsection{Oligomer cut-off}
+\begin{verbatim}
+# Oligomer_Cutoff
+Integer(1) Integer(2) ...
+\end{verbatim}
+This keyword lets Cassandra know to cutoff value for cluster size which determines a larger (micellar) or small (oligomeric) cluster for each species.  If you are not interested in studying the cluster behavior for a certain species set the value to 0.  If you want to study all cluster sizes set it equal to 1.  This value typically corresponds to the low-cluster-size local minimum in the cluster size distribution.
+\newline\noindent For example,
+\begin{verbatim}
+# Oligomer_Cutoff
+14 0 14
+\end{verbatim}
+
+\subsection{Counterion Degree of Association}
+\begin{verbatim}
+# Degree_Association
+Real(1)
+Character(i) 
+\end{verbatim}
+This keyword lets Cassandra know to calculate and update the degree of counterion association, which is $\alpha = \Sigma_{i}^{N_{\text{clusters}}}\frac{N_{\text{ion}}^{\text{associated}}}{M(i)}$ and is updated to the prp file.  \texttt{Real(1)} is the distance criteria and \texttt{Character(i)} is the atom name for each species which you want to determine is associated, use ``NONE'' is a species should be excluded.  Cassandra assumes that un-clustered species, as defined in \texttt{\# Clustering\_Info} is the associated species.
+\newline\noindent For example,
+\begin{verbatim}
+# Degree_Association
+4.3
+HG  
+Na   
+NONE
+\end{verbatim}
+Would insert species 3 of 3 into snapshots with an energy criteria of 1000000 kJ/mol.
+
+\subsection{Histogram file writing}
+\begin{verbatim}
+# Histogram_Info
+Integer(1) Real(2)
+\end{verbatim}
+This keyword lets Cassandra know to calculate and update the histogram of number of particles and energies with \texttt{Integer(1)} energy bins that are \texttt{Real(2)} kJ/mol wide. As of now, Cassandra assumes that there is only one chemical potential (one insertable component or pair insertionable). The generated file is designed to be interfaced with the \texttt{entropy} program suite. For two chemical potential systems one can easily modify the ``prp'' file with the $N_i$ and $U$ data.
+\newline\noindent For example,
+\begin{verbatim}
+# Histogram_Info
+5000 50.0
+\end{verbatim}
+Would have 5000 energy bins with 50.0 kJ/mol spacing.
+
+\section{Cassandra PostProcessing}
+
+\subsection{Reading configurations}
+\subsubsection{xyz}
+\begin{verbatim}
+# Start_Type
+read_xyz
+xyz_file
+\end{verbatim}
+Read xyz file written from Cassandra with the following format.
+\begin{verbatim}
+<no_atoms>
+
+<name> <x_pos> <y_pos> <z_pos> <species> <molecule>
+.
+.
+.
+\end{verbatim}
+which can be post-processed if written from a program other than this version of Cassandra.
+\newline\noindent For example,
+\begin{verbatim}
+# Start_Type
+read_xyz
+prod2_pp.xyz
+\end{verbatim}
+
+\subsubsection{dcd}
+\begin{verbatim}
+# Start_Type
+read_dcd
+xyz_file dcd_file
+\end{verbatim}
+Read dcd written from hoomd or LAMMPS.
+
+\subsubsection{xtc}
+\begin{verbatim}
+# Start_Type
+read_xtc
+gro_file ndx_file xtc_file
+\end{verbatim}
+Read Gromacs xtc files. Library installation is necessary.  See Gromacs documentation for descriptions of the different files.
+\newline\noindent For example,
+\begin{verbatim}
+# Start_Type
+read_xtc
+prod2.gro n1080_pp.ndx prod2.xtc
+\end{verbatim}
+\subsection{Excluded Volume}
+\begin{verbatim}
+# Excluded_Volume
+Integer(1) Integer(2) ...
+method method_parameter
+\end{verbatim}
+This keyword lets Cassandra know to calculate and update the excluded volume by clusters by inserting a species, that which corresponds to the non-zero \texttt{Integer} value, \texttt{Integer} number of times. The ratio of insertions which are ``excluded'' is written out to the ``prp'' file.  An insertion is included if one of the following occurs: (i) an insertion becomes part of a cluster, as defined in the \texttt{\# Clustering\_Info} section, (ii) there is an overlap based on \texttt{\# Rcutoff\_Low} and (iii), if specified, the energy change of the insertion exceeds that which is specified.
+\newline\noindent For example,
+\begin{verbatim}
+# Excluded_Volume
+0 0 400 
+energy 1000000
+\end{verbatim}
+would insert species 3 of 3 with 400 different configurations using the fragment library into snapshots with an energy criteria of 1000000 kJ/mol. Or alternatively,
+\begin{verbatim}
+# Excluded_Volume
+0 0 400 
+distance
+\end{verbatim}
+would insert species 3 of 3 with 400 different configurations using the fragment library into snapshots with a distance criteria using \texttt{\# Rcutoff\_Low}.
+
+\section{Cassandra virial\_MC}
+The same as the rest of the simulations, but with this information
+\subsection{2nd virial calculation}
+\begin{verbatim}
+# Virial_Info
+Real(1) Real(2) Real(3)
+Integer(1) Integer(2) 
+Integer(1,1) Integer(2,2)
+Integer(1,1) Integer(2,2)
+\end{verbatim}
+The first line tells the program to calculate the energy at distances ranging from \texttt{Real(1)} to \texttt{Real(3)} with spacings of \texttt{Real(3)}.  The second line tells which 2 species to calculate, can be 1 and 1.  The 3rd line tells the number of conformations, from the fragment library of the first and second species should be used at each separation. The final line tells the number of rotations of those conformations to do at each separation.
+\newline\noindent For example,
+\begin{verbatim}
+# Virial_Info
+1 0.1 40
+1 2
+10 20
+30 40
+\end{verbatim}
+would calculate the 2nd virial coefficient between species 1 and 2 using 10 conformations of species 1, 20 conformations of species 2, 30 rotations of each species 1 conformation and 40 rotations of each species 2 conformation, for separations from 1.0 \AA to 40.0 \AA with 0.1\AA spacings.
+
+\bibliographystyle{ieeetr}
+\bibliography{/home/andrew/Documents/Bibtex/library.bib}
+\end{document}

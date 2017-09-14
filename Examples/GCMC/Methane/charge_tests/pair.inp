@@ -1,0 +1,129 @@
+! This is the input file for a short GCMC simulation of methane at 151.0 K.
+
+# Run_Name
+assympair
+!--------------
+
+# Sim_Type
+NVT_MC
+!---------------
+
+# Nbr_Species
+2
+!----------------
+
+# VDW_Style
+LJ cut_tail 14.0
+!----------------
+
+# Charge_Style
+coul Ewald 14.0 1e-5
+!----------------
+
+# Intra_Scaling
+0.0 0.0 0.0 1.0
+0.0 0.0 0.0 1.0
+0.0 0.0 0.0 1.0
+0.0 0.0 0.0 1.0
+!------------------
+
+# Mixing_Rule
+LB
+!----------------
+
+# Seed_Info
+1219130951 1219130952
+!-------------------
+
+# Rcutoff_Low
+1.0
+!----------------
+
+# Pair_Energy
+TRUE
+!-----------
+
+# Molecule_Files
+pos.mcf 900
+neg.mcf 900
+!------------------------
+
+# Box_Info
+1
+CUBIC
+31.10743 31.10743 31.10743
+!-------------------------
+
+# Temperature_Info
+296.0
+!------------------
+
+# Chemical_Potential_Info
+-30.0 -30.0
+!------------------------
+
+# Move_Probability_Info
+
+# Prob_Translation
+1.0
+0.5 0.5
+
+# Prob_Insertion
+0.0
+insertion method
+reservoir 
+insertion method
+reservoir
+
+# Prob_Deletion
+0.0
+
+# Done_Probability_Info
+!----------------------
+
+# Start_Type
+make_config
+40
+20
+!------------------
+
+# Run_Type
+Equilibration   600  
+!------------------
+
+# Average_Info
+1
+!-------------
+
+# Frequency_Info
+freq_type    none
+Nthermofreq  1
+Ncoordfreq   1000
+MCsteps      1000
+# Done_Frequency_Info
+!--------------------
+
+# Property_Info 1 
+Energy_Total
+Energy_LJ
+Energy_Elec
+Energy_Elec_Self
+Energy_Elec_Reciprocal
+Nmols
+
+!----------------
+
+# Fragment_Files
+pos.dat 1
+neg.dat 2
+!---------------
+
+# CBMC_Info
+kappa_ins 12
+kappa_rot 0
+kappa_dih 0
+rcut_cbmc 6.5 6.5
+!------------
+
+
+END

@@ -1,0 +1,115 @@
+# Run_Name
+C7E6_303
+!--------------
+
+# Sim_Type
+NVT
+!---------------
+
+# Nbr_Species
+1
+!----------------
+
+# VDW_Style
+LJ96 cut_tail 15.0
+!----------------
+
+# Charge_Style
+NONE
+!----------------
+
+# Intra_Scaling
+0 0 0 1 
+0 0 0 1
+!------------------
+
+# Mixing_Rule
+LB
+!----------------
+
+# Seed_Info
+1219130951 1219130952
+!-------------------
+
+# Rcutoff_Low
+1.0
+!----------------
+
+# Pair_Energy
+TRUE
+!-----------
+
+# Molecule_Files
+C7E6.mcf 30
+!------------------------
+
+# Box_Info
+1
+CUBIC
+40.0 40.0 40.0
+!-------------------------
+
+# Temperature_Info
+303.0
+!------------------
+
+
+# Move_Probability_Info
+
+# Prob_Translation
+0.35
+10
+
+# Prob_Regrowth
+0.10
+1.0
+
+# Prob_Rotation
+0.10
+10 
+
+# Done_Probability_Info
+!----------------------
+
+# Start_Type
+make_config
+30
+!------------------
+
+# Run_Type
+Production   200  
+!------------------
+
+# Average_Info
+1
+!-------------
+
+# Frequency_Info
+freq_type    none
+Nthermofreq  10
+Ncoordfreq   10
+MCsteps      100
+# Done_Frequency_Info
+!--------------------
+
+# Property_Info 1 
+Nmols
+!----------------
+
+# Fragment_Files
+species1/frag1/frag1.dat  1
+species1/frag2/frag2.dat  2
+species1/frag3/frag3.dat  3
+species1/frag4/frag4.dat  4
+species1/frag5/frag5.dat  5
+species1/frag6/frag6.dat  6
+species1/frag7/frag7.dat  7
+!---------------------------------------------------------one line per fragment
+
+# CBMC_Info
+kappa_ins 36
+kappa_rot 0
+kappa_dih 15
+rcut_cbmc 15
+ 
+END
