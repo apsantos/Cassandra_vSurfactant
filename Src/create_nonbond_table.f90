@@ -64,7 +64,7 @@
 
     !custom mixing rules
     INTEGER :: ierr,line_nbr,nbr_entries, is_1, is_2, ia_1, ia_2, itype_custom, jtype_custom
-    CHARACTER(120) :: line_string, line_array(80)
+    CHARACTER(240) :: line_string, line_array(80)
 
 
 !********************************************************************************
@@ -115,7 +115,7 @@
     rcut_vdw_mix(:,:) = rcut_vdw(1)
     ALLOCATE(rcut_vdwsq_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     rcut_vdwsq_mix(:,:) = 0.0_DP
-    ALLOCATE(int_vdw_style_mix(nbr_atomtypes,nbr_atomtypes,14), Stat=AllocateStatus)
+    ALLOCATE(int_vdw_style_mix(nbr_atomtypes,nbr_atomtypes,15), Stat=AllocateStatus)
     int_vdw_style_mix(:,:,:) = .false.
     int_vdw_style_mix(:,:,int_vdw_style(1)) = .true.
     ALLOCATE(int_vdw_sum_style_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
@@ -461,11 +461,9 @@ SUBROUTINE Read_Nonbond_Table
     !custom mixing rules
     INTEGER :: ierr,nbr_entries
     INTEGER :: i_line, n_params, cur_line
-    CHARACTER(120) :: line_string, line_array(80)
-    CHARACTER(120) :: temp_name
+    CHARACTER(240) :: line_string, line_array(80)
+    CHARACTER(240) :: temp_name, pot_type
     INTEGER :: temp_type_list(30), temp_type, ncheck
-
-    CHARACTER(120) :: pot_type
   !********************************************************************************
 
 
@@ -555,7 +553,7 @@ SUBROUTINE Read_Nonbond_Table
     rcut_vdw_mix(:,:) = rcut_vdw(1)
     ALLOCATE(rcut_vdwsq_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
     rcut_vdwsq_mix(:,:) = 0.0_DP
-    ALLOCATE(int_vdw_style_mix(nbr_atomtypes,nbr_atomtypes,14), Stat=AllocateStatus)
+    ALLOCATE(int_vdw_style_mix(nbr_atomtypes,nbr_atomtypes,15), Stat=AllocateStatus)
     int_vdw_style_mix(:,:,:) = .false.
     int_vdw_style_mix(:,:,int_vdw_style(1)) = .true.
     ALLOCATE(int_vdw_sum_style_mix(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
@@ -710,7 +708,7 @@ SUBROUTINE Read_Nonbond_Table
     WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8 9 10 11 12 13'
     DO itype = 1, nbr_atomtypes
         DO jtype = itype, nbr_atomtypes
-            WRITE(logunit,'(2I3,11f11.4)') &
+            WRITE(logunit,'(2I3,13f11.4)') &
                  itype, jtype, &
                  vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype), &
                  vdw_param3_table(itype,jtype), vdw_param4_table(itype,jtype), &

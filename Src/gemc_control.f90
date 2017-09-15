@@ -74,6 +74,9 @@ SUBROUTINE GEMC_Control
 
   !END IF
 
+  ! Obtain the temperature of the simulation
+  CALL Get_Temperature_Info
+
   ! Determine how intramoleclar scaling of vdw and coul interactions handled.
   CALL Get_Intra_Scaling
 
@@ -86,9 +89,6 @@ SUBROUTINE GEMC_Control
   ! Seed info
   CALL Get_Seed_Info
  
-  ! Obtain the temperature of the simulation
-  CALL Get_Temperature_Info
-
   IF (sim_type == 'GEMC_NPT') THEN
      ! Obtain the pressure of the simulation box
      CALL Get_Pressure_Info

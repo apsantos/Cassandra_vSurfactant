@@ -66,6 +66,9 @@ SUBROUTINE virialMC_Control
   ! must be called before this routine.  
   CALL Get_Molecule_Info
 
+  ! Obtain the temperature of the simulation
+  CALL Get_Temperature_Info
+
   ! Determine how intramoleclar scaling of vdw and coul interactions handled.
   CALL Get_Intra_Scaling
 
@@ -77,9 +80,6 @@ SUBROUTINE virialMC_Control
 
   ! Seed info
   CALL Get_Seed_Info
-
-  ! Obtain the temperature of the simulation
-  CALL Get_Temperature_Info
 
   ! Read in virial calculation info
   CALL Get_Virial_Info
