@@ -129,9 +129,11 @@ Makefile.gfortran.openMP ----> cassandra_surfactant_gfortran_openMP.exe
 Post-processing
 Makefile.pp.intel ----> pp_cassandra_intel.exe
 Makefile.pp.gfortran ----> pp_cassandra_gfortran.exe
---required libraries--
-download the most recent version of xdr directory
-edit configure 'ac_default_prefix' variable
+    --required libraries--
+    download the most recent version of xdr directory 
+    (http://www.gromacs.org/Developer_Zone/Programming_Guide/XTC_Library)
+    edit configure 'ac_default_prefix' variable to be
+    in a home directory if being used on a cluster.
 
 Before running the openMP enabled executable, the environment variable
 OMP_NUM_THREADS will have to be set to the number of cores you want to
@@ -179,7 +181,7 @@ simulation. For this, the input file name is specified after the cassandra execu
 command. For example, if you wish to run a simulation using the input
 file 'npt.inp', invoke the command 
 
->./cassandra_intel.exe npt.inp
+>./cassandra_surfactant_intel.exe npt.inp
 
 This assumes that both the executable file and the input file are in
 the current directory. 
