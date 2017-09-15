@@ -59,7 +59,7 @@ INCS =
 #
 #F90FLAGS = -c -check -traceback
 F90FLAGS = -c -O2 #-ipo
-LINKFLAGS = -lxdrfile
+LINKFLAGS = -lxdrfile -L/home/apsantos/packages/xdr/lib
 
 
 ####################################################################
