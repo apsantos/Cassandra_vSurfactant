@@ -648,8 +648,8 @@ SUBROUTINE Read_Nonbond_Table
             ELSEIF (pot_type == 'SCR') THEN
                 int_vdw_style_mix(itype,jtype,vdw_screen) = .true.
                 int_vdw_style_mix(jtype,itype,vdw_screen) = .true.
-                vdw_param12_table(itype,jtype) = SQRT( String_To_Double(line_array(i+1)) / box_list(1)%volume * &
-                                                       (charge_factor(1) * 8.0 * PI) / box_list(1)%volume / beta(1) )
+                vdw_param12_table(itype,jtype) = SQRT( (String_To_Double(line_array(i+1)) * navogadro / m3_to_A3 ) * &
+                                                       (charge_factor(1) * 8.0 * PI) / beta(1) )
                 vdw_param13_table(itype,jtype) = String_To_Double(line_array(i+2)) 
                 vdw_param12_table(jtype,itype) = vdw_param12_table(itype,jtype)
                 vdw_param13_table(jtype,itype) = vdw_param13_table(itype,jtype)
@@ -708,7 +708,7 @@ SUBROUTINE Read_Nonbond_Table
     WRITE(logunit,'(A)') 'itype jtype vdw_param 1 2 3 4 5 6 7 8 9 10 11 12 13'
     DO itype = 1, nbr_atomtypes
         DO jtype = itype, nbr_atomtypes
-            WRITE(logunit,'(2I3,11f11.4)') &
+            WRITE(logunit,'(2I3,13f13.4)') &
                  itype, jtype, &
                  vdw_param1_table(itype,jtype), vdw_param2_table(itype,jtype), &
                  vdw_param3_table(itype,jtype), vdw_param4_table(itype,jtype), &
