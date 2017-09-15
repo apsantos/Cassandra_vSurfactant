@@ -1,5 +1,5 @@
 # Run_Name
-C7E6t303mu5
+C7E6n100n13690Wt303_micelle
 
 # Sim_Type
 GCMC
@@ -43,20 +43,20 @@ CUBIC
 303.0
 
 # Chemical_Potential_Info
--100.0 100.0
+100.0 100.0
 
 # Move_Probability_Info
 
 # Prob_Translation
-0.0
-1.0 6.0
+0.
+3.0 6.0
 
 # Prob_Regrowth
-0.0
+0.
 1.0 0
 
 # Prob_Rotation
-0.0
+0.
 10 0
 
 # Prob_Insertion
@@ -69,11 +69,27 @@ reservoir
 # Prob_Deletion
 0.5
 
+# Prob_Cluster
+0.
+3 0
+
 # Done_Probability_Info
 
 # Start_Type
-make_config
-100
+checkpoint
+C7E6t303n100nvt3.chk
+
+! Make a configuration with 100 surfactants and 0 W
+! then run nvt with just the surfactants
+! then run GCMC inserting just W
+!make_config
+!100
+!0
+
+! Make a configuration with 100 surfactants and 0 W
+! Make a configuration with 100 surfactants and 13690 W
+!make_config
+!100
 13690
 
 # Run_Type
@@ -84,16 +100,32 @@ Production   200
 
 # Frequency_Info
 freq_type    none
-Nthermofreq  10
+Nthermofreq  100
 Ncoordfreq   100
 MCsteps      50000
 # Done_Frequency_Info
+!Nclusterfreq 10
 
 # Property_Info 1 
 Nmols
 Energy_Total
-Energy_LJ
-Energy_Intra
+
+!Energy_LJ
+!Energy_Intra
+
+!# Clustering_Info
+!move 1
+!com
+!10 0 
+!0 0
+!count 1
+!com
+!10 0 
+!0 0
+!exvol 0
+
+!# Oligomer_Cutoff
+!14 0
 
 # Fragment_Files
 C7E6_303/frag1/frag1.dat  1

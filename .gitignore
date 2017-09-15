@@ -1,6 +1,5 @@
-*.o
-*.mod
-dep*
-*.exe
-dep.mkbkp
-Makefile*
+Src/*.o
+Src/*.mod
+Src/dep*
+Src/*.exe
+Src/dep.mkbkp
