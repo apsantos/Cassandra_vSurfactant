@@ -254,6 +254,10 @@ USE Type_Definitions
   REAL(DP), PARAMETER :: errabs = 0.0_DP
   REAL(DP), PARAMETER :: errel = 1.0E-5_DP
 
+  ! concentration conversion
+  REAL(DP), PARAMETER :: navogadro = 6.022140857E23_DP !mol-1
+  REAL(DP), PARAMETER :: m3_to_A3 = 1.0E30_DP !mol-1
+
   ! Parameter identifying number of trials
 
   INTEGER :: kappa_ins, kappa_rot, kappa_dih

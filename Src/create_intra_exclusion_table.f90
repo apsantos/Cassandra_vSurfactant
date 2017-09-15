@@ -430,7 +430,7 @@ SUBROUTINE Read_Intra_Exclusion_Table(is)
                             ELSEIF (pot_type == 'SCR') THEN
                                 int_in_vdw_style_mix(ia,ja,is,vdw_screen) = .true.
                                 int_in_vdw_style_mix(ja,ia,is,vdw_screen) = .true.
-                                vdw_param12_table(itype,jtype) = &
+                                vdw_in_param12_table(ia,ja,is) = &
                                     SQRT( (String_To_Double(line_array(i+1)) * navogadro / m3_to_A3 ) * &
                                           (charge_factor(1) * 8.0 * PI) / beta(1) )
                                 vdw_in_param13_table(ia,ja,is) = String_To_Double(line_array(i+2)) 
