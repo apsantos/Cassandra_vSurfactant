@@ -3,3 +3,9 @@
 dep*
 *.exe
 dep.mkbkp
+Documentation/*log
+Documentation/*out
+Documentation/*gz
+Documentation/*toc
+Documentation/*aux
+
