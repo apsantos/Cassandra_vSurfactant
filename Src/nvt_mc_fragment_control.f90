@@ -71,6 +71,9 @@ SUBROUTINE NVT_MC_Fragment_Control
 
   CALL Get_Molecule_Info
 
+  ! Temperature
+  CALL Get_Temperature_Info
+
   ! Determine how intramoleclar scaling of vdw and coul interactions handled.
   CALL Get_Intra_Scaling
   
@@ -83,10 +86,6 @@ SUBROUTINE NVT_MC_Fragment_Control
   ! Random initial seed
 
   CALL Get_Seed_Info
-
-  ! Temperature
-
-  CALL Get_Temperature_Info
 
   ! Probabilities
 
