@@ -94,7 +94,7 @@ SUBROUTINE Get_Runname
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
 
 ! Assign the first entry on the line to the name of the run
-        run_name = line_array(1)
+        run_name = TRIM( line_array(1) )
         EXIT
 
      ELSEIF (line_string(1:3) == 'END' .or. line_nbr > 10000) THEN
@@ -147,7 +147,7 @@ SUBROUTINE Get_Nspecies
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
 
 ! Assign the first entry on the line to the number of species.
-        nspecies = String_To_Int(line_array(1))
+        nspecies = String_To_Int(TRIM( line_array(1) ))
 
         EXIT
 
@@ -437,7 +437,7 @@ SUBROUTINE Get_Pair_Style
               ELSE IF (vdw_style(ibox) == 'LJ124') THEN
                  int_vdw_style(ibox) = vdw_lj124
               ELSE IF (vdw_style(ibox) == 'LJ96') THEN
-                int_vdw_style(ibox) = vdw_lj96
+                 int_vdw_style(ibox) = vdw_lj96
               ELSE IF (vdw_style(ibox) == 'YUKAWA') THEN
                  int_vdw_style(ibox) = vdw_yukawa
               ELSE IF (vdw_style(ibox) == 'SW') THEN
@@ -778,14 +778,14 @@ SUBROUTINE Get_Dielectric_Permitivity
            CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
    
    ! Assign the first entry on the line to the mixing rule
-           permitivity_method = line_array(1)
+           permitivity_method = TRIM( line_array(1) )
            
            IF (permitivity_method == 'fixed' .OR. permitivity_method == 'fix') THEN
               WRITE(logunit,'(A)') 'User-defined dielectric permitivity used'
               static_perm(ibox) = String_To_Double(line_array(2))
            ELSEIF (permitivity_method == 'fit') THEN
               WRITE(logunit,'(A)') 'fit dielectric permitivity to exp. data'
-              solvent = line_array(2)
+              solvent = TRIM( line_array(2) )
               CALL Calculate_Permitivity(ibox, solvent, static_perm(ibox))
            ELSE
               err_msg(1) = 'Dielectric Permitivity method not supported'
@@ -946,7 +946,7 @@ SUBROUTINE Get_Molecule_Info
               ! assign the name of the molecular connectivity file, max number
               ! of molecules, and starting number of molecules for this species
 
-              molfile_name(i) = line_array(1)
+              molfile_name(i) = TRIM( line_array(1) )
               nmolecules(i) = String_To_Int(line_array(2))
           
               WRITE(logunit,*)
@@ -1028,7 +1028,7 @@ SUBROUTINE Get_Molecule_Info
                     IF (SUM(mcf_index) .NE. 5) THEN
                        err_msg = ""
                        err_msg(1) =  'Error! In mcf file '
-                       err_msg(2) = molfile_name(i)
+                       err_msg(2) = TRIM( molfile_name(i) )
 
                        IF (mcf_index(1) .NE. 1) err_msg(3) = '   natoms  field not present'
                        IF (mcf_index(2) .NE. 1) err_msg(4) = '   nbonds  field not present'

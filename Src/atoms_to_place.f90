@@ -384,8 +384,8 @@ CONTAINS
     
     IMPLICIT NONE
 
-    INTEGER :: ispecies, idihedrals, atom1, atom2, atom3, atom4, iatoms, i, j
-    INTEGER :: alive_atoms
+    INTEGER :: ispecies, idihedrals, atom1, atom2, atom3, atom4, iatoms
+    INTEGER :: alive_atoms, i, j
     
 
     ALLOCATE(alive(MAXVAL(natoms)))
