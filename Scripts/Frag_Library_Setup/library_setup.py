@@ -398,8 +398,8 @@ for i in xrange(0, nbr_species):
     for j in xrange(0,nbr_atoms[i]):
         atom_type = linecache.getline(mcf_files[i],
                                       line_where_atom_info[i]+2+j).split()[1]
-        if atom_type[-3:] != '_s' + str(i+1):
-            atom_type = atom_type + '_s' + str(i+1)
+        #if atom_type[-3:] != '_s' + str(i+1):
+        #    atom_type = atom_type + '_s' + str(i+1)
         atom_type_list[i][j] = atom_type
         atom_in_ring = linecache.getline(mcf_files[i],
                        line_where_atom_info[i]+2+j).split()[-1] == 'ring'

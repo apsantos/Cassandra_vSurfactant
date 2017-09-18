@@ -512,7 +512,7 @@ SUBROUTINE Participation
 
                  IF (nonbond_list(this_atom,is)%ring_atom) THEN
                     
-                    WRITE(201,'(I5,2X,2(A4,2X),2(F11.7,2X),A6,2X,2(F11.7, 2X),A4)') i, &
+                    WRITE(201,'(I5,2X,2(A5,2X),2(F11.7,2X),A6,2X,2(F11.7, 2X),A4)') i, &
                          nonbond_list(this_atom,is)%atom_name, nonbond_list(this_atom,is)%element, &
                          nonbond_list(this_atom,is)%mass, nonbond_list(this_atom,is)%charge, &
                          nonbond_list(this_atom,is)%vdw_potential_type, &
@@ -520,7 +520,7 @@ SUBROUTINE Participation
                          nonbond_list(this_atom,is)%vdw_param(2), 'ring'
                  ELSE
 
-                    WRITE(201,'(I5,2X,2(A4,2X),2(F11.7,2X),A6,2X,2(F11.7, 2X))')i, &
+                    WRITE(201,'(I5,2X,2(A5,2X),2(F11.7,2X),A6,2X,2(F11.7, 2X))')i, &
                          nonbond_list(this_atom,is)%atom_name, nonbond_list(this_atom,is)%element, &
                          nonbond_list(this_atom,is)%mass, nonbond_list(this_atom,is)%charge, &
                          nonbond_list(this_atom,is)%vdw_potential_type, &
@@ -788,7 +788,7 @@ SUBROUTINE Participation
      END DO
      !Amir To Jindal: It the 3rd # format should be 11.7 otherwise it would generate errors. 10/12/12
 
-100  FORMAT(I5,2X,A4,2X,A4,F11.7,2X,F11.7,2X,A5,2X,F11.7, 2X, F11.7)
+100  FORMAT(I5,2X,A5,2X,A5,F11.7,2X,F11.7,2X,A5,2X,F11.7, 2X, F11.7)
 101  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F12.4,2X,F12.4)
 102  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F8.5)
 103  FORMAT(I5,2X,I5,2X,I5,2X,I5,2X,A9,2X,F10.3,2X,F10.5)
