@@ -537,14 +537,12 @@ CONTAINS
                      a3 * (1.0_DP + DCOS(a4*phi - a5)) + &
                      a6 * (1.0_DP + DCOS(a7*phi - a8)) !+ &
                 !a9 * (1.0_DP + DCOS(a10*phi - a11))
-                
-             
+                             
              ENDIF DihedPot1234
 
              EXIT
              
           ENDIF Dihed1234
-
 
        ELSEIF  (dihedral_part_list(at2,species)%position(i) == 3) THEN
 
@@ -983,7 +981,7 @@ CONTAINS
     REAL(DP) :: rcom,rx,ry,rz
     REAL(DP) :: rcut, rcutsq
     REAL(DP) :: this_lambda_lj
- 
+
     LOGICAL :: get_vdw,get_qq, f_intra_nrg, get_interaction
 
     !----------------------------------------------------------------------------------------------              
@@ -1508,7 +1506,7 @@ CONTAINS
           ! Determine if any atoms of these two molecules will interact
           CALL Check_Interaction(im,is,this_locate,ispecies,get_interaction,rcom,rx,ry,rz) 
 
-          IF (.NOT. get_interaction) CYCLE moleculeLOOP       
+          IF (.NOT. get_interaction) CYCLE moleculeLOOP
           
           CALL Compute_Molecule_Pair_Interaction(im,is,this_locate,ispecies,this_box, &
                Eij_vdw,Eij_qq,my_overlap)
@@ -2032,7 +2030,6 @@ CONTAINS
     END IF QQ_cor_calculation
 
 !FSL QQ Cor end    
-!------------------------------------------------------------------------------
 
   END SUBROUTINE Ewald_Real
 
@@ -3741,9 +3738,11 @@ CONTAINS
        
        IF (is == js .AND. im == jm) THEN
           intra = .true.
+          rcutsq = rcut_in_vdwsq_mix(ia,ja,is)
           i_vdw_sum = int_in_vdw_sum_style_mix(ia,ja,is)
        ELSE
           intra = .false.
+          rcutsq = rcut_vdwsq_mix(itype,jtype)
           i_vdw_sum = int_vdw_sum_style_mix(itype,jtype)
        END IF
 

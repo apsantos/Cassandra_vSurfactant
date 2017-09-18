@@ -68,7 +68,7 @@ CONTAINS
 !********************************************************************************
     INTEGER, INTENT(IN) :: file_number
     INTEGER, INTENT(OUT) :: ierr
-    CHARACTER(240), INTENT(OUT) :: string
+    CHARACTER(charLength), INTENT(OUT) :: string
 !********************************************************************************
 
     READ(file_number,'(A240)',IOSTAT=ierr) string
@@ -86,12 +86,12 @@ CONTAINS
 ! different by detecting a space between entries. It also tests to see if the 
 ! minimum number of entries specified was met or not. If not, and error is returned.
 !********************************************************************************
-    CHARACTER(240), INTENT(OUT) :: line_array(80)
+    CHARACTER(charLength), INTENT(OUT) :: line_array(lineArrayLength)
     INTEGER, INTENT(IN) :: file_number,min_entries,line_nbr
     INTEGER, INTENT(OUT) :: nbr_entries
     INTEGER, INTENT(INOUT) :: ierr
     
-    CHARACTER(240) :: string
+    CHARACTER(charLength) :: string
     INTEGER :: line_position,i
     LOGICAL :: space_start
 !********************************************************************************
@@ -156,7 +156,7 @@ CONTAINS
       IMPLICIT NONE
 
       INTEGER :: prefix_length
-      CHARACTER(240) :: prefix,new_name
+      CHARACTER(charLength) :: prefix,new_name
       CHARACTER(*) :: suffix
 
       prefix_length = LEN_TRIM(prefix)

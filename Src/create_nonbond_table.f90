@@ -60,11 +60,9 @@
     INTEGER :: is, ia, itype, jtype, iset,jset,k
     REAL(DP), DIMENSION(max_nonbond_params) :: temp_param_i, temp_param_j
 
-    ! Steele potential
-
     !custom mixing rules
     INTEGER :: ierr,line_nbr,nbr_entries, is_1, is_2, ia_1, ia_2, itype_custom, jtype_custom
-    CHARACTER(240) :: line_string, line_array(80)
+    CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
 
 !********************************************************************************
@@ -226,6 +224,7 @@
                   vdw_param1_table(itype,jtype) = 0.0_DP
 
                ELSE
+
                   ! Use specified mixing rule
                   ! LB mixing rule: epsij = (epsi * epsj)^(1/2); sigmaij = 1/2 (sigmai + sigmaj)
                   IF (mix_rule == 'LB') &
@@ -456,13 +455,11 @@ SUBROUTINE Read_Nonbond_Table
 
     INTEGER :: i, is, ia, itype, jtype, tot_natoms, iatom
 
-    ! Steele potential
-
     !custom mixing rules
     INTEGER :: ierr,nbr_entries
     INTEGER :: i_line, n_params, cur_line
-    CHARACTER(240) :: line_string, line_array(80)
-    CHARACTER(240) :: temp_name, pot_type
+    CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
+    CHARACTER(charLength) :: temp_name, pot_type
     INTEGER :: temp_type_list(30), temp_type, ncheck
   !********************************************************************************
 

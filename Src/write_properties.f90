@@ -18,7 +18,6 @@
 !   You should have received a copy of the GNU General Public License
 !   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !********************************************************************************
-
 SUBROUTINE Write_Properties(this_mc_step,this_box)
   ! The subroutine will write desired properties to the property files. It is
   ! called by respective drivers such as.
@@ -74,8 +73,8 @@ CONTAINS
     IMPLICIT NONE
 
     INTEGER :: file_number, ii
-    CHARACTER(240) :: prop_to_write
-    CHARACTER(240), ALLOCATABLE :: prop_unit(:)
+    CHARACTER(charLength) :: prop_to_write
+    CHARACTER(charLength), ALLOCATABLE :: prop_unit(:)
 
     IF (block_average) THEN
        WRITE(this_unit,'(A)') '# Block averages'
@@ -140,7 +139,7 @@ CONTAINS
 
     END DO
 
-    prop_to_write = TRIM( prop_output(ii,file_number,this_box) )
+    prop_to_write = prop_output(ii,file_number,this_box)
     
     IF (prop_to_write(1:6) == 'Energy') THEN
        
@@ -165,14 +164,6 @@ CONTAINS
     ELSE IF (prop_to_write(1:6) == 'Degree') THEN
 
        prop_unit(ii) = '(% associated)'
-
-    ELSE IF (prop_to_write(1:6) == 'Virial') THEN
-
-       prop_unit(ii) = '(kJ/mol)-Ext '
-
-    ELSE IF (prop_to_write(1:6) == 'Effect') THEN
-
-       prop_unit(ii) = '(kJ/mol)-Ext '
 
     END IF
     
@@ -428,7 +419,8 @@ CONTAINS
             write_buff(ii+1) = exvol%excluded / REAL(nexvol_freq * exvol%n_iter,DP)
          ELSE
             write_buff(ii+1) = exvol%excluded / REAL(exvol%n_iter)
-            IF (lattice_sim) write_buff(ii+1) = exvol%excluded / REAL(exvol%n_iter * box_list(1)%volume)
+            IF (lattice_sim) write_buff(ii+1) = exvol%excluded / &
+                                                REAL(exvol%n_iter * box_list(1)%volume)
 
          END IF
 
@@ -441,24 +433,6 @@ CONTAINS
          ELSE
             write_buff(ii+1) = alpha%n_assoc / REAL(cluster%n_clusters, DP)
          END IF
-
-!      ELSE IF (prop_written == 'Virial_Coefficient') THEN
-!
-!         IF (block_average) THEN
-!            write_buff(ii+1) = virial%coefficient/REAL(nthermo_freq,DP)
-!         ELSE
-!            write_buff(ii+1) = virial%coefficient
-!         END IF
-!         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
-!
-!      ELSE IF (prop_written == 'Effective_Potential') THEN
-!
-!         IF (block_average) THEN
-!            write_buff(ii+1) = virial%effective/REAL(nthermo_freq,DP)
-!         ELSE
-!            write_buff(ii+1) = virial%effective
-!         END IF
-!         write_buff(ii+1) = write_buff(ii+1) * atomic_to_kJmol
 
       END IF
       
@@ -546,7 +520,7 @@ SUBROUTINE Write_Coords(this_box)
            DO ia = 1, natoms(is)
 !FSL Write is and im values           
               WRITE(M_XYZ_unit,'(A3,F20.13,F20.13,F20.13,I5,I5)') &
-              nonbond_list(ia,is)%element, &
+              nonbond_list(ia,is)%atom_name, & 
                    atom_list(ia,this_im,is)%rxp, &
                    atom_list(ia,this_im,is)%ryp, &
                    atom_list(ia,this_im,is)%rzp, &
@@ -660,7 +634,7 @@ SUBROUTINE Write_Cluster(this_box)
   !
   ! CALLED BY
   !
-  !        pp_driver
+  !        *_driver
   !
   !************************************************************************************
 
@@ -726,9 +700,93 @@ SUBROUTINE Write_Cluster(this_box)
         
      END IF
   END DO
-  CLOSE(unit=cluster_file_unit+this_box)
-
+  CLOSE(unit=box_unit)
+ 
 END SUBROUTINE Write_Cluster
+
+SUBROUTINE Write_Histogram(this_box)
+  !************************************************************************************
+  ! The subroutine writes the cluster vists in the simulation box
+  !
+  ! CALLED BY
+  !
+  !        *_driver
+  !
+  !************************************************************************************
+
+  USE Run_Variables
+  USE File_Names
+  USE Cluster_Routines
+  USE IO_Utilities
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: this_box
+  INTEGER             :: this_unit, is, imol, istart, iend, i, namph, hist_index
+  REAL(DP)            :: e_total
+
+  e_total = energy(this_box)%total
+
+  DO is = 1, nspecies
+
+      namph = nmols(is,this_box)
+      if (energy_hist(is,-2,namph) == energy_hist(is,0,namph)) then    ! first energy observed for this namph - set
+                                                              ! at mid-point
+          energy_hist(is,0,namph) = REAL( energy_hist_width * int(e_total/energy_hist_width - n_energy_hist/2), SP)
+          energy_hist(is,-2,namph) = REAL( energy_hist(is,0,namph) - &
+                                     energy_hist_width * (int((energy_hist(is,0,namph)-e_total)/energy_hist_width)+1), SP)
+          energy_hist(is,-1,namph) = REAL( energy_hist(is,0,namph) + &
+                                     energy_hist_width * (int((-energy_hist(is,0,namph)+e_total)/energy_hist_width)+1), SP)
+      endif
+
+      if (e_total < energy_hist(is,-2,namph)) then    ! found lower value than min
+          energy_hist(is,-2,namph) = REAL( energy_hist(is,0,namph) - &
+                                     energy_hist_width * (int((energy_hist(is,0,namph)-e_total)/energy_hist_width)+1), SP)
+          if (energy_hist(is,-2,namph) <= energy_hist(is,0,namph) + energy_hist_width ) then
+              write (logunit,*) 'Maximum width of energy histograms exceeded (low)'
+              write (logunit,*) 'namph, energy(-2),energy(-1),energy(0),e_total', namph,energy_hist(is,-2:0,namph),e_total
+              stop
+          endif
+
+      else if (e_total > energy_hist(is,-1,namph)) then    ! found greater value than max
+          energy_hist(is,-1,namph) = REAL( energy_hist(is,0,namph) + &
+                                     energy_hist_width * (int((-energy_hist(is,0,namph)+e_total)/energy_hist_width)+1), SP)
+          if (energy_hist(is,-1,namph) > energy_hist(is,0,namph)+energy_hist_width*(n_energy_hist-2)) then
+              write (logunit,*) 'Maximum width of energy histograms exceeded (high)'
+              write (logunit,*) 'namph, energy(-2),energy(-1),energy(0),e_total', namph,energy_hist(is,-2:0,namph),e_total
+              stop
+          endif
+
+      endif
+      ! value ok
+      hist_index = int((e_total-energy_hist(is,0,namph))/energy_hist_width + 0.5) 
+      energy_hist(is,hist_index,namph) = energy_hist(is,hist_index,namph) + 1
+
+      this_unit = histogram_file_unit + is 
+      histogram_file = 'his_'//TRIM(run_name)// '.spec' // TRIM(Int_To_String(is)) //'.dat'
+      OPEN(unit=this_unit, file=histogram_file)
+
+      WRITE (this_unit,'(A)') '    kBT       mu          width     x- y- z-dim  (Atomistic units)'
+      WRITE (this_unit,'(3f11.3,3f8.3)') 1./beta(this_box), species_list(is)%chem_potential, energy_hist_width, &
+                                        box_list(this_box)%length(1,1), &
+                                        box_list(this_box)%length(2,2), &
+                                        box_list(this_box)%length(3,3)
+
+      DO imol = 0, nmolecules(is)
+          istart = INT( (energy_hist(is, -2,imol) - energy_hist(is, 0, imol)) / energy_hist_width )
+          iend   = INT( (energy_hist(is, -1,imol) - energy_hist(is, 0, imol)) / energy_hist_width )
+
+          IF (istart /= iend) THEN 
+              WRITE (this_unit,'(2i7,f13.5)') imol, iend-istart+1, energy_hist(is, -2,imol)
+              WRITE (this_unit,'(8f9.0)') (energy_hist(is, i, imol), i = istart, iend)
+          ENDIF
+
+      END DO
+
+      CLOSE (this_unit) 
+  END DO
+
+END SUBROUTINE Write_Histogram
 
 SUBROUTINE Write_Bond(this_box)
   !************************************************************************************
@@ -888,22 +946,22 @@ SUBROUTINE Write_Angle(this_box)
 END SUBROUTINE Write_Angle
 
 SUBROUTINE Write_Dihedral(this_box)
-  !************************************************************************************
-  ! The subroutine writes the cluster vists in the simulation box
-  !
-  ! CALLED BY
-  !
-  !        pp_driver
-  !
-  !************************************************************************************
-
-  USE Run_Variables
-  USE File_Names
-  USE IO_Utilities
-
-  IMPLICIT NONE
-
-  INTEGER, INTENT(IN) :: this_box
+   !************************************************************************************
+   ! The subroutine writes the cluster vists in the simulation box
+   !
+   ! CALLED BY
+   !
+  !        *_driver
+   !
+   !************************************************************************************
+ 
+   USE Run_Variables
+   USE File_Names
+   USE IO_Utilities
+ 
+   IMPLICIT NONE
+ 
+   INTEGER, INTENT(IN) :: this_box
   INTEGER :: box_unit, is, i, im, id, id_bin
   CHARACTER(5) :: Tatom
   REAL(DP)  :: bin_width
@@ -967,13 +1025,11 @@ SUBROUTINE Write_Dihedral(this_box)
      END DO
      CLOSE(unit=dihedral_file_unit+this_box)
   END DO
-
-
+ 
 END SUBROUTINE Write_Dihedral
 
 SUBROUTINE Write_Atom_Distribution(this_box)
   !************************************************************************************
-  ! The subroutine writes the cluster vists in the simulation box
   !
   ! CALLED BY
   !
@@ -1004,19 +1060,17 @@ SUBROUTINE Write_Atom_Distribution(this_box)
   END DO
   WRITE(box_unit,'(A)', ADVANCE='NO') '# is im js jm distance'
   
-  DO is = 1, nspecies
+   DO is = 1, nspecies
       IF ( .NOT. ANY(measure_mol%a_dist_pairs(:, 1) == is) ) CYCLE
       DO i = 1, nmolecules(is)
           im = locate(i, is)
-        IF (.TRUE.) THEN
-            print*, im, cluster%N(cluster%clabel(im, is))
-        END IF 
           IF( .NOT. molecule_list(im, is)%live ) CYCLE
+
           WRITE(box_unit,'(/)', ADVANCE='NO')
           WRITE(box_unit,'(I3, I6)', ADVANCE='NO') is, im 
           DO iap = 1, measure_mol%natom_dists
-              WRITE(box_unit,'(E13.5)', ADVANCE='NO') ( measure_mol%a_dist_sq(iap, im, is) )**(0.5) / FLOAT(measure_mol%nadistcall)
-              !WRITE(box_unit,'(E11.3)', ADVANCE='NO') ( measure_mol%a_dist_sq(iap, im, is) )**(0.5) / FLOAT(measure_mol%nadistcall * nmolecules(is))
+              WRITE(box_unit,'(E13.5)', ADVANCE='NO') ( measure_mol%a_dist_sq(iap, im, is) )**(0.5) /&
+                                                        FLOAT(measure_mol%nadistcall)
           END DO
      END DO
   END DO
@@ -1025,12 +1079,11 @@ SUBROUTINE Write_Atom_Distribution(this_box)
   a_dist_file = TRIM(run_name) // '.box' // TRIM(Int_To_String(this_box)) // '.atomdist_his'
   box_unit = a_dist_file_unit + this_box
   OPEN(unit=a_dist_file_unit+this_box, file=a_dist_file)
-
+ 
   WRITE(box_unit,'(A)', ADVANCE='NO') '# distance atom pair:'
   DO iap = 1, measure_mol%natom_dists
      WRITE(box_unit,'(I5)', ADVANCE='NO') iap
-  END DO
-     
+  END DO   
   
   bin_width =  measure_mol%a_dist_max_sq / FLOAT(measure_mol%nad_bins)
   DO iap_bin = 1, measure_mol%nad_bins
@@ -1044,4 +1097,3 @@ SUBROUTINE Write_Atom_Distribution(this_box)
   CLOSE(unit=a_dist_file_unit+this_box)
 
 END SUBROUTINE Write_Atom_Distribution
-

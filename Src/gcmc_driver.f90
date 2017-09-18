@@ -214,6 +214,24 @@ SUBROUTINE GCMC_Driver
 
         movetime(imove_regrowth) = movetime(imove_regrowth) + time_e - time_s
 
+     ELSE IF (rand_no <= cut_cluster) THEN
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_s)
+        ELSE
+!$        time_s = omp_get_wtime()
+        END IF
+
+        CALL Translate_Cluster(this_box)
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_e)
+        ELSE
+!$         time_e = omp_get_wtime()
+        END IF
+
+        movetime(imove_translate_cluster) = movetime(imove_translate_cluster) + time_e - time_s
+
      ELSE IF (rand_no <= cut_atom_displacement) THEN
 
         IF(.NOT. openmp_flag) THEN
@@ -264,6 +282,19 @@ SUBROUTINE GCMC_Driver
 
      IF ( .NOT. block_average ) THEN
 
+        IF ( ncluster_freq /= 0 ) THEN
+           IF ( MOD(i,ncluster_freq) == 0 ) THEN
+           
+              DO ibox = 1, nbr_boxes
+              
+                 CALL Find_Clusters(ibox,1)
+                 CALL Write_Cluster(ibox)
+              
+              END DO
+           
+           END IF
+        END IF
+        
         ! instantaneous values are to be printed   
 
         IF ( MOD(i,ncoord_freq) == 0 ) THEN
@@ -289,6 +320,18 @@ SUBROUTINE GCMC_Driver
            END IF
         END IF
         
+        IF ( histogram_freq /= 0 ) THEN
+           IF ( MOD(i,histogram_freq) == 0 ) THEN
+           
+              DO ibox = 1, nbr_boxes
+              
+                 CALL Write_Histogram(ibox)
+              
+              END DO
+           
+           END IF
+        END IF
+
         IF ( nexvol_freq /= 0 ) THEN
            IF ( MOD(i,nexvol_freq) == 0 ) THEN
            
@@ -314,7 +357,7 @@ SUBROUTINE GCMC_Driver
            END DO
            
         END IF
-        
+
      ELSE
         
         DO ibox = 1, nbr_boxes

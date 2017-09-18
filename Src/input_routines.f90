@@ -65,7 +65,7 @@ SUBROUTINE Get_Runname
 !********************************************************************************
 
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   
 !********************************************************************************
@@ -122,7 +122,7 @@ SUBROUTINE Get_Nspecies
 !*************************************************************************************
 
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 !*************************************************************************************
   REWIND(inputunit)
 
@@ -147,7 +147,7 @@ SUBROUTINE Get_Nspecies
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
 
 ! Assign the first entry on the line to the number of species.
-        nspecies = String_To_Int(line_array(1))
+        nspecies = String_To_Int(TRIM( line_array(1) ))
 
         EXIT
 
@@ -289,7 +289,7 @@ SUBROUTINE Get_Sim_Type
 ! ignored.
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
 !********************************************************************************
   REWIND(inputunit)
@@ -385,7 +385,7 @@ SUBROUTINE Get_Pair_Style
 !                 need to be stored. 
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries, iassign, ibox, k
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REAL(DP), ALLOCATABLE :: ewald_tol(:)
 
@@ -447,6 +447,7 @@ SUBROUTINE Get_Pair_Style
               ELSE IF (vdw_style(ibox) == 'SW') THEN
                  int_vdw_style(ibox) = vdw_sw
               END IF
+
               vdw_sum_style(ibox) = TRIM( line_array(2) )
               WRITE(logunit,'(A,2x,A,A,I3)') '   VDW sum style is: ',vdw_sum_style(ibox), 'in box:', ibox
 
@@ -742,8 +743,8 @@ SUBROUTINE Get_Dielectric_Permitivity
   USE Energy_Routines
 
   INTEGER :: ierr, line_nbr, nbr_entries, ibox
-  CHARACTER(240) :: line_string, line_array(80)
-  CHARACTER(120) :: solvent, permitivity_method
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
+  CHARACTER(charLength) :: solvent, permitivity_method
 
 !********************************************************************************
   ! Check to make sure that we have read in number of boxes if not then abort
@@ -825,7 +826,7 @@ SUBROUTINE Get_Mixing_Rules
 ! ignored. If no mixing rule is specified, Lorentz-Berthelot is used as default.
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
 !********************************************************************************
   REWIND(inputunit)
@@ -902,7 +903,7 @@ SUBROUTINE Get_Molecule_Info
 
   INTEGER :: ierr,line_nbr,nbr_entries, i, openstatus, is, max_index
   INTEGER :: mcf_index(5)
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
 !********************************************************************************
 ! determine the type of molecule input and connectivity
@@ -1283,7 +1284,7 @@ SUBROUTINE Get_L_Coul_CBMC(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(molfile_unit)
 
@@ -1343,7 +1344,7 @@ SUBROUTINE Get_Species_Type(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(molfile_unit)
 
@@ -1407,7 +1408,7 @@ SUBROUTINE Get_Insertion_Style(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(molfile_unit)
 
@@ -1490,7 +1491,7 @@ SUBROUTINE Get_Atom_Info(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, ia
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(molfile_unit)
 
@@ -1676,7 +1677,7 @@ SUBROUTINE Get_Bond_Info(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, ib
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(molfile_unit)
 
@@ -1813,7 +1814,7 @@ SUBROUTINE Get_Angle_Info(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, iang, nangles_linear
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(molfile_unit)
 
@@ -1988,7 +1989,7 @@ SUBROUTINE Get_Dihedral_Info(is)
   INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, idihed
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(molfile_unit)
 
@@ -2274,7 +2275,7 @@ SUBROUTINE Get_Improper_Info(is)
 INTEGER, INTENT(IN) :: is
 
   INTEGER :: ierr,line_nbr,nbr_entries, iimprop
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(molfile_unit)
 
@@ -2446,14 +2447,14 @@ SUBROUTINE Get_Fragment_Anchor_Info(is)
 
   INTEGER :: i, line_nbr, ierr, min_entries, nbr_entries, ianchor
 
-  CHARACTER(240) :: line_String,line_array(80)
-
+  CHARACTER(charLength) :: line_String, line_array(lineArrayLength)
 
   line_nbr = 0
   ierr = 0
 
   REWIND(molfile_unit)
 
+  frag_list(:,is)%nanchors = 0
   DO
      line_nbr = line_nbr + 1
      CALL Read_String(molfile_unit,line_string,ierr)
@@ -2548,13 +2549,14 @@ SUBROUTINE Get_Fragment_Info(is)
   INTEGER :: nanchors, iatoms, jatoms, ibonds, iatoms_bond
   INTEGER :: i_atom, j_atom, atom1, atom2
   INTEGER, ALLOCATABLE :: anchor_id(:)
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   frag_list(:,is)%natoms = 0
   line_nbr = 0
   ierr = 0
   REWIND(molfile_unit)
 
+  frag_list(:,is)%natoms = 0
   DO
      line_nbr = line_nbr + 1
      CALL Read_String(molfile_unit,line_string,ierr)
@@ -2720,7 +2722,7 @@ SUBROUTINE Get_Fragment_Info(is)
 
   ! Output info
 
-  frag_list(:,:)%ring = .FALSE.
+  frag_list(:,is)%ring = .FALSE.
 
   DO ifrag = 1,nfragments(is)
      WRITE(logunit,*)
@@ -2762,7 +2764,7 @@ SUBROUTINE Get_Fragment_Connect_Info(is)
 
   INTEGER, INTENT(IN):: is
   INTEGER :: ierr, line_nbr, nbr_entries, ifrag, min_entries, i
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(molfile_unit)
   ierr = 0
@@ -2855,7 +2857,7 @@ SUBROUTINE Get_Fragment_Connectivity_Info(is)
   INTEGER :: ierr, line_nbr, ifrag, nbr_entries, j, ifrag_connect, frag1, frag2
   INTEGER, ALLOCATABLE :: temp_frag(:)
 
-  CHARACTER(240) :: line_string,line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   ierr = 0
   line_nbr = 0
@@ -3011,7 +3013,7 @@ SUBROUTINE Get_Fragment_File_Info(is)
 
   INTEGER :: ierr, line_nbr, i, j, ifrag, nbr_entries, is
   REAL(DP) :: vdw_cutoff, coul_cutoff
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
   CHARACTER(4) :: ring_flag
   
   REWIND(inputunit)
@@ -3022,9 +3024,9 @@ SUBROUTINE Get_Fragment_File_Info(is)
 ! declare that all the fragments are not ring fragments
 ! if it is then, it will be assigned a true flag later on
 
-  frag_list(:,:)%rcut_vdwsq = 0.0_DP
-  frag_list(:,:)%rcut_coulsq = 0.0_DP
-  frag_list(:,:)%alpha_ewald = 0.0_DP
+  frag_list(:,is)%rcut_vdwsq = 0.0_DP
+  frag_list(:,is)%rcut_coulsq = 0.0_DP
+  frag_list(:,is)%alpha_ewald = 0.0_DP
   frag_list(:,is)%type = 0
 
   DO
@@ -3292,10 +3294,9 @@ END SUBROUTINE Get_Fragment_Coords
 SUBROUTINE Get_Intra_Scaling
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries, is
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
   LOGICAL :: intrascaling_set
   LOGICAL :: intrascaling_read(nspecies)
-
 !********************************************************************************
   REWIND(inputunit)
 
@@ -3463,7 +3464,7 @@ SUBROUTINE Get_Box_Info
   ! CUBIC, ORTHOGONAL, CELL_MATRIX
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries,ibox
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
 !********************************************************************************
   REWIND(inputunit)
@@ -3698,7 +3699,7 @@ SUBROUTINE Get_Temperature_Info
   IMPLICIT NONE
 
   INTEGER :: ierr, line_nbr, i, nbr_entries
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   ! Check to make sure that we have read in number of boxes if not then abort
 
@@ -3745,7 +3746,7 @@ SUBROUTINE Get_Temperature_Info
         DO i = 1, nbr_boxes
            temperature(i) = String_To_Double(line_array(i))
            ! compute inverse temperature
-              beta(i) = 1.0_DP / (kboltz * temperature(i))
+           beta(i) = 1.0_DP / (kboltz * temperature(i))
            ! write to the logunit that temperature is specified for box
            
            write(logunit,'(A30,2X,i3,2x,A2,2X,F7.3,2X,A3)')'Temperature assigned to box ', i, 'is', temperature(i), ' K'
@@ -3782,7 +3783,7 @@ SUBROUTINE Get_Pressure_Info
   ! that only different pressure can be specified.
 
   INTEGER :: ierr, line_nbr, nbr_entries, i
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(inputunit)
 
@@ -3861,7 +3862,7 @@ SUBROUTINE Get_Fugacity_Info
   IMPLICIT NONE
 
   INTEGER :: line_nbr, nbr_entries, ierr, i, spec_counter, j, is, js, i_ins
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(inputunit)
 
@@ -3956,6 +3957,7 @@ SUBROUTINE Get_Fugacity_Info
         ! IF the species is inserted as a pair, set the corresponding chemical potential
         CALL Parse_String(inputunit,line_nbr,0,nbr_entries,line_array,ierr)
         IF (ANY(species_list(:)%pair_insert) .eqv. .TRUE.) THEN
+           CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
            IF (line_array(1) /= 'pair') THEN
               err_msg = ""
               err_msg(1) = 'You must define the pair chemical potentials'
@@ -4000,7 +4002,7 @@ SUBROUTINE Get_Fugacity_Info
         ELSE IF (nbr_entries > 0) THEN
             IF (line_array(1) == 'pair') THEN
                 WRITE(logunit,'(A,A)') 'You have not defined the insertion probabilities,', &
-                                'chemical potential information is not being used'
+                                       'chemical potential information is not being used'
             END IF
         END IF
 
@@ -4031,7 +4033,7 @@ SUBROUTINE Get_Move_Probabilities
   INTEGER :: ierr, nbr_entries, line_nbr,i, j, ibox, is, vol_int
   INTEGER :: ks, js, n_pairs, pair_ins_species
   INTEGER ::  kbox, this_box
-  CHARACTER(240) :: line_string, line_array(80), line_string2
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength), line_string2
   CHARACTER(4) :: Symbol
 
   REAL(DP) :: total_mass, this_mass, prob_box_swap, sum_prob_species_ins_pair
@@ -4759,7 +4761,6 @@ SUBROUTINE Get_Move_Probabilities
                  END DO
               END DO
 
-
            ELSE IF (line_string(1:23) == '# Done_Probability_Info') THEN
 
               ! finished the section 
@@ -4994,13 +4995,8 @@ SUBROUTINE Get_Start_Type
     use, intrinsic :: iso_c_binding, only: C_NULL_CHAR
 
   INTEGER :: ierr, is, line_nbr, nbr_entries, i, ibox, tot_natoms
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
-  ! parameters for commented out portion
-  !INTEGER :: j
-  !CHARACTER(4) :: symbol
-  !REAL(DP) :: total_mass, this_mass
-  
   ierr = 0
   line_nbr = 0
 
@@ -5081,42 +5077,9 @@ SUBROUTINE Get_Start_Type
                  END IF
 
                  WRITE(logunit,*) 
-                 WRITE(logunit,'(A36,2X,I2,2X,A21,2X,I6)') 'Total number of molecules of species ', i, &
+                 WRITE(logunit,'(A36,2X,I2,2X,A21,2X,I10)') 'Total number of molecules of species ', i , &
                                                            ' present initially is', species_list(i)%nmoltotal
 
-!!$                 ! --- open the geometry file and read in the coordinates 
-!!$                 OPEN(unit=init_geomunit,file=init_geomfile(i),status='old')
-!!$                 ! the file is in xyz format
-!!$
-!!$                 ! obtain COM of the input geometry as well
-!!$                 total_mass = 0.0_DP
-!!$                 
-!!$                 species_list(i)%xcom = 0.0_DP
-!!$                 species_list(i)%ycom = 0.0_DP
-!!$                 species_list(i)%zcom = 0.0_DP
-!!$                 
-!!$
-!!$                 DO j = 1, natoms(i)
-!!$                    READ(init_geomunit,*) symbol, init_list(j,1,i)%rxp, init_list(j,1,i)%ryp, init_list(j,1,i)%rzp
-!!$                    
-!!$                    this_mass = nonbond_list(j,i)%mass
-!!$                    total_mass = total_mass + this_mass
-!!$                    
-!!$                    species_list(i)%xcom = species_list(i)%xcom + this_mass * &
-!!$                         init_list(j,1,i)%rxp
-!!$                    species_list(i)%ycom = species_list(i)%ycom + this_mass * &
-!!$                         init_list(j,1,i)%ryp
-!!$                    species_list(i)%zcom = species_list(i)%zcom + this_mass * &
-!!$                         init_list(j,1,i)%rzp
-!!$                    
-!!$                 END DO
-!!$                 
-!!$                 CLOSE(UNIT=init_geomunit)
-!!$
-!!$                 species_list(i)%xcom = species_list(i)%xcom / total_mass
-!!$                 species_list(i)%ycom = species_list(i)%ycom / total_mass
-!!$                 species_list(i)%zcom = species_list(i)%zcom / total_mass
-                 
               END DO
               
               EXIT inputLOOP
@@ -5374,6 +5337,9 @@ SUBROUTINE Get_Start_Type
                  err_msg = ""
                  err_msg(1) = 'An error in the input line ' // TRIM(Int_to_String(line_nbr)) &
                       // ' of input file.'
+                 err_msg(2) = "Make sure that the characters of the string are alphanumeric with"
+                 err_msg(3) = " a possibility of a . (dot) or _ (dash)."
+                 err_msg(4) = "The first character must be an alphabet"
                  CALL Clean_Abort(err_msg,'Get_Initial_Coordinates_Info')
               END IF
               
@@ -5412,7 +5378,7 @@ USE Random_Generators
   IMPLICIT NONE
 
   INTEGER :: ierr, line_nbr, nbr_entries
-  CHARACTER(240) :: line_string,line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   ierr = 0
   line_nbr = 0
@@ -5503,7 +5469,7 @@ SUBROUTINE Get_CBMC_Info
   ! The subroutine reads in the information on the starting seed for the simulation
 
   INTEGER :: ierr, line_nbr, nbr_entries,ibox
-  CHARACTER(240) :: line_string,line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(inputunit)
   ierr = 0
@@ -5570,7 +5536,7 @@ SUBROUTINE Get_Zig_By_Omega
 !*************************************
 
   INTEGER :: ierr, line_nbr, nbr_entries, i, spec_counter
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(inputunit)
 
@@ -5631,7 +5597,7 @@ SUBROUTINE Get_Seed_Info
   ! The subroutine reads in the information on the starting seed for the simulation
 
   INTEGER :: ierr, line_nbr, nbr_entries
-  CHARACTER(240) :: line_string,line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(inputunit)
   ierr = 0
@@ -5694,7 +5660,7 @@ SUBROUTINE Get_Frequency_Info
   ! This subroutine obtains frequency for writing to various files
 
   INTEGER :: ierr, line_nbr, nbr_entries, ibox, is
-  CHARACTER(240) :: line_string, line_array(80),movie_header_file, &
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength),movie_header_file, &
                      movie_xyz_file, movie_clus_xyz_file
 
   REWIND(inputunit)
@@ -5720,6 +5686,7 @@ SUBROUTINE Get_Frequency_Info
   ndipole_freq = 0
   nvirial_freq = 0
   npotential_freq = 0
+  histogram_freq = 0
 
   DO
      line_nbr = line_nbr + 1
@@ -5794,6 +5761,14 @@ SUBROUTINE Get_Frequency_Info
                  WRITE(logunit,*) 
                  WRITE(logunit,'(A,T50,I8,A)') 'Thermodynamic quantities will written at every', &
                                                 nthermo_freq, ' MC steps.'
+ 
+              ELSE IF (line_array(1) == 'Nclusterfreq') THEN
+
+                 ncluster_freq = String_To_Int(line_array(2))
+              
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', &
+                                                ncluster_freq, ' MC steps.'
 
               ELSE IF (line_array(1) == 'Nclusterfreq') THEN
 
@@ -5822,6 +5797,20 @@ SUBROUTINE Get_Frequency_Info
               ELSE IF (line_array(1) == 'Nclusdegreefreq') THEN
 
                  nalphaclus_freq = String_To_Int(line_array(2))
+                 
+              ELSE IF (line_array(1) == 'NequilSteps') THEN
+                 
+                 n_equilsteps = String_To_Int(line_array(2))
+                 WRITE(logunit,*) 
+                 WRITE(logunit, '(A,I10)') 'Number of equilibrium steps', n_equilsteps
+                 
+              ELSE IF (line_array(1) == 'NEhistfreq') THEN
+                 
+                 histogram_freq = String_To_Int(line_array(2))
+                 WRITE(logunit,*) 
+                 WRITE(logunit, '(A,I10)') 'Histogram will be updated every ', histogram_freq, ' MC steps.'
+                 
+              ELSE IF (line_array(2) == 'Done_Frequency_Info') THEN
               
                  WRITE(logunit,*) 
                  WRITE(logunit,'(2A,T50,I8,A)') 'The degree of ion association to cluster', &
@@ -6051,7 +6040,7 @@ END SUBROUTINE Get_Frequency_Info
 !*****************************************************************************************************
 SUBROUTINE Average_Info
 
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   INTEGER :: ierr, line_nbr, this_average, nbr_entries
 
@@ -6118,7 +6107,7 @@ USE Run_Variables, ONLY: cpcollect
 
   INTEGER :: ierr, line_nbr, nbr_properties, max_properties, nbr_entries
   INTEGER :: i, j, this_box, ibox, is
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
   CHARACTER(12) :: extension
 
   REWIND(inputunit)
@@ -6330,18 +6319,15 @@ SUBROUTINE Get_Clustering_Info
   !***************************************************************************************************
 
   INTEGER :: ierr, line_nbr, nbr_entries, i, is, js, ia, ja
-  INTEGER :: imax_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
-  CHARACTER(240) :: line_string, line_array(80)
-  REAL(8) :: distance, min_dist, min_dist_sq
-  CHARACTER(24), DIMENSION(12) :: names
+  INTEGER :: imax_nmol, max_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
+  REAL(8) :: distance
 
   REWIND(inputunit)
-
-  WRITE(logunit,*)
+  
+  WRITE(logunit,*) 
   WRITE(logunit,*) '**** Reading Clustering information ****** '
 
-  min_dist = 0.000001
-  min_dist_sq = min_dist * min_dist
   max_nmol = 0
   ierr = 0
   line_nbr = 0
@@ -6366,16 +6352,16 @@ SUBROUTINE Get_Clustering_Info
         c_or_m = 0
         cluster%n_species_type = 0
         !                                 2 = move/cluster          0 =  COM
-        ALLOCATE( cluster%min_distance_sq(3, nspecies, nspecies, 0:MAXVAL(natoms), 0:MAXVAL(natoms)) )
+        ALLOCATE( cluster%min_distance_sq(2, nspecies, nspecies, 0:MAXVAL(natoms), 0:MAXVAL(natoms)) )
         cluster%min_distance_sq = 0.0_DP
-        ALLOCATE( cluster%r1_sq(3, nspecies,0:MAXVAL(natoms)))
-        ALLOCATE( cluster%r2_sq(3, nspecies,0:MAXVAL(natoms)))
-        ALLOCATE( cluster%r3_sq(3, nspecies,0:MAXVAL(natoms)))
-        cluster%r1_sq = 0.0_DP
+        ALLOCATE( cluster%r1_sq(2, nspecies,0:MAXVAL(natoms)) )
+        ALLOCATE( cluster%r2_sq(2, nspecies,0:MAXVAL(natoms)) )
+        ALLOCATE( cluster%r3_sq(2, nspecies,0:MAXVAL(natoms)) )
+        cluster%r1_sq = 0.0_DP 
         cluster%r2_sq = 0.0_DP
         cluster%r3_sq = 0.0_DP
 
-CMloop: DO icm = 1, 3
+CMloop: DO icm = 1, 2
         imax_nmol = 0
         line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
@@ -6390,13 +6376,10 @@ CMloop: DO icm = 1, 3
             c_or_m = 1
         ELSE IF (line_array(1) == 'move') THEN
             IF (prob_cluster == 0.0) THEN
-                WRITE(logunit,'(A)') 'Clustering info given for Cluster move,'
+                WRITE(logunit,'(A)') 'Clustering info given for Cluster move,' 
                 WRITE(logunit,'(A)') 'but cluster move probability not given.'
             END IF
             c_or_m = 2
-
-        ELSE IF (line_array(1) == 'exvol') THEN
-            c_or_m = 3
 
         ! Error handling
         ELSE
@@ -6405,13 +6388,13 @@ CMloop: DO icm = 1, 3
                 err_msg(1) = "Error while reading inputfile; expected count or move!"
                 CALL Clean_Abort(err_msg,'Get_Clustering_Info')
             ELSE IF (c_or_m == 1) THEN
-                IF (prob_cluster > 0.0) THEN
+                IF (prob_cluster >= 0.0) THEN
                     err_msg = ""
                     err_msg(1) = "Error while reading inputfile; expected move Clustering info!"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                 END IF
             ELSE IF (c_or_m == 2) THEN
-                IF (ncluster_freq > 0) THEN
+                IF (ncluster_freq >= 0) THEN
                     err_msg = ""
                     err_msg(1) = "Error while reading inputfile; expected count Clustering info!"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
@@ -6426,105 +6409,98 @@ EnLoop: DO ientry = 1, n_entries
 
  ClusCheck: IF (line_array(1) == 'com') THEN
                 cluster%criteria(c_or_m, int_com) = .TRUE.
-
-                DO is = 1, nspecies
+    
+                DO is = 1, nspecies 
                     line_nbr = line_nbr + 1
-                    CALL Parse_String(inputunit,line_nbr,nspecies,nbr_entries,line_array,ierr)
+                    CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
                     IF ( ierr /= 0 ) THEN
                         err_msg = ""
                         err_msg(1) = "Error while reading inputfile"
                         CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                    ELSE IF ( line_array(1) == 'com' .or. &
-                              line_array(1) == 'exvol' .or. &
-                              line_array(1) == 'move') THEN
-                        err_msg = ""
-                        err_msg(1) = "Must give a line for each species in the cluster criteria"
-                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                     END IF
-
-                    DO js = 1, nspecies
+    
+                    DO js = 1, nspecies 
                         distance = String_To_Double(line_array(js))
-                        IF (distance > min_dist) THEN
+                        IF (distance > 0.001) THEN
                             cluster%min_distance_sq(c_or_m, is, js, 0, 0) = distance**2.0_DP
                             WRITE(logunit,*) 'COM clustering between species, ', is, ' and ', js
                         ENDIF
                     END DO
-
+    
                 END DO
-
+    
             ELSE IF (line_array(1) == 'type') THEN
                  IF ( nbr_entries /= 2 ) THEN
                     err_msg = ""
                     err_msg(1) = "Must give the number of type entries"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                 END IF
-
+    
                 cluster%criteria(c_or_m, int_type) = .TRUE.
-
-                ntype_entries = String_To_Int(line_array(2))
+    
+                ntype_entries = nbr_entries - 1
                 DO ie = 1, ntype_entries
                     line_nbr = line_nbr + 1
-                    CALL Parse_String(inputunit,line_nbr,5,nbr_entries,line_array,ierr)
-                    IF ( nbr_entries /= 5 ) THEN
-                        err_msg = ""
-                        err_msg(1) = "Must give the 2 atom names and a distance for however many are being clustered"
-                        err_msg(2) = "    Cluster format is: i_species atom_name j_species atom_name distance"
-                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                    ELSE IF ( ierr /= 0 ) THEN
+                    CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
+                    IF ( ierr /= 0 ) THEN
                         err_msg = ""
                         err_msg(1) = "Error while reading inputfile"
                         CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                    ELSE IF ( nbr_entries /= 3 ) THEN
+                        err_msg = ""
+                        err_msg(1) = "Must give the 2 atom names and a distance for however many are being clustered"
+                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                     END IF
-
-                    is = String_To_Int(line_array(1))
-                    js = String_To_Int(line_array(3))
-                    distance = String_To_Double(line_array(5))
+    
+                    distance = String_To_Double(line_array(3))
                     ! Figure out the type of the atom from the name, remember could be multiple with the same name
-                    IF (distance > min_dist) THEN
-                        DO ia = 1, natoms(is)
-                            IF (nonbond_list(ia,is)%atom_name == TRIM( line_array(2) ) ) THEN
-                                DO ja = 1, natoms(js)
-                                    IF (nonbond_list(ja,js)%atom_name == TRIM( line_array(4) ) ) THEN
-                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
-                                        WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', is, 'and'
-                                        WRITE(logunit,*) 'atom type "', TRIM(line_array(4)), '" of species, ', js
-                                        WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
+                    IF (distance > 0.001) THEN
+                        DO is = 1, nspecies 
+                            DO ia = 1, natoms(is)
+    
+                                IF (nonbond_list(ia,is)%atom_name == line_array(1) ) THEN
+                                    DO js = 1, nspecies 
+                                        DO ja = 1, natoms(js)
+                                            IF (nonbond_list(ja,js)%atom_name == line_array(2) ) THEN
+                                                cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
+                                                WRITE(logunit,*) 'atom type "', TRIM(line_array(1)), '" of species, ', is, 'and'
+                                                WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', js
+                                                WRITE(logunit,*) 'are included in the Clustering calculation'
+                                            END IF
+                                        END DO
+                                    END DO
+                                END IF
+    
+                            END DO
+                        END DO
+                    ENDIF
+    
+                    ! Make sure equivalent distances agree
+                    DO is = 1, nspecies 
+                        DO js = 1, nspecies 
+                            DO ja = 1, natoms(js)
+                                DO ia = 1, natoms(is)
+                                    IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= &
+                                        cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
+                                        IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
+                                            cluster%min_distance_sq(c_or_m, is, js, ia, ja) = &
+                                                cluster%min_distance_sq(c_or_m, js, is, ja, ia)
+                                        ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
+                                            cluster%min_distance_sq(c_or_m, js, is, ja, ia) = &
+                                                cluster%min_distance_sq(c_or_m, is, js, ia, ja)
+                                        ELSE
+                                            err_msg = ""
+                                            err_msg(1) = "Two type clustering criteria do not agree"
+                                            CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                                        END IF
                                     END IF
                                 END DO
-                            END IF
+                            END DO
                         END DO
-
-                    ENDIF
-                    ! Make sure equivalent distances agree
-                    isloop: DO is = 1, nspecies
-                    jsloop: DO js = 1, nspecies
-                    jaloop: DO ja = 1, natoms(js)
-                    ialoop: DO ia = 1, natoms(is)
-                            IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= &
-                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
-
-                                IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
-                                    cluster%min_distance_sq(c_or_m, is, js, ia, ja) = &
-                                        cluster%min_distance_sq(c_or_m, js, is, ja, ia)
-
-                                ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
-                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia) = &
-                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja)
-
-                                ELSE
-                                    err_msg = ""
-                                    err_msg(1) = "Two type clustering criteria do not agree"
-                                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                                END IF
-
-                             END IF
-                    END DO ialoop
-                    END DO jaloop
-                    END DO jsloop
-                    END DO isloop
-
+                    END DO
+    
                 END DO
-
+    
             ELSE IF (line_array(1) == 'micelle') THEN
                 cluster%criteria(c_or_m, int_micelle) = .TRUE.
                 cluster%criteria(c_or_m, int_com) = .TRUE.
@@ -6539,73 +6515,73 @@ EnLoop: DO ientry = 1, n_entries
                     WRITE(logunit,*) 'Only need 1 entry for every species in the micelle clustering'
                 END IF
 
-                DO is = 1, nspecies
+                DO is = 1, nspecies 
                     distance = String_To_Double(line_array(is))
                     cluster%min_distance_sq(c_or_m, is, is, 0, 0) = distance**2.0
-                    IF (distance > min_dist) THEN
+                    IF (distance > 0.001) THEN
                         WRITE(logunit,*) 'COM clustering between species, ', is
                         cluster%micelle_species = is
                     END IF
                 END DO
 
                 line_nbr = line_nbr + 1
-                CALL Parse_String(inputunit,line_nbr,5,nbr_entries,line_array,ierr)
+                CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
                 IF ( ierr /= 0 ) THEN
                     err_msg = ""
                     err_msg(1) = "Error while reading inputfile"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                 END IF
 
-                is = String_To_Int(line_array(1))
-                js = String_To_Int(line_array(3))
-                distance = String_To_Double(line_array(5))
+                distance = String_To_Double(line_array(3))
                 ! Figure out the type of the atom from the name, remember could be multiple with the same name
-                IF (distance > min_dist) THEN
-                    DO ia = 1, natoms(is)
-                        IF (nonbond_list(ia,is)%atom_name == TRIM( line_array(2) ) ) THEN
-                            DO ja = 1, natoms(js)
-                                IF (nonbond_list(ja,js)%atom_name == TRIM( line_array(4) ) ) THEN
-                                    cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
-                                    WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', is, 'and'
-                                    WRITE(logunit,*) 'atom type "', TRIM(line_array(4)), '" of species, ', js
-                                    WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
-                                END IF
-                            END DO
-                        END IF
+                IF (distance > 0.001) THEN
+                    DO is = 1, nspecies 
+                        DO ia = 1, natoms(is)
+
+                            IF (nonbond_list(ia,is)%atom_name == line_array(1) ) THEN
+                                DO js = 1, nspecies 
+                                    DO ja = 1, natoms(js)
+                                        IF (nonbond_list(ja,js)%atom_name == line_array(2) ) THEN
+                                            cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
+                                            WRITE(logunit,*) 'atom type "', TRIM(line_array(1)), '" of species, ', is, 'and'
+                                            WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', js
+                                            WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
+                                        END IF
+                                    END DO
+                                END DO
+                            END IF
+
+                        END DO
                     END DO
                 ENDIF
 
                 ! Make sure equivalent distances agree
-                isloop2: DO is = 1, nspecies
-                jsloop2: DO js = 1, nspecies
-                jaloop2: DO ja = 1, natoms(js)
-                ialoop2: DO ia = 1, natoms(is)
-                        IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= &
-                                cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
-
-                            IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
-                                cluster%min_distance_sq(c_or_m, is, js, ia, ja) = &
-                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia)
-
-                            ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
-                                cluster%min_distance_sq(c_or_m, js, is, ja, ia) = &
-                                    cluster%min_distance_sq(c_or_m, is, js, ia, ja)
-
-                            ELSE
-                                err_msg = ""
-                                err_msg(1) = "Two type clustering criteria do not agree"
-                                CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                            END IF
-
-                         END IF
-                END DO ialoop2
-                END DO jaloop2
-                END DO jsloop2
-                END DO isloop2
+                DO is = 1, nspecies 
+                    DO js = 1, nspecies 
+                        DO ja = 1, natoms(js)
+                            DO ia = 1, natoms(is)
+                                IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= &
+                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
+                                    IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
+                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja) = &
+                                            cluster%min_distance_sq(c_or_m, js, is, ja, ia)
+                                    ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
+                                        cluster%min_distance_sq(c_or_m, js, is, ja, ia) = &
+                                            cluster%min_distance_sq(c_or_m, is, js, ia, ja)
+                                    ELSE
+                                        err_msg = ""
+                                        err_msg(1) = "Two type clustering criteria do not agree"
+                                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                                    END IF
+                                END IF
+                            END DO
+                        END DO
+                    END DO
+                END DO
 
             ELSE IF (line_array(1) == 'skh') THEN
                 cluster%criteria(c_or_m, int_skh) = .TRUE.
-                DO is = 1, nspecies
+                DO is = 1, nspecies 
                     line_nbr = line_nbr + 1
                     CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
                     IF ( ierr /= 0 ) THEN
@@ -6613,13 +6589,14 @@ EnLoop: DO ientry = 1, n_entries
                         err_msg(1) = "Error while reading inputfile"
                         CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                     END IF
-
+    
                     cluster%r1_sq(c_or_m, is,0) = String_To_Double(line_array(1))**2.0
                     cluster%r2_sq(c_or_m, is,0) = String_To_Double(line_array(2))**2.0
                     cluster%r3_sq(c_or_m, is,0) = String_To_Double(line_array(3))**2.0
-
+                    
                     ! Figure out the type of the atom from the name, remember could be multiple with the same name
-                    IF ((cluster%r1_sq(c_or_m, is,0) + cluster%r2_sq(c_or_m, is,0) + cluster%r3_sq(c_or_m, is,0))> min_dist_sq) THEN
+                    IF ((cluster%r1_sq(c_or_m, is,0) + cluster%r2_sq(c_or_m, is,0) + cluster%r3_sq(c_or_m, is,0)) &
+                        > 0.00001) THEN
                         DO i = 4, nbr_entries
                             DO ia = 1, natoms(is)
                                 IF (nonbond_list(ia,is)%atom_name == line_array(i)) THEN
@@ -6630,19 +6607,18 @@ EnLoop: DO ientry = 1, n_entries
                                     WRITE(logunit,*) 'is included in the Clustering calculation'
                                 END IF
                             END DO
-
+        
                         END DO
                     ENDIF
-
+    
                 END DO
-
+    
             END IF ClusCheck
 
         END DO EnLoop
- 
-        DO is = 1, nspecies
-            IF ( ANY(cluster%min_distance_sq(c_or_m, is,:,:,:) > min_dist_sq) .OR. &
-                 ANY(cluster%r3_sq(c_or_m, is,:) > min_dist_sq) ) THEN
+
+        DO is = 1, nspecies 
+            IF (ANY(cluster%min_distance_sq(c_or_m, is,:,:,:) > 0.000001)) THEN
                 cluster%n_species_type(c_or_m) = cluster%n_species_type(c_or_m) + 1
                 imax_nmol = imax_nmol + nmolecules(is)
             END IF
@@ -6651,56 +6627,26 @@ EnLoop: DO ientry = 1, n_entries
 
         END DO CMloop
 
-        ALLOCATE(cluster%species_type(3, MAXVAL(cluster%n_species_type)))
+        IF ( ANY(cluster%criteria(:,int_skh) .eqv. .FALSE.)) DEALLOCATE(cluster%r1_sq, cluster%r2_sq, cluster%r3_sq)
+
+        ALLOCATE(cluster%species_type(2, MAXVAL(cluster%n_species_type)))
         cluster%species_type = 0
-        DO c_or_m = 1, 3
+        DO c_or_m = 1, 2
             i = 1
-            DO is = 1, nspecies
-                IF ( ANY(cluster%min_distance_sq(c_or_m,is,:,:,:) > min_dist_sq) .OR. &
-                     ANY(cluster%r3_sq(c_or_m, is,:) > min_dist_sq) ) THEN
+            DO is = 1, nspecies 
+                IF (ANY(cluster%min_distance_sq(c_or_m,is,:,:,:) > 0.000001)) THEN
                     cluster%species_type(c_or_m, i) = is
                     i = i + 1
                 END IF
             END DO
         END DO
-        IF ( .not. ANY(cluster%criteria(:,int_skh) .eqv. .TRUE.)) DEALLOCATE(cluster%r1_sq, cluster%r2_sq, cluster%r3_sq)
 
-
+        
         ALLOCATE( cluster%M(max_nmol), cluster%N(max_nmol) )
         ALLOCATE( cluster%clabel(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
         cluster%M = 0
         cluster%N = 0
-        cluster%clabel(:,:) = 0
-
-        IF ( ncluslife_freq /= 0 ) THEN
-            ALLOCATE( cluster%clabel_prev(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
-            ALLOCATE( cluster%age(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
-            ALLOCATE( cluster%N_prev(max_nmol) )
-            ALLOCATE( cluster%c_name(max_nmol), cluster%c_name_prev(max_nmol) )
-            ALLOCATE( cluster%clabel_life(max_nmol), cluster%clabel_life_prev(max_nmol) )
-            ALLOCATE( cluster%lifetime(max_nmol), cluster%n_clus_birth(max_nmol), cluster%n_clus_death(max_nmol) )
-            ALLOCATE( cluster%fission(max_nmol, max_nmol), cluster%fusion(max_nmol, max_nmol) )
-            cluster%N_prev = 0
-            cluster%clabel_prev(:,:) = 0
-            cluster%clabel_life      = 0
-            cluster%clabel_life_prev = 0
-            cluster%clabel_life_max  = 0
-            cluster%lifetime = 0
-            cluster%n_clus_birth = 0
-            cluster%n_clus_death = 0
-            cluster%fission = 0
-            cluster%fusion = 0
-            i = 1
-            cluster%names = (/ 'A', 'E', 'F', 'G', 'J', 'L', 'M', 'Q', 'R', 'T', 'Y', 'W' /)
-            IF (max_nmol < 12) THEN
-                cluster%c_name(1:max_nmol) = names(1:max_nmol)
-            ELSE
-                cluster%c_name(1:12) = names 
-            END IF
-    
-            cluster%age(:,:) = 0
-        END IF
-
+        cluster%clabel = 0
         ! Now get the Oligomer_Cutoff_Info
         CALL Get_Oligomer_Cutoff_Info
         EXIT
@@ -6714,8 +6660,6 @@ EnLoop: DO ientry = 1, n_entries
             WRITE(logunit,*) '**** Not Performing Cluster move ****** '
         ELSE IF (cluster%n_species_type(2) == 0) THEN
             WRITE(logunit,*) '**** Not Performing Clustering calculation ****** '
-        ELSE IF (cluster%n_species_type(3) == 0) THEN
-            WRITE(logunit,*) '**** Not Performing Excluded Volume calculation ****** '
         END IF
 
         EXIT
@@ -6724,6 +6668,115 @@ EnLoop: DO ientry = 1, n_entries
   END DO
 
 END SUBROUTINE Get_Clustering_Info
+
+SUBROUTINE Get_Oligomer_Cutoff_Info
+  !***************************************************************************************************
+  ! 
+  !***************************************************************************************************
+
+  USE Cluster_Routines
+
+  INTEGER :: ierr, line_nbr, nbr_entries, is
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
+
+  REWIND(inputunit)
+
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Oligomer Cutoff information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
+     END IF
+
+     IF(line_string(1:17) == '# Oligomer_Cutoff') THEN
+        IF ( .not. ANY(cluster%n_species_type /= 0) ) THEN
+            err_msg = ''
+            err_msg(1) = 'Cannot compute oligomer cutoff without clustering information'
+            CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
+        END IF
+
+        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+        IF (nbr_entries /= nspecies ) THEN
+            err_msg = ''
+            err_msg(1) = 'Must give a M_olig value for each species'
+            CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
+        END IF
+
+        ALLOCATE(cluster%M_olig(nspecies))
+        DO is = 1, nspecies
+            cluster%M_olig(is) = String_To_Int(line_array(is))
+        END DO
+        EXIT
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+        err_msg = ''
+        err_msg(1) = 'Oligomer_Cutoff_Info must be given with Clustering'
+        CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
+        EXIT
+     END IF
+  END DO
+
+END SUBROUTINE Get_Oligomer_Cutoff_Info
+
+SUBROUTINE Get_Histogram_Info
+  !***************************************************************************************************
+  ! 
+  !***************************************************************************************************
+
+  USE Cluster_Routines
+
+  INTEGER :: ierr, line_nbr, nbr_entries
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
+
+  REWIND(inputunit)
+
+  ierr = 0
+
+  WRITE(logunit,*) 
+  WRITE(logunit,*) '**** Reading Histogram writing information ****** '
+  
+  line_nbr = 0
+  DO
+     line_nbr = line_nbr + 1
+     CALL Read_String(inputunit,line_string,ierr)
+
+     IF ( ierr /= 0 ) THEN
+        err_msg = ''
+        err_msg(1) = 'Error while reading inputfile'
+        CALL Clean_Abort(err_msg,'Get_Histogram_Info')
+     END IF
+
+     IF(line_string(1:22) == '# Histogram_Info') THEN
+        line_nbr = line_nbr + 1
+        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+        IF ( nbr_entries /= 2 ) THEN
+            err_msg = ''
+            err_msg(1) = 'Only need the number of energy bins and the energy bin width'
+            CALL Clean_Abort(err_msg,'Get_Histogram_Info')
+        END IF
+        n_energy_hist = String_To_Int(line_array(1))
+        energy_hist_width = String_To_Double(line_array(2))
+        energy_hist_width = energy_hist_width * kjmol_to_atomic
+
+        ALLOCATE( energy_hist(nspecies, -2:n_energy_hist, 0:MAXVAL(nmolecules)) )
+        energy_hist = 0.0
+        EXIT
+
+     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
+        EXIT
+     END IF
+  END DO
+
+END SUBROUTINE Get_Histogram_Info
 
 SUBROUTINE Get_Degree_Association_Info
   !***************************************************************************************************
@@ -6735,7 +6788,7 @@ SUBROUTINE Get_Degree_Association_Info
   USE Degree_Association
 
   INTEGER :: ierr, line_nbr, nbr_entries, is, ia
-  CHARACTER(240) :: line_string, line_array(80) !filename
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
 
   REWIND(inputunit)
   
@@ -6855,66 +6908,6 @@ SUBROUTINE Get_Degree_Association_Info
 
 END SUBROUTINE Get_Degree_Association_Info
 
-SUBROUTINE Get_Oligomer_Cutoff_Info
-  !***************************************************************************************************
-  ! 
-  !***************************************************************************************************
-
-  USE Cluster_Routines
-
-  INTEGER :: ierr, line_nbr, nbr_entries, is
-  CHARACTER(240) :: line_string, line_array(80) !filename
-
-  REWIND(inputunit)
-
-  ierr = 0
-
-  WRITE(logunit,*) 
-  WRITE(logunit,*) '**** Reading Oligomer Cutoff information ****** '
-  
-  line_nbr = 0
-  DO
-     line_nbr = line_nbr + 1
-     CALL Read_String(inputunit,line_string,ierr)
-
-     IF ( ierr /= 0 ) THEN
-        err_msg = ''
-        err_msg(1) = 'Error while reading inputfile'
-        CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
-     END IF
- 
-     IF(line_string(1:17) == '# Oligomer_Cutoff') THEN
-        IF ( .not. ANY(cluster%criteria(1,:) .eqv. .TRUE.) ) THEN
-            err_msg = ''
-            err_msg(1) = 'Cannot compute oligomer cutoff without clustering information'
-            CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
-        END IF
- 
-        line_nbr = line_nbr + 1
-        CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
-        IF (nbr_entries /= nspecies ) THEN
-            err_msg = ''
-            err_msg(1) = 'Must give a M_olig value for each species'
-            CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
-        END IF
- 
-        ALLOCATE(cluster%M_olig(nspecies))
-        DO is = 1, nspecies
-            cluster%M_olig(is) = String_To_Int(line_array(is))
-        END DO
-        EXIT
- 
-     ELSE IF (line_nbr > 10000 .OR. line_string(1:3) == 'END') THEN
-        err_msg = ''
-        err_msg(1) = 'Oligomer_Cutoff_Info must be given with Clustering'
-        CALL Clean_Abort(err_msg,'Get_Oligomer_Cutoff_Info')
-
-        EXIT
-     END IF
-   END DO
- 
- END SUBROUTINE Get_Oligomer_Cutoff_Info
-  
 SUBROUTINE Get_Bond_Histogram_Info
   !***************************************************************************************************
   ! 
@@ -6923,7 +6916,7 @@ SUBROUTINE Get_Bond_Histogram_Info
   USE Measure_Molecules
 
   INTEGER :: ierr, line_nbr, nbr_entries, is, ib, cnt
-  CHARACTER(240) :: line_string, line_array(80) !filename
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
 
   REWIND(inputunit)
 
@@ -6977,9 +6970,9 @@ SUBROUTINE Get_Bond_Histogram_Info
      END IF
    END DO
  
- END SUBROUTINE Get_Bond_Histogram_Info
+END SUBROUTINE Get_Bond_Histogram_Info
 
- SUBROUTINE Get_Angle_Histogram_Info
+SUBROUTINE Get_Angle_Histogram_Info
   !***************************************************************************************************
   ! 
   !***************************************************************************************************
@@ -6987,7 +6980,7 @@ SUBROUTINE Get_Bond_Histogram_Info
   USE Measure_Molecules
 
   INTEGER :: ierr, line_nbr, nbr_entries, is, ia
-  CHARACTER(240) :: line_string, line_array(80) !filename
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
 
   REWIND(inputunit)
 
@@ -7045,7 +7038,7 @@ SUBROUTINE Get_Bond_Histogram_Info
   USE Measure_Molecules
 
   INTEGER :: ierr, line_nbr, nbr_entries, is, id
-  CHARACTER(240) :: line_string, line_array(80) !filename
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
 
   REWIND(inputunit)
 
@@ -7103,7 +7096,7 @@ SUBROUTINE Get_Bond_Histogram_Info
   USE Measure_Molecules
 
   INTEGER :: ierr, line_nbr, nbr_entries, iap
-  CHARACTER(240) :: line_string, line_array(80) !filename
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
 
   REWIND(inputunit)
 
@@ -7171,7 +7164,7 @@ SUBROUTINE Get_Bond_Histogram_Info
   USE Excluded_Volume
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
-  CHARACTER(240) :: line_string, line_array(80) !filename
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
 
   REWIND(inputunit)
   
@@ -7303,7 +7296,7 @@ SUBROUTINE Get_MSD_Info
   !USE Transport_Properties
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
-  CHARACTER(240) :: line_string, line_array(80) !filename
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
 
   REWIND(inputunit)
   
@@ -7434,7 +7427,7 @@ SUBROUTINE Get_VACF_Info
   !USE Transport_Properties
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
-  CHARACTER(240) :: line_string, line_array(80) !filename
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
 
   REWIND(inputunit)
   
@@ -7565,7 +7558,7 @@ SUBROUTINE Get_Dipole_Moment_Info
   !USE Transport_Properties
 
   INTEGER :: ierr, line_nbr, nbr_entries, is
-  CHARACTER(240) :: line_string, line_array(80) !filename
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
 
   REWIND(inputunit)
   
@@ -7693,7 +7686,7 @@ SUBROUTINE Get_Virial_Info
   !***************************************************************************************************
 
   INTEGER :: ierr, line_nbr, nbr_entries
-  CHARACTER(240) :: line_string, line_array(80) !filename
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength) !filename
 
   REWIND(inputunit)
   
@@ -7793,7 +7786,7 @@ SUBROUTINE Copy_Inputfile
 !***********************************************************************************************
 
   INTEGER :: ierr, line_nbr
-  CHARACTER(240) :: line_string
+  CHARACTER(charLength) :: line_string
   
 
   REWIND(inputunit)
@@ -7843,7 +7836,7 @@ SUBROUTINE Get_Rcutoff_Low
   !**********************************************************************************************
 
   INTEGER :: ierr, line_nbr, nbr_entries
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(inputunit)
   ierr = 0
@@ -7899,7 +7892,7 @@ SUBROUTINE Get_File_Info
 
   INTEGER :: ierr, nbr_entries, line_nbr, is
 
-  CHARACTER(240) :: line_array(80), line_string
+  CHARACTER(charLength) :: line_array(lineArrayLength), line_string
   
   ierr = 0
   REWIND(inputunit)
@@ -7949,7 +7942,7 @@ SUBROUTINE Get_Energy_Check_Info
   IMPLICIT NONE
 
   INTEGER :: ierr, line_nbr, nbr_entries
-  CHARACTER(240) :: line_string, line_array(80)
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(inputunit)
 
@@ -8002,7 +7995,7 @@ SUBROUTINE Get_Mie_Nonbond
   USE File_Names
 
   INTEGER :: ierr, nbr_entries, line_nbr, is, Mk, Mi, Mj
-  CHARACTER(240) :: line_array(80), line_string
+  CHARACTER(charLength) :: line_array(lineArrayLength), line_string
   ierr = 0
   REWIND(inputunit)
   line_nbr = 0
@@ -8074,7 +8067,7 @@ SUBROUTINE Get_Lattice
     IMPLICIT NONE
 
     INTEGER :: line_nbr, ierr, nbr_entries
-    CHARACTER(240) :: line_string, line_array(80)
+    CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
     REWIND(inputunit)
 
@@ -8134,7 +8127,7 @@ SUBROUTINE Get_Lattice_File_Info
     IMPLICIT NONE
 
     INTEGER :: line_nbr, ierr, nbr_entries
-    CHARACTER(240) :: line_string, line_array(80)
+    CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
     REWIND(inputunit)
 

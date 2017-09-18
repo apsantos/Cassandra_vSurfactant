@@ -92,8 +92,8 @@ PROGRAM Main
   INTEGER :: i, is, im, ia, this_im, ibox, nmol_is, this_box
 
   INTEGER :: nyears, nmonths, ndays, nhours, nmin, nsec, nms
-  CHARACTER(240) :: version
-  CHARACTER(240) :: filename1
+  CHARACTER(charLength) :: version
+  CHARACTER(charLength) :: filename1
   CHARACTER(80) :: name
 
   LOGICAL :: overlap
@@ -200,6 +200,8 @@ PROGRAM Main
      CALL NVT_MC_Fragment_Control
   ELSE IF (int_sim_type == sim_mcf) THEN
      CALL MCF_Control
+  ELSE IF (int_sim_type == sim_test) THEN
+     CALL TEST_Control
   ELSE IF (int_sim_type == sim_pp) THEN
      CALL PP_Control
   ELSE IF (int_sim_type == sim_virial) THEN
@@ -567,6 +569,10 @@ PROGRAM Main
   ELSE IF (int_sim_type == sim_ring) THEN
 
      CALL NVT_MC_Ring_Fragment
+
+  ELSE IF (int_sim_type == sim_test) THEN
+
+     CALL TEST_Driver
 
   ELSE IF (int_sim_type == sim_pp) THEN
 

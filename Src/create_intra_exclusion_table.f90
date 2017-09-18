@@ -272,8 +272,8 @@ SUBROUTINE Read_Intra_Exclusion_Table(is)
   INTEGER :: ierr,nbr_entries, i_line
   INTEGER, ALLOCATABLE, DIMENSION(:,:) :: temp_type
 
-  CHARACTER(240) :: line_string, line_array(80)
-  CHARACTER(240) :: temp_name, pot_type
+  CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
+  CHARACTER(charLength) :: temp_name, pot_type
 !-----------------------------------------------------------------------------
   ! Open intra scalingfile and find the line where the data begins
   OPEN(UNIT=intrafile_unit,FILE=intrafile_name(is),STATUS="OLD",IOSTAT=openstatus,ACTION="READ")
@@ -430,8 +430,9 @@ SUBROUTINE Read_Intra_Exclusion_Table(is)
                             ELSEIF (pot_type == 'SCR') THEN
                                 int_in_vdw_style_mix(ia,ja,is,vdw_screen) = .true.
                                 int_in_vdw_style_mix(ja,ia,is,vdw_screen) = .true.
-                                vdw_in_param12_table(ia,ja,is) = SQRT( String_To_Double(line_array(i+1)) / box_list(1)%volume * &
-                                                                     (charge_factor(1) * 8.0 * PI) / box_list(1)%volume / beta(1) )
+                                vdw_in_param12_table(ia,ja,is) = &
+                                    SQRT( (String_To_Double(line_array(i+1)) * navogadro / m3_to_A3 ) * &
+                                          (charge_factor(1) * 8.0 * PI) / beta(1) )
                                 vdw_in_param13_table(ia,ja,is) = String_To_Double(line_array(i+2)) 
                                 vdw_in_param12_table(ja,ia,is) = vdw_in_param12_table(ia,ja,is)
                                 vdw_in_param13_table(ja,ia,is) = vdw_in_param13_table(ia,ja,is)

@@ -56,8 +56,10 @@ USE Type_Definitions
 !*********************************************************************************
   ! This section contains global variables used by many routines during the run.
 
-  CHARACTER(240) :: run_name, start_type
-  CHARACTER(240) :: err_msg(10)
+  INTEGER, PARAMETER :: charLength = 240
+  INTEGER, PARAMETER :: lineArrayLength = 80
+  CHARACTER(charLength) :: run_name, start_type
+  CHARACTER(charLength) :: err_msg(10)
 
   ! error handling variables
   INTEGER :: AllocateStatus, OpenStatus, DeAllocateStatus
@@ -155,7 +157,6 @@ USE Type_Definitions
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param10_table, vdw_param11_table
   ! Yukawa Screened electrostatics
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: vdw_param12_table, vdw_param13_table
-
 
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alpha_ewald, h_ewald_cut
   REAL(DP), DIMENSION(:), ALLOCATABLE :: alphal_ewald

@@ -37,12 +37,13 @@ SUBROUTINE GEMC_Driver
   USE Random_Generators
   USE Read_Write_Checkpoint
   USE Energy_Routines, ONLY: Compute_Total_System_Energy
+  USE Cluster_Routines
   USE File_Names
   USE IO_Utilities, ONLY: Int_To_String
 
   IMPLICIT NONE
 
-!$ include 'omp_lib.h'
+! !$ include 'omp_lib.h'
 
   INTEGER :: i,j, this_box, ibox, is, other_box, which_step
 
@@ -228,6 +229,24 @@ SUBROUTINE GEMC_Driver
 
         movetime(imove_regrowth) = movetime(imove_regrowth) + time_e - time_s
 
+     ELSE IF (rand_no <= cut_cluster) THEN
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_s)
+        ELSE
+!$        time_s = omp_get_wtime()
+        END IF
+
+        CALL Translate_Cluster(this_box)
+
+        IF(.NOT. openmp_flag) THEN
+           CALL cpu_time(time_e)
+        ELSE
+!$         time_e = omp_get_wtime()
+        END IF
+
+        movetime(imove_translate_cluster) = movetime(imove_translate_cluster) + time_e - time_s
+
     ELSE IF (rand_no <= cut_atom_displacement) THEN
 
         IF(.NOT. openmp_flag) THEN
@@ -299,6 +318,19 @@ SUBROUTINE GEMC_Driver
            IF(now_time .GT. nthermo_freq) THEN
               thermo_time = thermo_time + nthermo_freq
               write_flag = .TRUE.
+           END IF
+        END IF
+
+        IF ( ncluster_freq /= 0 ) THEN
+           IF ( MOD(i,ncluster_freq) == 0 ) THEN
+           
+              DO ibox = 1, nbr_boxes
+              
+                 CALL Find_Clusters(ibox,1)
+                 CALL Write_Cluster(ibox)
+              
+              END DO
+           
            END IF
         END IF
 

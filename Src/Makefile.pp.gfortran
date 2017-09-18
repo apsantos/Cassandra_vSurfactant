@@ -59,8 +59,7 @@ INCS =
 #
 F90FLAGS = -c -fbacktrace -fimplicit-none -Wline-truncation -Wsurprising -Waliasing -Wcharacter-truncation -Wunused-parameter -fwhole-file -pedantic -Wall
 #F90FLAGS = -c -O2 
-LINKFLAGS = -lxdrfile -L/home/apsantos/packages/xdr/lib
-
+LINKFLAGS = -lxdrfile #-L/home/apsantos/packages/xdr/lib
 
 ####################################################################
 OBJS =	main.o \

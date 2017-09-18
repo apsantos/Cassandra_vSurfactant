@@ -66,7 +66,7 @@ SUBROUTINE Participation
   USE Run_Variables
   USE IO_Utilities
   USE File_Names
-  USE Random_Generators, ONLY : Generate_Random_Sphere
+  USE Random_Generators, ONLY : Generate_Random_Sphere, r8_normal_ab
 
   IMPLICIT NONE
 
@@ -80,10 +80,8 @@ SUBROUTINE Participation
 
   REAL(DP) :: x_this, y_this, z_this, this_l
 
-  CHARACTER(240) :: file_name, car_file, xyz_file
-  CHARACTER(240) :: line_string
-
-  
+  CHARACTER(charLength) :: file_name, car_file, xyz_file
+  CHARACTER(charLength) :: line_string
 
   ! allocate memory for bondpart_list. 
   ALLOCATE(bondpart_list(MAXVAL(natoms),nspecies))
@@ -537,7 +535,8 @@ SUBROUTINE Participation
               
               WRITE(201,*) bondpart_list(ia,is)%nbonds + 1
               WRITE(201,100) anchor_atom, nonbond_list(ia,is)%atom_name, nonbond_list(ia,is)%element, &
-                   nonbond_list(ia,is)%mass, nonbond_list(ia,is)%charge, 'NONE', &
+                   nonbond_list(ia,is)%mass, nonbond_list(ia,is)%charge, &
+                   nonbond_list(ia,is)%vdw_potential_type, &
                    (nonbond_list(ia,is)%vdw_param(1))/kboltz, nonbond_list(ia,is)%vdw_param(2)
               
               ! write the 'read_old' file for the fragment
@@ -558,7 +557,8 @@ SUBROUTINE Participation
                  this_atom = frag_list(ifrag,is)%atoms(i)
                  
                  WRITE(201,100) i, nonbond_list(this_atom,is)%atom_name, nonbond_list(this_atom,is)%element, &
-                      nonbond_list(this_atom,is)%mass, nonbond_list(this_atom,is)%charge, 'NONE', &
+                      nonbond_list(this_atom,is)%mass, nonbond_list(this_atom,is)%charge, &
+                      nonbond_list(this_atom,is)%vdw_potential_type, &
                       (nonbond_list(this_atom,is)%vdw_param(1))/kboltz, nonbond_list(this_atom,is)%vdw_param(2)
                  
               END DO
@@ -615,7 +615,7 @@ SUBROUTINE Participation
                     ! We could not locate the bond connecting this_atom and anchor, abort with an error
                     
                     err_msg = ''
-                    err_msg(1) = 'Error generating a fragment mcf file'
+                    err_msg(1) = 'Error while generating a fragment mcf file for the fragment '//Int_To_String(ifrag)
                     err_msg(2) = 'Species '//Int_To_String(is)
                     err_msg(3) = 'Fragment ' //Int_To_String(ifrag)
                     err_msg(4) = ' No bond found between the atoms'//Int_To_String(ia)
@@ -625,20 +625,28 @@ SUBROUTINE Participation
                     
                  END IF
                  
-                 IF (bond_list(this_bond,is)%int_bond_type == int_harmonic) THEN
+                 IF (bond_list(this_bond,is)%int_bond_type == int_harmonic .or. &
+                     bond_list(this_bond,is)%int_bond_type == int_none) THEN
+
+                    IF (bond_list(this_bond,is)%int_bond_type == int_harmonic) THEN
+                       
+                       WRITE(201,101) i-1, anchor_atom, i, "harmonic", bond_list(this_bond,is)%bond_param(2), &
+                            bond_list(this_bond,is)%bond_param(1) / kboltz
+                       
+                       this_l = ABS( r8_normal_ab( bond_list(this_bond,is)%bond_param(2), &
+                                                  (2.0_DP * bond_list(this_bond,is)%bond_param(1))**(-0.5) ) )
+
+                    ELSE IF (bond_list(this_bond,is)%int_bond_type == int_none) THEN
+                       ! it is a fixed bond
+                       
+                       WRITE(201,102) i-1, anchor_atom, i, "fixed", bond_list(this_bond,is)%bond_param(1)
+                       
+                       ! for a fixed bond length system, generate points of this atom on a unit sphere
+                       
+                       this_l = bond_list(this_bond,is)%bond_param(1)
                     
-                    WRITE(201,101) i-1, anchor_atom, i, "harmonic", bond_list(this_bond,is)%bond_param(1) /kboltz, &
-                         bond_list(this_bond,is)%bond_param(2)
-                    
-                 ELSE IF (bond_list(this_bond,is)%int_bond_type == int_none) THEN
-                    ! it is a fixed bond
-                    
-                    WRITE(201,102) i-1, anchor_atom, i, "fixed", bond_list(this_bond,is)%bond_param(1)
-                    
-                    ! for a fixed bond length system, generate points of this atom on a unit sphere
-                    
-                    this_l = bond_list(this_bond,is)%bond_param(1)
-                 
+                    END IF
+
                     IF ( i == 2) THEN
                        ! this is the first bond and hence the second atom, it will be placed along 
                        ! the x-axis
@@ -652,8 +660,6 @@ SUBROUTINE Participation
                        CALL Generate_Random_Sphere(x_this,y_this,z_this)
                        
                        ! coordinates of the 'this_atom'
-                       
-                       
                        x_this = this_l * x_this
                        y_this = this_l * y_this
                        z_this = this_l * z_this
@@ -781,13 +787,12 @@ SUBROUTINE Participation
      
      END DO
      !Amir To Jindal: It the 3rd # format should be 11.7 otherwise it would generate errors. 10/12/12
-	 
+
 100  FORMAT(I5,2X,A4,2X,A4,F11.7,2X,F11.7,2X,A5,2X,F11.7, 2X, F11.7)
-101  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F10.3,2X,F8.5)
+101  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F12.4,2X,F12.4)
 102  FORMAT(I5,2X,I5,2X,I5,2X,A9,2X,F8.5)
 103  FORMAT(I5,2X,I5,2X,I5,2X,I5,2X,A9,2X,F10.3,2X,F10.5)
 104  FORMAT(I5,2X,I5,2X,I5,2X,I5,2X,A9,2X,F10.5)
-!105  FORMAT(A,2X,I5,2X,A2,2X,6(I3,2X))
      
   END IF
 
@@ -875,8 +880,8 @@ CONTAINS
 
        IF (bond_list(this_bond,is)%int_bond_type == int_harmonic) THEN
           WRITE(201,'(I5,2X,I5,2X,I5,2X,A9,2X,F10.3,2X,F8.5)') i, &
-               atom1(i), atom2(i), "harmonic", bond_list(this_bond,is)%bond_param(1)/kboltz, &
-               bond_list(this_bond,is)%bond_param(2)
+               atom1(i), atom2(i), "harmonic", bond_list(this_bond,is)%bond_param(2), &
+               bond_list(this_bond,is)%bond_param(1) / kboltz
 
        ELSE IF (bond_list(this_bond,is)%int_bond_type == int_none) THEN
           WRITE(201,'(I5,2X,I5,2X,I5,2X,A9,2X,F8.5)') i, &
@@ -1293,7 +1298,7 @@ CONTAINS
     INTEGER :: i, this_atom, j
     REAL(DP) :: x, y, z
     
-    CHARACTER(240) :: car_file, pdb_file, xyz_file
+    CHARACTER(charLength) :: car_file, pdb_file, xyz_file
     CHARACTER(30) :: this_symbol
 
     
@@ -1331,7 +1336,7 @@ CONTAINS
          IF (ierr .NE. 0) THEN
             err_msg = ""
             err_msg(1) = "Error reading the pdb file"
-            err_msg(2) = pdb_file(1:80)
+            err_msg(2) = pdb_file
             CALL Clean_Abort(err_msg,'Read_inputfile')
          END IF
 
@@ -1357,7 +1362,7 @@ CONTAINS
             ! No name specified so abort
             err_msg = ""
             err_msg(1) = 'Exceeded file size in'
-            err_msg(2) = pdb_file(1:80)
+            err_msg(2) = pdb_file
             err_msg(3) = 'The atom'
             err_msg(4) = Int_To_String(this_atom)
             err_msg(5) = 'could not be found'

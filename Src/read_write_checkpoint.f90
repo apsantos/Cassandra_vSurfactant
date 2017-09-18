@@ -1074,6 +1074,12 @@ SUBROUTINE Read_Checkpoint
     READ(restartunit,*)
     DO is = 1, nspecies
        READ(restartunit,*) this_species, sp_nmoltotal(is)
+
+       IF (sp_nmoltotal(is) > nmolecules(is)) THEN
+          err_msg = ""
+          err_msg(1) = "More molecules in the checkpoint file than allowed in the input."
+          CALL Clean_Abort(err_msg,'Read_Checkpoint')
+       END IF
     END DO
     
     READ(restartunit,*)
@@ -1230,7 +1236,7 @@ SUBROUTINE Read_Checkpoint
     REAL(DP) :: this_lambda
     REAL(DP) :: xcom_old, ycom_old, zcom_old
     REAL(DP) :: xcom_new, ycom_new, zcom_new
-    
+  
     ! Loop over total number of boxes to read in the atomic coordinates
 
     ALLOCATE(total_molecules_this(nspecies))
@@ -1456,6 +1462,16 @@ SUBROUTINE Write_Trials_Success
 
         END IF
 
+        ! cluster trans
+
+        IF (ntrials(is,ibox)%cluster_translate /= 0 ) THEN
+           
+           WRITE(logunit,11) 'Cluster Translation', ntrials(is,ibox)%cluster_translate, &
+                nsuccess(is,ibox)%cluster_translate, &
+                100.0*dble(nsuccess(is,ibox)%cluster_translate)/dble(ntrials(is,ibox)%cluster_translate)
+
+        END IF
+
         ! atom displacement
 
         IF (ntrials(is,ibox)%disp_atom /= 0 ) THEN
@@ -1644,6 +1660,18 @@ IF(movetime(imove_regrowth) .GT. 0.0_DP ) THEN
    ELSE 
         WRITE(logunit,'(1X,A,T25,F15.6,A)') &
        'Regrowth time = ', movetime(imove_regrowth) / 3600.0_DP , ' hrs.'
+   END IF
+
+END IF
+
+IF(movetime(imove_translate_cluster) .GT. 0.0_DP ) THEN
+
+   IF(movetime(imove_translate_cluster) .LT. 60.0_DP ) THEN
+        WRITE(logunit,'(1X,A,T25,F15.6,A)') &
+       'Cluster Move time = ', movetime(imove_translate_cluster), ' secs.'
+   ELSE 
+        WRITE(logunit,'(1X,A,T25,F15.6,A)') &
+       'Cluster Move time = ', movetime(imove_translate_cluster) / 3600.0_DP , ' hrs.'
    END IF
 
 END IF

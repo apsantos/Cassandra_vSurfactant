@@ -19,18 +19,19 @@
 !   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !*******************************************************************************
 
-SUBROUTINE GEMC_Control
+SUBROUTINE TEST_Control
 
   !****************************************************************************
+  ! Reads in all necessary control variables to run an NPT MC simulation.
   !
-  ! Reads in all necessary control variables to run a GEMC simulation
+  ! Called by 
   !
-  ! Called by ***
   !   main
   !
   ! Revision history
   !
-  !   12/10/13 : Beta Release
+  !    12/10/13  : Beta release version
+  !
 !*******************************************************************************
   USE IO_Utilities
   USE Run_Variables
@@ -43,14 +44,13 @@ SUBROUTINE GEMC_Control
 
   IMPLICIT NONE
 
-  INTEGER ::  i
+  INTEGER :: i
 !*******************************************************************************
 
   CALL Copy_Inputfile
 
   ! How many species to simulate?
   CALL Get_Nspecies
-
   WRITE(logunit,'(a30,1x,I5,/)') 'Number of species simulated: ',nspecies
 
   ! Load box shape, number of boxes and box type. Compute various properties of the box
@@ -64,15 +64,6 @@ SUBROUTINE GEMC_Control
   ! Load molecular conectivity and force field paramters. Note that Get_Nspecies 
   ! must be called before this routine.  
   CALL Get_Molecule_Info
-
-  ! If the simulation contains an intermediate box for transfer then
-  ! read the number of ideal gas molecules in that box
-
-!  IF (int_sim_type == sim_gemc_ig) THEN
-
- !    CALL Get_IGAS_Num
-
-  !END IF
 
   ! Obtain the temperature of the simulation
   CALL Get_Temperature_Info
@@ -88,17 +79,17 @@ SUBROUTINE GEMC_Control
 
   ! Seed info
   CALL Get_Seed_Info
- 
-  IF (sim_type == 'GEMC_NPT') THEN
-     ! Obtain the pressure of the simulation box
-     CALL Get_Pressure_Info
-   
-  END IF
+
   ! Read in the probabilities for all the moves
   CALL Get_Move_Probabilities
 
-  CALL Get_CBMC_Info
-
+  ! Get the information on fugacities
+  CALL Get_Fugacity_Info
+    
+  ! Get the product of z/omega for each of fragments
+  IF (lfugacity) THEN
+          CALL Get_Zig_By_Omega
+  END IF 
 
   ! Determine the frequency with which information will be output 
   CALL Get_Frequency_Info
@@ -107,12 +98,8 @@ SUBROUTINE GEMC_Control
   CALL Get_Clustering_Info
 
   CALL Average_Info
-
   ! Properties to be output
   CALL Get_Property_Info
-
-  ! Get information on the averages
-  CALL Average_Info
 
   CALL Get_Rcutoff_Low
 
@@ -143,10 +130,12 @@ SUBROUTINE GEMC_Control
   ! angles exist
   CALL Get_Dihedral_Atoms_To_Place  
 
-  DO i=1,nbr_boxes
+  CALL Get_CBMC_Info
+
+  DO i=1, nbr_boxes
   IF (int_vdw_sum_style(i) == vdw_mie) THEN
       CALL Get_Mie_Nonbond
   END IF
   END DO
-
-END SUBROUTINE GEMC_Control
+  
+END SUBROUTINE TEST_Control

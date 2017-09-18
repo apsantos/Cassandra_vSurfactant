@@ -85,7 +85,6 @@ CONTAINS
     LOGICAL :: inter_overlap, accept, accept_or_reject
   
     ! Pair_Energy arrays and Ewald implementation
-    !INTEGER :: position
     REAL(DP), ALLOCATABLE :: cos_mol_old(:,:), sin_mol_old(:,:)
 
     reject_type = 0
@@ -438,8 +437,8 @@ CONTAINS
                max_clus_disp(is,this_box) = MIN(rcut_small,2.0_DP*success_ratio*max_clus_disp(is,this_box))
            END IF
   
-           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is, & 
-                                               ' in box ', this_box, ' : ', max_clus_disp(is,this_box)
+           WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is, &
+                                                ' in box ', this_box, ' : ', max_clus_disp(is,this_box)
           
        END IF
   
@@ -581,6 +580,10 @@ CONTAINS
         END DO
     END DO
     cluster%Mave = cluster%Mave / float(cluster%n_mic_clus)
+    !write(*,*) 'N', cluster%N(1:200)
+    !write(*,*) 'clabel', cluster%clabel(1:500, 1)
+    !write(*,*) 'M', cluster%M
+    !write(*,*) 'olig, clus', cluster%n_oligomers, cluster%n_clusters
 
   END SUBROUTINE Update_Cluster_Counters
 
@@ -679,8 +682,9 @@ CONTAINS
 
     LOGICAL :: Neighbor
     INTEGER, INTENT(IN) :: test_part, cur_part, test_type, cur_type, count_or_move
-    REAL(DP) :: rxij, ryij, rzij, rijsq, rxijp, ryijp, rzijp, n_accept
     INTEGER :: test_atom, cur_atom
+    REAL(DP) :: rxijp, ryijp, rzijp, rijsq, rxij, ryij, rzij
+    REAL(DP) :: n_accept
 
     Neighbor = .FALSE.
 

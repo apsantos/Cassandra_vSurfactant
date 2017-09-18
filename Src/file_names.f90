@@ -190,6 +190,10 @@ CHARACTER(FILENAME_LEN) :: lattice_file
 INTEGER :: cluster_file_unit = 919
 CHARACTER(FILENAME_LEN) :: cluster_file
 
+! Histogram
+INTEGER :: histogram_file_unit = 600
+CHARACTER(FILENAME_LEN) :: histogram_file
+
 ! Mean-squared deviation file
 INTEGER :: msd_file_unit = 609
 CHARACTER(FILENAME_LEN) :: msd_file
