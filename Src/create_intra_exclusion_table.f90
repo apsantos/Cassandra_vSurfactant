@@ -277,6 +277,7 @@ SUBROUTINE Read_Intra_Exclusion_Table(is)
 !-----------------------------------------------------------------------------
   ! Open intra scalingfile and find the line where the data begins
   OPEN(UNIT=intrafile_unit,FILE=intrafile_name(is),STATUS="OLD",IOSTAT=openstatus,ACTION="READ")
+
   CALL Read_String(intrafile_unit,line_string,ierr)
   IF (ierr .NE. 0) THEN
       err_msg = ""
@@ -378,13 +379,16 @@ SUBROUTINE Read_Intra_Exclusion_Table(is)
                IF ( ii == temp_type(ia,is)) THEN
                   DO ja = 1, natoms(is)
                      IF ( jj == temp_type(ja,is)) THEN
+                        int_in_vdw_style_mix(ia,ja,is,:) = .false.
+                        int_in_vdw_style_mix(ja,ia,is,:) = .false.
+                
                         DO i = 3, SIZE(line_array)
                             pot_type = line_array(i)
                 
                             IF (pot_type == 'LJ' .or. pot_type == 'LJ126' .or. &
                                 pot_type == 'LJ124' .or. &
                                 pot_type == 'LJ96') THEN
-                
+
                                 IF (pot_type == 'LJ' .or. pot_type == 'LJ126') THEN
                                    int_in_vdw_style_mix(ia,ja,is,vdw_lj) = .true.
                                    int_in_vdw_style_mix(ja,ia,is,vdw_lj) = .true.

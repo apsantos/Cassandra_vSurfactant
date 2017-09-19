@@ -592,6 +592,9 @@ SUBROUTINE Read_Nonbond_Table
         itype = String_To_Int( line_array(1) )
         jtype = String_To_Int( line_array(2) )
 
+        int_vdw_style_mix(itype,jtype,:) = .false.
+        int_vdw_style_mix(jtype,itype,:) = .false.
+                
         DO i = 3, SIZE(line_array)
             pot_type = line_array(i)
 
