@@ -438,7 +438,7 @@ CONTAINS
            END IF
   
            WRITE(logunit,'(A,I3,A,I1,A,F8.5)') 'Maximum width, cluster translation of species ', is, &
-                                                ' in box ', this_box, ' : ', max_clus_disp(is,this_box)
+                                               ' in box ', this_box, ' : ', max_clus_disp(is,this_box)
           
        END IF
   

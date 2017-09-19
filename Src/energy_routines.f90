@@ -1887,11 +1887,9 @@ CONTAINS
           Powerh = ((rij - Rhyd)**2)/(2.0_DP*(Shyd**2))
           E_hyd = Preexph*EXP(-Powerh)
 
-       ELSE
-          E_hyd = 0.0_DP
+          Eij_vdw = Eij_vdw + E_hyd
        ENDIF hydration_calculation
 
-       Eij_vdw = Eij_vdw + E_hyd
 !FSL Hydration Energy end
 
        qq_calculation: IF ( get_qq ) THEN

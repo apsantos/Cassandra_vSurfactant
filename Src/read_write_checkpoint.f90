@@ -659,7 +659,8 @@ SUBROUTINE Read_XYZ(this_mc_step)
                 
           END IF
 
-          IF (line_array(1) /= nonbond_list(ia,is)%element) THEN
+          !IF (line_array(1) /= nonbond_list(ia,is)%element) THEN
+          IF (line_array(1) /= nonbond_list(ia,is)%atom_name) THEN
              err_msg = ""
              err_msg(1) = "An atom name in the xyz file ("//TRIM(line_array(1))//") does not match the name in the mcf file."
              err_msg(2) = "Consider the order..."

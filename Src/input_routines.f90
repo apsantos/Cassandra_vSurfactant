@@ -850,7 +850,7 @@ SUBROUTINE Get_Mixing_Rules
         
         CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
 
-! Assign the first entry on the line to the mixing rule
+        ! Assign the first entry on the line to the mixing rule
         mix_rule = TRIM( line_array(1) )
         
         IF (mix_rule == 'LB') THEN
@@ -867,7 +867,7 @@ SUBROUTINE Get_Mixing_Rules
            err_msg(1) = 'Mixing rule not supported'
            err_msg(2) = mix_rule
            err_msg(3) = 'Available options are'
-           err_msg(4) = 'LB or geometric'
+           err_msg(4) = 'LB, geometric, custom or table'
            CALL Clean_Abort(err_msg,'Get_Mixing_Rules')
         ENDIF
 
@@ -5770,14 +5770,6 @@ SUBROUTINE Get_Frequency_Info
                  WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', &
                                                 ncluster_freq, ' MC steps.'
 
-              ELSE IF (line_array(1) == 'Nclusterfreq') THEN
-
-                 ncluster_freq = String_To_Int(line_array(2))
-              
-                 WRITE(logunit,*) 
-                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', &
-                                                ncluster_freq, ' MC steps.'
-
               ELSE IF (line_array(1) == 'Nexvolfreq') THEN
 
                  nexvol_freq = String_To_Int(line_array(2))
@@ -5798,25 +5790,12 @@ SUBROUTINE Get_Frequency_Info
 
                  nalphaclus_freq = String_To_Int(line_array(2))
                  
-              ELSE IF (line_array(1) == 'NequilSteps') THEN
-                 
-                 n_equilsteps = String_To_Int(line_array(2))
-                 WRITE(logunit,*) 
-                 WRITE(logunit, '(A,I10)') 'Number of equilibrium steps', n_equilsteps
-                 
               ELSE IF (line_array(1) == 'NEhistfreq') THEN
                  
                  histogram_freq = String_To_Int(line_array(2))
                  WRITE(logunit,*) 
                  WRITE(logunit, '(A,I10)') 'Histogram will be updated every ', histogram_freq, ' MC steps.'
                  
-              ELSE IF (line_array(2) == 'Done_Frequency_Info') THEN
-              
-                 WRITE(logunit,*) 
-                 WRITE(logunit,'(2A,T50,I8,A)') 'The degree of ion association to cluster', &
-                                                ' as a function of clusters will be calculated/written at every', &
-                                                nalphaclus_freq, ' MC steps.'
-
               ELSE IF (line_array(1) == 'Ncluslifefreq') THEN
 
                  ncluslife_freq = String_To_Int(line_array(2))
@@ -6321,12 +6300,15 @@ SUBROUTINE Get_Clustering_Info
   INTEGER :: ierr, line_nbr, nbr_entries, i, is, js, ia, ja
   INTEGER :: imax_nmol, max_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
   CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
-  REAL(8) :: distance
+  REAL(8) :: distance, min_dist, min_dist_sq
 
   REWIND(inputunit)
   
   WRITE(logunit,*) 
   WRITE(logunit,*) '**** Reading Clustering information ****** '
+
+  min_dist = 0.000001
+  min_dist_sq = min_dist * min_dist
 
   max_nmol = 0
   ierr = 0
@@ -6352,11 +6334,11 @@ SUBROUTINE Get_Clustering_Info
         c_or_m = 0
         cluster%n_species_type = 0
         !                                 2 = move/cluster          0 =  COM
-        ALLOCATE( cluster%min_distance_sq(2, nspecies, nspecies, 0:MAXVAL(natoms), 0:MAXVAL(natoms)) )
+        ALLOCATE( cluster%min_distance_sq(3, nspecies, nspecies, 0:MAXVAL(natoms), 0:MAXVAL(natoms)) )
         cluster%min_distance_sq = 0.0_DP
-        ALLOCATE( cluster%r1_sq(2, nspecies,0:MAXVAL(natoms)) )
-        ALLOCATE( cluster%r2_sq(2, nspecies,0:MAXVAL(natoms)) )
-        ALLOCATE( cluster%r3_sq(2, nspecies,0:MAXVAL(natoms)) )
+        ALLOCATE( cluster%r1_sq(3, nspecies,0:MAXVAL(natoms)) )
+        ALLOCATE( cluster%r2_sq(3, nspecies,0:MAXVAL(natoms)) )
+        ALLOCATE( cluster%r3_sq(3, nspecies,0:MAXVAL(natoms)) )
         cluster%r1_sq = 0.0_DP 
         cluster%r2_sq = 0.0_DP
         cluster%r3_sq = 0.0_DP
@@ -6381,6 +6363,9 @@ CMloop: DO icm = 1, 2
             END IF
             c_or_m = 2
 
+        ELSE IF (line_array(1) == 'exvol') THEN
+            c_or_m = 3
+
         ! Error handling
         ELSE
             IF (c_or_m == 0) THEN
@@ -6388,13 +6373,13 @@ CMloop: DO icm = 1, 2
                 err_msg(1) = "Error while reading inputfile; expected count or move!"
                 CALL Clean_Abort(err_msg,'Get_Clustering_Info')
             ELSE IF (c_or_m == 1) THEN
-                IF (prob_cluster >= 0.0) THEN
+                IF (prob_cluster > 0.0) THEN
                     err_msg = ""
                     err_msg(1) = "Error while reading inputfile; expected move Clustering info!"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                 END IF
             ELSE IF (c_or_m == 2) THEN
-                IF (ncluster_freq >= 0) THEN
+                IF (ncluster_freq > 0) THEN
                     err_msg = ""
                     err_msg(1) = "Error while reading inputfile; expected count Clustering info!"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
@@ -6412,16 +6397,22 @@ EnLoop: DO ientry = 1, n_entries
     
                 DO is = 1, nspecies 
                     line_nbr = line_nbr + 1
-                    CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+                    CALL Parse_String(inputunit,line_nbr,nspecies,nbr_entries,line_array,ierr)
                     IF ( ierr /= 0 ) THEN
                         err_msg = ""
                         err_msg(1) = "Error while reading inputfile"
+                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                    ELSE IF ( line_array(1) == 'com' .or. &
+                              line_array(1) == 'exvol' .or. &
+                              line_array(1) == 'move') THEN
+                        err_msg = ""
+                        err_msg(1) = "Must give a line for each species in the cluster criteria"
                         CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                     END IF
     
                     DO js = 1, nspecies 
                         distance = String_To_Double(line_array(js))
-                        IF (distance > 0.001) THEN
+                        IF (distance > min_dist) THEN
                             cluster%min_distance_sq(c_or_m, is, js, 0, 0) = distance**2.0_DP
                             WRITE(logunit,*) 'COM clustering between species, ', is, ' and ', js
                         ENDIF
@@ -6438,44 +6429,71 @@ EnLoop: DO ientry = 1, n_entries
     
                 cluster%criteria(c_or_m, int_type) = .TRUE.
     
-                ntype_entries = nbr_entries - 1
+                ntype_entries = String_To_Int(line_array(2))
                 DO ie = 1, ntype_entries
                     line_nbr = line_nbr + 1
                     CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
-                    IF ( ierr /= 0 ) THEN
+                    CALL Parse_String(inputunit,line_nbr,5,nbr_entries,line_array,ierr)
+                    IF ( nbr_entries /= 5 ) THEN
+                        err_msg = ""
+                        err_msg(1) = "Must give the 2 atom names and a distance for however many are being clustered"
+                        err_msg(2) = "    Cluster format is: i_species atom_name j_species atom_name distance"
+                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                    ELSE IF ( ierr /= 0 ) THEN
+                    ELSE IF ( nbr_entries /= 3 ) THEN
                         err_msg = ""
                         err_msg(1) = "Error while reading inputfile"
                         CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                    ELSE IF ( nbr_entries /= 3 ) THEN
-                        err_msg = ""
-                        err_msg(1) = "Must give the 2 atom names and a distance for however many are being clustered"
-                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                     END IF
     
-                    distance = String_To_Double(line_array(3))
+                    is = String_To_Int(line_array(1))
+                    js = String_To_Int(line_array(3))
+                    distance = String_To_Double(line_array(5))
                     ! Figure out the type of the atom from the name, remember could be multiple with the same name
-                    IF (distance > 0.001) THEN
-                        DO is = 1, nspecies 
-                            DO ia = 1, natoms(is)
+                    IF (distance > min_dist) THEN
+                        DO ia = 1, natoms(is)
+                            IF (nonbond_list(ia,is)%atom_name == TRIM( line_array(2) ) ) THEN
+                                DO ja = 1, natoms(js)
+                                    IF (nonbond_list(ja,js)%atom_name == TRIM( line_array(4) ) ) THEN
+                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
+                                        WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', is, 'and'
+                                        WRITE(logunit,*) 'atom type "', TRIM(line_array(4)), '" of species, ', js
+                                        WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
+                                    END IF
+                                END DO
+                            END IF
     
-                                IF (nonbond_list(ia,is)%atom_name == line_array(1) ) THEN
-                                    DO js = 1, nspecies 
-                                        DO ja = 1, natoms(js)
-                                            IF (nonbond_list(ja,js)%atom_name == line_array(2) ) THEN
-                                                cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
-                                                WRITE(logunit,*) 'atom type "', TRIM(line_array(1)), '" of species, ', is, 'and'
-                                                WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', js
-                                                WRITE(logunit,*) 'are included in the Clustering calculation'
-                                            END IF
-                                        END DO
-                                    END DO
-                                END IF
-    
-                            END DO
                         END DO
-                    ENDIF
+                    END IF
     
                     ! Make sure equivalent distances agree
+                    isloop: DO is = 1, nspecies
+                    jsloop: DO js = 1, nspecies
+                    jaloop: DO ja = 1, natoms(js)
+                    ialoop: DO ia = 1, natoms(is)
+                            IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= &
+                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
+
+                                IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
+                                    cluster%min_distance_sq(c_or_m, is, js, ia, ja) = &
+                                        cluster%min_distance_sq(c_or_m, js, is, ja, ia)
+
+                                ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
+                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia) = &
+                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja)
+
+                                ELSE
+                                    err_msg = ""
+                                    err_msg(1) = "Two type clustering criteria do not agree"
+                                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                                END IF
+
+                             END IF
+                    END DO ialoop
+                    END DO jaloop
+                    END DO jsloop
+                    END DO isloop
+
                     DO is = 1, nspecies 
                         DO js = 1, nspecies 
                             DO ja = 1, natoms(js)
@@ -6518,14 +6536,14 @@ EnLoop: DO ientry = 1, n_entries
                 DO is = 1, nspecies 
                     distance = String_To_Double(line_array(is))
                     cluster%min_distance_sq(c_or_m, is, is, 0, 0) = distance**2.0
-                    IF (distance > 0.001) THEN
+                    IF (distance > min_dist) THEN
                         WRITE(logunit,*) 'COM clustering between species, ', is
                         cluster%micelle_species = is
                     END IF
                 END DO
 
                 line_nbr = line_nbr + 1
-                CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
+                CALL Parse_String(inputunit,line_nbr,5,nbr_entries,line_array,ierr)
                 IF ( ierr /= 0 ) THEN
                     err_msg = ""
                     err_msg(1) = "Error while reading inputfile"
@@ -6534,50 +6552,48 @@ EnLoop: DO ientry = 1, n_entries
 
                 distance = String_To_Double(line_array(3))
                 ! Figure out the type of the atom from the name, remember could be multiple with the same name
-                IF (distance > 0.001) THEN
-                    DO is = 1, nspecies 
-                        DO ia = 1, natoms(is)
-
-                            IF (nonbond_list(ia,is)%atom_name == line_array(1) ) THEN
-                                DO js = 1, nspecies 
-                                    DO ja = 1, natoms(js)
-                                        IF (nonbond_list(ja,js)%atom_name == line_array(2) ) THEN
-                                            cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
-                                            WRITE(logunit,*) 'atom type "', TRIM(line_array(1)), '" of species, ', is, 'and'
-                                            WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', js
-                                            WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
-                                        END IF
-                                    END DO
-                                END DO
-                            END IF
-
-                        END DO
-                    END DO
-                ENDIF
-
-                ! Make sure equivalent distances agree
-                DO is = 1, nspecies 
-                    DO js = 1, nspecies 
-                        DO ja = 1, natoms(js)
-                            DO ia = 1, natoms(is)
-                                IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= &
-                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
-                                    IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
-                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja) = &
-                                            cluster%min_distance_sq(c_or_m, js, is, ja, ia)
-                                    ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
-                                        cluster%min_distance_sq(c_or_m, js, is, ja, ia) = &
-                                            cluster%min_distance_sq(c_or_m, is, js, ia, ja)
-                                    ELSE
-                                        err_msg = ""
-                                        err_msg(1) = "Two type clustering criteria do not agree"
-                                        CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                                    END IF
+                IF (distance > min_dist) THEN
+                    DO ia = 1, natoms(is)
+                        IF (nonbond_list(ia,is)%atom_name == TRIM( line_array(2) ) ) THEN
+                            DO ja = 1, natoms(js)
+                                IF (nonbond_list(ja,js)%atom_name == TRIM( line_array(4) ) ) THEN
+                                    cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
+                                    WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', is, 'and'
+                                    WRITE(logunit,*) 'atom type "', TRIM(line_array(4)), '" of species, ', js
+                                    WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
                                 END IF
                             END DO
-                        END DO
+                        END IF
                     END DO
-                END DO
+                END IF
+
+                ! Make sure equivalent distances agree
+                isloop2: DO is = 1, nspecies
+                jsloop2: DO js = 1, nspecies
+                jaloop2: DO ja = 1, natoms(js)
+                ialoop2: DO ia = 1, natoms(is)
+                        IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= &
+                                cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
+
+                            IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
+                                cluster%min_distance_sq(c_or_m, is, js, ia, ja) = &
+                                    cluster%min_distance_sq(c_or_m, js, is, ja, ia)
+
+                            ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
+                                cluster%min_distance_sq(c_or_m, js, is, ja, ia) = &
+                                    cluster%min_distance_sq(c_or_m, is, js, ia, ja)
+
+                            ELSE
+                                err_msg = ""
+                                err_msg(1) = "Two type clustering criteria do not agree"
+                                CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                            END IF
+
+                         END IF
+                END DO ialoop2
+                END DO jaloop2
+                END DO jsloop2
+                END DO isloop2
 
             ELSE IF (line_array(1) == 'skh') THEN
                 cluster%criteria(c_or_m, int_skh) = .TRUE.
@@ -6595,8 +6611,7 @@ EnLoop: DO ientry = 1, n_entries
                     cluster%r3_sq(c_or_m, is,0) = String_To_Double(line_array(3))**2.0
                     
                     ! Figure out the type of the atom from the name, remember could be multiple with the same name
-                    IF ((cluster%r1_sq(c_or_m, is,0) + cluster%r2_sq(c_or_m, is,0) + cluster%r3_sq(c_or_m, is,0)) &
-                        > 0.00001) THEN
+                    IF ((cluster%r1_sq(c_or_m, is,0) + cluster%r2_sq(c_or_m, is,0) + cluster%r3_sq(c_or_m, is,0))> min_dist_sq) THEN
                         DO i = 4, nbr_entries
                             DO ia = 1, natoms(is)
                                 IF (nonbond_list(ia,is)%atom_name == line_array(i)) THEN
@@ -6618,7 +6633,8 @@ EnLoop: DO ientry = 1, n_entries
         END DO EnLoop
 
         DO is = 1, nspecies 
-            IF (ANY(cluster%min_distance_sq(c_or_m, is,:,:,:) > 0.000001)) THEN
+            IF ( ANY(cluster%min_distance_sq(c_or_m, is,:,:,:) > min_dist_sq) .OR. &
+                 ANY(cluster%r3_sq(c_or_m, is,:) > min_dist_sq) ) THEN
                 cluster%n_species_type(c_or_m) = cluster%n_species_type(c_or_m) + 1
                 imax_nmol = imax_nmol + nmolecules(is)
             END IF
@@ -6627,26 +6643,47 @@ EnLoop: DO ientry = 1, n_entries
 
         END DO CMloop
 
-        IF ( ANY(cluster%criteria(:,int_skh) .eqv. .FALSE.)) DEALLOCATE(cluster%r1_sq, cluster%r2_sq, cluster%r3_sq)
-
-        ALLOCATE(cluster%species_type(2, MAXVAL(cluster%n_species_type)))
+        ALLOCATE(cluster%species_type(3, MAXVAL(cluster%n_species_type)))
         cluster%species_type = 0
-        DO c_or_m = 1, 2
+        DO c_or_m = 1, 3
             i = 1
-            DO is = 1, nspecies 
-                IF (ANY(cluster%min_distance_sq(c_or_m,is,:,:,:) > 0.000001)) THEN
+            DO is = 1, nspecies
+                IF ( ANY(cluster%min_distance_sq(c_or_m,is,:,:,:) > min_dist_sq) .OR. &
+                     ANY(cluster%r3_sq(c_or_m, is,:) > min_dist_sq) ) THEN
                     cluster%species_type(c_or_m, i) = is
                     i = i + 1
                 END IF
             END DO
         END DO
 
+        IF ( .not. ANY(cluster%criteria(:,int_skh) .eqv. .TRUE.)) DEALLOCATE(cluster%r1_sq, cluster%r2_sq, cluster%r3_sq)
         
         ALLOCATE( cluster%M(max_nmol), cluster%N(max_nmol) )
         ALLOCATE( cluster%clabel(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
         cluster%M = 0
         cluster%N = 0
         cluster%clabel = 0
+        cluster%clabel(:,:) = 0
+
+        IF ( ncluslife_freq /= 0 ) THEN
+            ALLOCATE( cluster%clabel_prev(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
+            ALLOCATE( cluster%age(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
+            ALLOCATE( cluster%N_prev(max_nmol) )
+            ALLOCATE( cluster%c_name(max_nmol), cluster%c_name_prev(max_nmol) )
+            ALLOCATE( cluster%clabel_life(max_nmol), cluster%clabel_life_prev(max_nmol) )
+            ALLOCATE( cluster%lifetime(max_nmol), cluster%n_clus_birth(max_nmol), cluster%n_clus_death(max_nmol) )
+            ALLOCATE( cluster%fission(max_nmol, max_nmol), cluster%fusion(max_nmol, max_nmol) )
+            cluster%N_prev = 0
+           cluster%clabel_prev(:,:) = 0
+            cluster%clabel_life      = 0
+            cluster%clabel_life_prev = 0
+            cluster%clabel_life_max  = 0
+            cluster%lifetime = 0
+            cluster%n_clus_birth = 0
+            cluster%n_clus_death = 0
+            cluster%fission = 0
+            cluster%fusion = 0
+        END IF
         ! Now get the Oligomer_Cutoff_Info
         CALL Get_Oligomer_Cutoff_Info
         EXIT
@@ -6660,6 +6697,8 @@ EnLoop: DO ientry = 1, n_entries
             WRITE(logunit,*) '**** Not Performing Cluster move ****** '
         ELSE IF (cluster%n_species_type(2) == 0) THEN
             WRITE(logunit,*) '**** Not Performing Clustering calculation ****** '
+        ELSE IF (cluster%n_species_type(3) == 0) THEN
+            WRITE(logunit,*) '**** Not Performing Excluded Volume calculation ****** '
         END IF
 
         EXIT
