@@ -5789,6 +5789,10 @@ SUBROUTINE Get_Frequency_Info
               ELSE IF (line_array(1) == 'Nclusdegreefreq') THEN
 
                  nalphaclus_freq = String_To_Int(line_array(2))
+                 WRITE(logunit,*) 
+                 WRITE(logunit,'(2A,T50,I8,A)') 'The degree of ion association to cluster', &
+                                                ' as a function of clusters will be calculated/written at every', &
+                                                nalphaclus_freq, ' MC steps.'
                  
               ELSE IF (line_array(1) == 'NEhistfreq') THEN
                  
@@ -6301,6 +6305,7 @@ SUBROUTINE Get_Clustering_Info
   INTEGER :: imax_nmol, max_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
   CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
   REAL(8) :: distance, min_dist, min_dist_sq
+  CHARACTER(24), DIMENSION(12) :: names
 
   REWIND(inputunit)
   
@@ -6432,7 +6437,6 @@ EnLoop: DO ientry = 1, n_entries
                 ntype_entries = String_To_Int(line_array(2))
                 DO ie = 1, ntype_entries
                     line_nbr = line_nbr + 1
-                    CALL Parse_String(inputunit,line_nbr,3,nbr_entries,line_array,ierr)
                     CALL Parse_String(inputunit,line_nbr,5,nbr_entries,line_array,ierr)
                     IF ( nbr_entries /= 5 ) THEN
                         err_msg = ""
@@ -6440,7 +6444,6 @@ EnLoop: DO ientry = 1, n_entries
                         err_msg(2) = "    Cluster format is: i_species atom_name j_species atom_name distance"
                         CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                     ELSE IF ( ierr /= 0 ) THEN
-                    ELSE IF ( nbr_entries /= 3 ) THEN
                         err_msg = ""
                         err_msg(1) = "Error while reading inputfile"
                         CALL Clean_Abort(err_msg,'Get_Clustering_Info')
@@ -6494,31 +6497,6 @@ EnLoop: DO ientry = 1, n_entries
                     END DO jsloop
                     END DO isloop
 
-                    DO is = 1, nspecies 
-                        DO js = 1, nspecies 
-                            DO ja = 1, natoms(js)
-                                DO ia = 1, natoms(is)
-                                    IF (cluster%min_distance_sq(c_or_m, is, js, ia, ja) /= &
-                                        cluster%min_distance_sq(c_or_m, js, is, ja, ia)) THEN
-                                        IF ( cluster%min_distance_sq(c_or_m, is, js, ia, ja) == 0) THEN
-                                            cluster%min_distance_sq(c_or_m, is, js, ia, ja) = &
-                                                cluster%min_distance_sq(c_or_m, js, is, ja, ia)
-                                        ELSE IF ( cluster%min_distance_sq(c_or_m, js, is, ja, ia) == 0) THEN
-                                            cluster%min_distance_sq(c_or_m, js, is, ja, ia) = &
-                                                cluster%min_distance_sq(c_or_m, is, js, ia, ja)
-                                        ELSE
-                                            err_msg = ""
-                                            err_msg(1) = "Two type clustering criteria do not agree"
-                                            CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                                        END IF
-                                    END IF
-                                END DO
-                            END DO
-                        END DO
-                    END DO
-    
-                END DO
-    
             ELSE IF (line_array(1) == 'micelle') THEN
                 cluster%criteria(c_or_m, int_micelle) = .TRUE.
                 cluster%criteria(c_or_m, int_com) = .TRUE.
@@ -6662,7 +6640,6 @@ EnLoop: DO ientry = 1, n_entries
         ALLOCATE( cluster%clabel(MAXVAL(nmolecules(:)), MAXVAL(cluster%n_species_type)) )
         cluster%M = 0
         cluster%N = 0
-        cluster%clabel = 0
         cluster%clabel(:,:) = 0
 
         IF ( ncluslife_freq /= 0 ) THEN
@@ -6674,7 +6651,7 @@ EnLoop: DO ientry = 1, n_entries
             ALLOCATE( cluster%lifetime(max_nmol), cluster%n_clus_birth(max_nmol), cluster%n_clus_death(max_nmol) )
             ALLOCATE( cluster%fission(max_nmol, max_nmol), cluster%fusion(max_nmol, max_nmol) )
             cluster%N_prev = 0
-           cluster%clabel_prev(:,:) = 0
+            cluster%clabel_prev(:,:) = 0
             cluster%clabel_life      = 0
             cluster%clabel_life_prev = 0
             cluster%clabel_life_max  = 0
@@ -6683,6 +6660,15 @@ EnLoop: DO ientry = 1, n_entries
             cluster%n_clus_death = 0
             cluster%fission = 0
             cluster%fusion = 0
+            i = 1
+            cluster%names = (/ 'A', 'E', 'F', 'G', 'J', 'L', 'M', 'Q', 'R', 'T', 'Y', 'W' /)
+            IF (max_nmol < 12) THEN
+                cluster%c_name(1:max_nmol) = names(1:max_nmol)
+            ELSE
+                cluster%c_name(1:12) = names 
+            END IF
+    
+            cluster%age(:,:) = 0
         END IF
         ! Now get the Oligomer_Cutoff_Info
         CALL Get_Oligomer_Cutoff_Info
