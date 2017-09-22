@@ -57,7 +57,7 @@ FC = ifort
 LIBS = 
 INCS = 
 #
-F90FLAGS = -c -O3 #-traceback -check
+F90FLAGS = -c -traceback -check
 LINKFLAGS = -lxdrfile #-L/home/andrew/packages/xdr/lib
 
 
