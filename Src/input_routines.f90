@@ -3957,7 +3957,6 @@ SUBROUTINE Get_Fugacity_Info
         ! IF the species is inserted as a pair, set the corresponding chemical potential
         CALL Parse_String(inputunit,line_nbr,0,nbr_entries,line_array,ierr)
         IF (ANY(species_list(:)%pair_insert) .eqv. .TRUE.) THEN
-           CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
            IF (line_array(1) /= 'pair') THEN
               err_msg = ""
               err_msg(1) = 'You must define the pair chemical potentials'
@@ -6302,7 +6301,7 @@ SUBROUTINE Get_Clustering_Info
   !***************************************************************************************************
 
   INTEGER :: ierr, line_nbr, nbr_entries, i, is, js, ia, ja
-  INTEGER :: imax_nmol, max_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
+  INTEGER :: imax_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
   CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
   REAL(8) :: distance, min_dist, min_dist_sq
   CHARACTER(24), DIMENSION(12) :: names
@@ -6348,14 +6347,14 @@ SUBROUTINE Get_Clustering_Info
         cluster%r2_sq = 0.0_DP
         cluster%r3_sq = 0.0_DP
 
-CMloop: DO icm = 1, 2
+CMloop: DO icm = 1, 3
         imax_nmol = 0
         line_nbr = line_nbr + 1
         CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
         ! Clustering for cluster counting or cluster translation
         IF (line_array(1) == 'count') THEN
-                 WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', &
-                                                ncluster_freq, ' MC steps.'
+            WRITE(logunit,'(A,T50,I8,A)') 'Cluster distribution will be calculated/written at every', &
+                                           ncluster_freq, ' MC steps.'
             IF (ncluster_freq == 0) THEN
                 WRITE(logunit,'(A)') 'Clustering info given to calculate cluster distr.,'
                 WRITE(logunit,'(A)') 'but cluster distribution frequency not given.'
@@ -6369,6 +6368,10 @@ CMloop: DO icm = 1, 2
             c_or_m = 2
 
         ELSE IF (line_array(1) == 'exvol') THEN
+            IF (nexvol_freq == 0) THEN
+                WRITE(logunit,'(A)') 'Clustering info given to calculate cluster distr.,'
+                WRITE(logunit,'(A)') 'but excluded volume frequency not given.'
+            END IF
             c_or_m = 3
 
         ! Error handling
@@ -6496,6 +6499,7 @@ EnLoop: DO ientry = 1, n_entries
                     END DO jaloop
                     END DO jsloop
                     END DO isloop
+                END DO
 
             ELSE IF (line_array(1) == 'micelle') THEN
                 cluster%criteria(c_or_m, int_micelle) = .TRUE.
@@ -6602,7 +6606,7 @@ EnLoop: DO ientry = 1, n_entries
                             END DO
         
                         END DO
-                    ENDIF
+                    END IF
     
                 END DO
     
