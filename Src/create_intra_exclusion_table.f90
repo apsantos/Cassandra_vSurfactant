@@ -329,6 +329,12 @@ SUBROUTINE Read_Intra_Exclusion_Table(is)
             IF (( ANY(ii == temp_type(:,is)) .eqv. .FALSE.) .or. &
                 ( ANY(jj == temp_type(:,is)) .eqv. .FALSE.)) THEN
                err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule."
+               err_msg(2) = "of species "//TRIM(Int_To_String(is))
+                IF (( ANY(ii == temp_type(:,is)) .eqv. .FALSE.) )THEN
+                    err_msg(3) = "This is not in the Atom_Types: "//TRIM(Int_To_String(ii))
+                ELSEIF (( ANY(jj == temp_type(:,is)) .eqv. .FALSE.) )THEN
+                    err_msg(3) = "This is not in the Atom_Types: "//TRIM(Int_To_String(jj))
+                ENDIF
                CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
                EXIT
             ENDIF
@@ -370,7 +376,13 @@ SUBROUTINE Read_Intra_Exclusion_Table(is)
 
             IF (( ANY(ii == temp_type(:,is)) .eqv. .FALSE.) .or. &
                 ( ANY(jj == temp_type(:,is)) .eqv. .FALSE.)) THEN
-               err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule."
+               err_msg(1) = "Intra Scaling can only be done among atoms in the same molecule"
+               err_msg(2) = "of species "//TRIM(Int_To_String(is))
+                IF (( ANY(ii == temp_type(:,is)) .eqv. .FALSE.) )THEN
+                    err_msg(3) = "This is not in the Atom_Types: "//TRIM(Int_To_String(ii))
+                ELSEIF (( ANY(jj == temp_type(:,is)) .eqv. .FALSE.) )THEN
+                    err_msg(3) = "This is not in the Atom_Types: "//TRIM(Int_To_String(jj))
+                ENDIF
                CALL Clean_Abort(err_msg,'Read_Intra_Exclusion_Table')
                EXIT
             ENDIF
