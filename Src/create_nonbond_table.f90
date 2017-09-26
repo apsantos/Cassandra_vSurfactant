@@ -587,10 +587,22 @@ SUBROUTINE Read_Nonbond_Table
     n_params = INT(nbr_atomtypes * (nbr_atomtypes + 1 ) / 2)
 
     ! Read in from the table file
-    DO cur_line = i_line, n_params + i_line - 1
+line_loop: DO cur_line = i_line, n_params + i_line - 1
         CALL Parse_String(mixfile_unit, cur_line, 2, nbr_entries, line_array, ierr)
         itype = String_To_Int( line_array(1) )
         jtype = String_To_Int( line_array(2) )
+        IF (itype > nbr_atomtypes) THEN
+            WRITE(*,'(A,T25,A)') '    WARNING:'
+            WRITE(*,'(A,I3,2A)') 'type (', itype, ') in the mix file', mixfile_name,&
+                                 'is too large based on # Atom_Types info and number of species, skipping'
+            CYCLE line_loop
+        END IF
+        IF (jtype > nbr_atomtypes) THEN
+            WRITE(*,'(A,T25,A)') '    WARNING'
+            WRITE(*,'(A,I3,2A)') 'type (', jtype, ') in the mix file', mixfile_name,&
+                                 'is too large based on # Atom_Types info and number of species, skipping'
+            CYCLE line_loop
+        END IF
 
         int_vdw_style_mix(itype,jtype,:) = .false.
         int_vdw_style_mix(jtype,itype,:) = .false.
@@ -665,7 +677,7 @@ SUBROUTINE Read_Nonbond_Table
             ENDIF
 
         ENDDO
-    ENDDO
+    ENDDO line_loop
 
     ! read the vdw sum style and cutoffs if there
     i_line = 1
@@ -684,6 +696,20 @@ SUBROUTINE Read_Nonbond_Table
    
               itype = String_To_Int( line_array(1) )
               jtype = String_To_Int( line_array(2) )
+
+              IF (itype > nbr_atomtypes) THEN
+                  WRITE(*,'(A,T25,A)') '    WARNING'
+                  WRITE(*,'(A,I3,2A)') 'type (', itype, ') in the mix file', mixfile_name,&
+                                       'is too large based on # Atom_Types info and number of species, skipping'
+                  CYCLE 
+              END IF
+              IF (jtype > nbr_atomtypes) THEN
+                  WRITE(*,'(A,T25,A)') '    WARNING'
+                  WRITE(*,'(A,I3,2A)') 'type (', jtype, ') in the mix file', mixfile_name,&
+                                       'is too large based on # Atom_Types info and number of species, skipping'
+                  CYCLE 
+              END IF
+
               rcut_vdw_mix(itype,jtype) = String_To_Double(line_array(4))
               rcut_vdw_mix(jtype,itype) = String_To_Double(line_array(4))
 
