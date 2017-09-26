@@ -58,7 +58,7 @@ CONTAINS
     OPEN(unit=chkptunit,file=checkpointfile)
     ! Let us write all the counters
 
-    WRITE(chkptunit,*) '********* Translation,rotation, dihedral, angle distortion ******'
+    WRITE(chkptunit,'(A)') '********* Translation,rotation, dihedral, angle distortion ******'
 
     DO ibox = 1, nbr_boxes
        DO is = 1, nspecies
@@ -75,18 +75,18 @@ CONTAINS
 
        IF (int_sim_type == sim_npt .OR. int_sim_type == sim_gemc .OR. &
             int_sim_type == sim_gemc_npt) THEN
-          WRITE(chkptunit,*) nvol_success(ibox), nvolumes(ibox)
+          WRITE(chkptunit,'(I10,1x,I10)') nvol_success(ibox), nvolumes(ibox)
        END IF
     END DO
     
-    WRITE(chkptunit,*) '********** # of MC steps *********'
-    WRITE(chkptunit,*) this_mc_step
-    WRITE(chkptunit,*) '******** Box info ***********'
+    WRITE(chkptunit,'(A)') '********** # of MC steps *********'
+    WRITE(chkptunit,'(I12)') this_mc_step
+    WRITE(chkptunit,'(A)') '******** Box info ***********'
     
     DO ibox = 1, nbr_boxes
-       WRITE(chkptunit,*) tot_trials(ibox)
-       WRITE(chkptunit,*) box_list(ibox)%volume
-       WRITE(chkptunit,*) box_list(ibox)%box_shape
+       WRITE(chkptunit,'(I12)') tot_trials(ibox)
+       WRITE(chkptunit,'(F19.8)') box_list(ibox)%volume
+       WRITE(chkptunit,'(A)') TRIM(box_list(ibox)%box_shape)
        DO ii = 1, 3
           WRITE(chkptunit,'(3(F10.4,1X))') (box_list(ibox)%length(ii,jj), jj=1,3)
        END DO
@@ -99,15 +99,15 @@ CONTAINS
        IF (int_sim_type == sim_npt .OR. int_sim_type == sim_gemc .OR. &
             int_sim_type == sim_gemc_npt)  THEN
 
-             WRITE(chkptunit,*) box_list(ibox)%dv_max
+             WRITE(chkptunit,'(F10.4)') box_list(ibox)%dv_max
           
        END IF
        
     END DO
-    WRITE(chkptunit,*) '**** SEEDS *******'
-    WRITE(chkptunit,*) s1,s2,s3,s4,s5
+    WRITE(chkptunit,'(A)') '**** SEEDS *******'
+    WRITE(chkptunit,'(5(I21,1X))') s1,s2,s3,s4,s5
     
-    WRITE(chkptunit,*) '******* Info for total number of molecules'
+    WRITE(chkptunit,'(A)') '******* Info for total number of molecules'
     ! write number of molecules of each of the species
     DO is = 1, nspecies
        total_molecules_is = 0
@@ -115,11 +115,11 @@ CONTAINS
           CALL Get_Nmolecules_Species(ibox,is,nmolecules_is)
           total_molecules_is = total_molecules_is + nmolecules_is
        END DO
-       WRITE(chkptunit,*) is,total_molecules_is
+       WRITE(chkptunit,'(I3,1X,I10)') is,total_molecules_is
     END DO
     
     
-    WRITE(chkptunit,*) '********Writing coordinates for all the boxes'
+    WRITE(chkptunit,'(A)') '******** Writing coordinates for all the boxes'
     
     DO is = 1, nspecies
        DO im = 1, nmolecules(is)
@@ -130,8 +130,8 @@ CONTAINS
              this_box = molecule_list(this_im,is)%which_box
 
              DO ia = 1, natoms(is)
-!                WRITE(chkptunit,'(A,T10,3(F15.10,1X),T70,I3)') nonbond_list(ia,is)%element, &
-                WRITE(chkptunit,*) nonbond_list(ia,is)%element, &
+                WRITE(chkptunit,'(A,T10,3(F15.10,1X),T70,I3)') nonbond_list(ia,is)%element, &
+                !WRITE(chkptunit,*) nonbond_list(ia,is)%element, &
                      atom_list(ia,this_im,is)%rxp, &
                      atom_list(ia,this_im,is)%ryp, &
                      atom_list(ia,this_im,is)%rzp, this_box
@@ -932,11 +932,12 @@ SUBROUTINE Read_DCD(this_mc_step)
 
 SUBROUTINE Read_Checkpoint
 
-   INTEGER :: this_mc_step
+    INTEGER :: this_mc_step
 
     INTEGER :: ibox, is, ii, jj, im, this_im, ia, this_box, mols_this, sp_nmoltotal(nspecies)
     INTEGER :: this_species
     INTEGER :: this_unit
+    INTEGER :: line_nbr, nbr_entries, ierr
 
     INTEGER, DIMENSION(:), ALLOCATABLE :: total_molecules, n_int
 
@@ -945,6 +946,8 @@ SUBROUTINE Read_Checkpoint
 
     LOGICAL :: f_checkpoint, f_read_old
     LOGICAL :: lopen
+
+    CHARACTER(240) :: line_array(80)
 
     ALLOCATE(total_molecules(nspecies))
     ALLOCATE(n_int(nspecies))
@@ -961,6 +964,7 @@ SUBROUTINE Read_Checkpoint
     nmols(:,:) = 0
     n_int(:) = 0
     
+    line_nbr = 1
     READ(restartunit,*)
 
     f_checkpoint = .FALSE.
@@ -975,22 +979,43 @@ SUBROUTINE Read_Checkpoint
           ! read information only if start_type == checkpoint
           
           IF (f_checkpoint) THEN
+             line_nbr = line_nbr + 1
+             CALL Parse_String(restartunit,line_nbr,5,nbr_entries,line_array,ierr)
+             this_species = String_To_Int( line_array(1) )
+             ntrials(is,ibox)%displacement = String_To_Int( line_array(2) )
+             ntrials(is,ibox)%rotation = String_To_Int( line_array(3) )
+             ntrials(is,ibox)%dihedral = String_To_Int( line_array(4) )
+             ntrials(is,ibox)%angle = String_To_Int( line_array(5) )
 
-             READ(restartunit,'(5(I10,1x))') this_species, ntrials(is,ibox)%displacement, &
-                  ntrials(is,ibox)%rotation, ntrials(is,ibox)%dihedral, &
-                  ntrials(is,ibox)%angle
+             !READ(restartunit,*) this_species, ntrials(is,ibox)%displacement, &
+             !READ(restartunit,'(5(I10,1x))') this_species, ntrials(is,ibox)%displacement, &
+             !     ntrials(is,ibox)%rotation, ntrials(is,ibox)%dihedral, &
+             !     ntrials(is,ibox)%angle
 
-             READ(restartunit,'(5(I10,1x))') this_species, nsuccess(is,ibox)%displacement, &
-                  nsuccess(is,ibox)%rotation, nsuccess(is,ibox)%dihedral, &
-                  nsuccess(is,ibox)%angle
-             READ(restartunit,'(3(E24.15))') max_disp(is,ibox), max_rot(is,ibox), &
-                  species_list(is)%max_torsion
+             line_nbr = line_nbr + 1
+             CALL Parse_String(restartunit,line_nbr,5,nbr_entries,line_array,ierr)
+             this_species = String_To_Int( line_array(1) )
+             nsuccess(is,ibox)%displacement = String_To_Int( line_array(2) )
+             nsuccess(is,ibox)%rotation = String_To_Int( line_array(3) )
+             nsuccess(is,ibox)%dihedral = String_To_Int( line_array(4) )
+             nsuccess(is,ibox)%angle = String_To_Int( line_array(5) )
+             !READ(restartunit,'(5(I10,1x))') this_species, nsuccess(is,ibox)%displacement, &
+             !     nsuccess(is,ibox)%rotation, nsuccess(is,ibox)%dihedral, &
+             !     nsuccess(is,ibox)%angle
+             line_nbr = line_nbr + 1
+             CALL Parse_String(restartunit,line_nbr,3,nbr_entries,line_array,ierr)
+             max_disp(is,ibox) = String_To_Double( line_array(1) )
+             max_rot(is,ibox) = String_To_Double( line_array(2) )
+             species_list(is)%max_torsion = String_To_Double( line_array(3) )
+             !READ(restartunit,'(3(E24.15))') max_disp(is,ibox), max_rot(is,ibox), &
+             !     species_list(is)%max_torsion
 
           ELSE IF (f_read_old) THEN
 
              READ(restartunit,*)
              READ(restartunit,*)
              READ(restartunit,*)
+             line_nbr = line_nbr + 3
 
           END IF
 
@@ -999,8 +1024,12 @@ SUBROUTINE Read_Checkpoint
        IF (int_sim_type == sim_npt .OR. int_sim_type == sim_gemc .OR. &
             int_sim_type == sim_gemc_npt) THEN
 
+          line_nbr = line_nbr + 1
           IF (f_checkpoint) THEN
-             READ(restartunit,*) nvol_success(ibox), nvolumes(ibox)
+             CALL Parse_String(restartunit,line_nbr,2,nbr_entries,line_array,ierr)
+             nvol_success(ibox) = String_To_Int( line_array(1) )
+             nvolumes(ibox) = String_To_Int( line_array(2) )
+             !READ(restartunit,'(I10,1x,I10)') nvol_success(ibox), nvolumes(ibox)
           ELSE IF (f_read_old) THEN
              READ(restartunit,*)
           END IF
@@ -1008,25 +1037,51 @@ SUBROUTINE Read_Checkpoint
        END IF
     END DO
     
+    line_nbr = line_nbr + 1
     READ(restartunit,*)
-    READ(restartunit,*) this_mc_step
+    line_nbr = line_nbr + 1
+    CALL Parse_String(restartunit,line_nbr,1,nbr_entries,line_array,ierr)
+    this_mc_step = String_To_Int( line_array(1) )
+    !READ(restartunit,'(I12)') this_mc_step
+    line_nbr = line_nbr + 1
     READ(restartunit,*) 
     
     DO ibox = 1, nbr_boxes
 
        IF (f_checkpoint) THEN
+          line_nbr = line_nbr + 1
+          CALL Parse_String(restartunit,line_nbr,1,nbr_entries,line_array,ierr)
+          tot_trials(ibox) = String_To_Int( line_array(1) )
           
-          READ(restartunit,*) tot_trials(ibox)
-          READ(restartunit,*) box_list(ibox)%volume
-          READ(restartunit,*) box_list(ibox)%box_shape
+          line_nbr = line_nbr + 1
+          CALL Parse_String(restartunit,line_nbr,1,nbr_entries,line_array,ierr)
+          box_list(ibox)%volume = String_To_Double( line_array(1) )
+          
+          line_nbr = line_nbr + 1
+          CALL Parse_String(restartunit,line_nbr,1,nbr_entries,line_array,ierr)
+          box_list(ibox)%box_shape = TRIM( line_array(1) )
+          
+          !READ(restartunit,'(I12)') tot_trials(ibox)
+          !READ(restartunit,'(F19.8)') box_list(ibox)%volume
+          !READ(restartunit,'(A)') box_list(ibox)%box_shape
           
           DO ii = 1, 3
-             READ(restartunit,*) (box_list(ibox)%length(ii,jj), jj=1,3)
+             line_nbr = line_nbr + 1
+             CALL Parse_String(restartunit,line_nbr,3,nbr_entries,line_array,ierr)
+             DO jj = 1, 3
+                box_list(ibox)%length(ii,jj) = String_To_Double( line_array(jj) )
+             END DO
+             !READ(restartunit,'(3(F10.4,1X))') (box_list(ibox)%length(ii,jj), jj=1,3)
           END DO
           
           !--- inverse length
           DO ii = 1, 3
-             READ(restartunit,*) (box_list(ibox)%length_inv(ii,jj), jj=1,3)          
+             line_nbr = line_nbr + 1
+             CALL Parse_String(restartunit,line_nbr,3,nbr_entries,line_array,ierr)
+             DO jj = 1, 3
+                box_list(ibox)%length_inv(ii,jj) = String_To_Double( line_array(jj) )
+             END DO
+             !READ(restartunit,'(3(E12.5,1X))') (box_list(ibox)%length_inv(ii,jj), jj=1,3)          
           END DO
 
           CALL Compute_Cell_Dimensions(ibox)
@@ -1047,14 +1102,18 @@ SUBROUTINE Read_Checkpoint
              READ(restartunit,*)
           END DO
 
+          line_nbr = line_nbr + 9
        END IF
 
        
        IF (int_sim_type == sim_npt .OR. int_sim_type == sim_gemc .OR. &
             int_sim_type == sim_gemc_npt) THEN
           
+          line_nbr = line_nbr + 1
           IF (f_checkpoint) THEN
-                READ(restartunit,*) box_list(ibox)%dv_max          
+             CALL Parse_String(restartunit,line_nbr,1,nbr_entries,line_array,ierr)
+             box_list(ibox)%dv_max = String_To_Double( line_array(1) )
+             !READ(restartunit,'(F10.4)') box_list(ibox)%dv_max          
           ELSE
              READ(restartunit,*)
           END IF
@@ -1063,18 +1122,40 @@ SUBROUTINE Read_Checkpoint
        
     END DO
     
+    line_nbr = line_nbr + 1
     READ(restartunit,*)
+
+    line_nbr = line_nbr + 1
     IF (f_checkpoint) THEN
+        CALL Parse_String(restartunit,line_nbr,3,nbr_entries,line_array,ierr)
+        s1 = String_To_Int( line_array(1) )
+        s2 = String_To_Int( line_array(2) )
+        s3 = String_To_Int( line_array(3) )
+        IF ( nbr_entries == 3) THEN
+           line_nbr = line_nbr + 1
+           CALL Parse_String(restartunit,line_nbr,2,nbr_entries,line_array,ierr)
+           s4 = String_To_Int( line_array(1) )
+           s5 = String_To_Int( line_array(2) )
+        ELSE
+           s4 = String_To_Int( line_array(4) )
+           s5 = String_To_Int( line_array(5) )
+        END IF
 !       READ(restartunit,*) iseed1, iseed3
-        READ(restartunit,*) s1,s2,s3,s4,s5
+        !READ(restartunit,'(5(I21,1X))') s1,s2,s3,s4,s5
     ELSE
        READ(restartunit,*)
     END IF
 
     ! read total number of molecules of each of the species
+
+    line_nbr = line_nbr + 1
     READ(restartunit,*)
     DO is = 1, nspecies
-       READ(restartunit,*) this_species, sp_nmoltotal(is)
+       line_nbr = line_nbr + 1
+       CALL Parse_String(restartunit,line_nbr,2,nbr_entries,line_array,ierr)
+       this_species = String_To_Int( line_array(1) )
+       sp_nmoltotal(is) = String_To_Int( line_array(2) )
+       !READ(restartunit,'(I3,I10)') this_species, sp_nmoltotal(is)
 
        IF (sp_nmoltotal(is) > nmolecules(is)) THEN
           err_msg = ""
@@ -1083,6 +1164,7 @@ SUBROUTINE Read_Checkpoint
        END IF
     END DO
     
+    line_nbr = line_nbr + 1
     READ(restartunit,*)
     
     DO is = 1, nspecies
@@ -1108,11 +1190,27 @@ SUBROUTINE Read_Checkpoint
 
           DO ia = 1, natoms(is)
 
-             READ(restartunit,*)nonbond_list(ia,is)%element, &
-                  atom_list(ia,this_im,is)%rxp, &
-                  atom_list(ia,this_im,is)%ryp, &
-                  atom_list(ia,this_im,is)%rzp 
-             READ(restartunit,*) this_box
+             line_nbr = line_nbr + 1
+             CALL Parse_String(restartunit,line_nbr,4,nbr_entries,line_array,ierr)
+             nonbond_list(ia,is)%element = TRIM( line_array(1) )
+             atom_list(ia,this_im,is)%rxp = String_To_Double( line_array(2) )
+             atom_list(ia,this_im,is)%ryp = String_To_Double( line_array(3) )
+             atom_list(ia,this_im,is)%rzp = String_To_Double( line_array(4) )
+             IF (nbr_entries == 4) THEN
+                line_nbr = line_nbr + 1
+                CALL Parse_String(restartunit,line_nbr,1,nbr_entries,line_array,ierr)
+                this_box = String_To_Int( line_array(1) )
+             ELSE
+                this_box = String_To_Int( line_array(5) )
+             END IF
+             !READ(restartunit,*) this_box
+!             READ(restartunit,'(A,T10,3(F15.10,1X),T70,I3)') &
+!                  nonbond_list(ia,is)%element, &
+!                  atom_list(ia,this_im,is)%rxp, &
+!                  atom_list(ia,this_im,is)%ryp, &
+!                  atom_list(ia,this_im,is)%rzp, &
+!                  this_box
+             !READ(restartunit,*) this_box
              ! set the cfc_lambda and exist flags for this atom
              atom_list(ia,this_im,is)%exist = .TRUE.
           END DO
