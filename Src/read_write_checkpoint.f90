@@ -390,7 +390,8 @@ SUBROUTINE Read_GRO(this_mc_step)
     ps = ndx_type(1)
     DO i_line = 1, n_lines 
 
-       IF (1 < this_mc_step .and. this_mc_step < n_equilsteps) THEN
+       IF (this_mc_step < n_equilsteps) THEN
+       !IF (1 < this_mc_step .and. this_mc_step < n_equilsteps) THEN
           READ(gro_config_unit, *) 
           CYCLE
        END IF
