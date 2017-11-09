@@ -5162,9 +5162,9 @@ SUBROUTINE Get_Start_Type
 
               WRITE(logunit,*)
               WRITE(logunit,'(A,T40,I3,A,T50)')'Starting configuration is'
-              WRITE(logunit,*) ADJUSTL(line_array(1))
+              WRITE(logunit,*) TRIM(ADJUSTL(line_array(1)))
               WRITE(logunit,'(A,T40,I3,A,T50)')'Atom index is'
-              WRITE(logunit,*) ADJUSTL(line_array(2))
+              WRITE(logunit,*) TRIM(ADJUSTL(line_array(2)))
 
               gro_config_file = TRIM(ADJUSTL(line_array(1)))
               ndx_file = TRIM(ADJUSTL(line_array(2)))
@@ -5522,7 +5522,7 @@ SUBROUTINE Get_CBMC_Info
         call clean_abort(err_msg,'Get_CBMC_Info')
      end if
   end do
-end subroutine get_cbmc_info
+END SUBROUTINE Get_CBMC_Info
 !*****************************************************************************************
 SUBROUTINE Get_Zig_By_Omega
 !*************************************

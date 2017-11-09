@@ -436,8 +436,9 @@ SUBROUTINE GEMC_Driver
   write(logunit,*) '***** Insertion efficiency *****************'
   DO ibox = 1, nbr_boxes
      DO is = 1, nspecies
-        write(logunit,*) 'Total number of insertions for species', is , 'is', ntrials(is,ibox)%insertion
-        write(logunit,*) 'Successful insertions', nsuccess(is,ibox)%insertion
+        write(logunit,'(A40,2X,I2,2X,A2,2X,I10)') 'Total number of insertions for species', &
+                                                  is , 'is', ntrials(is,this_box)%insertion
+        write(logunit,'(A22,2X,I10)') 'Successful insertions', nsuccess(is,this_box)%insertion
      END DO
      write(logunit,*)
   END DO
@@ -445,8 +446,8 @@ SUBROUTINE GEMC_Driver
   write(logunit,*) '***** Deletion efficiency *****************'
   DO ibox = 1, nbr_boxes
     DO is = 1, nspecies
-       write(logunit,*) 'Total number of deletions for species', is , 'is', ntrials(is,ibox)%deletion
-       write(logunit,*) 'Successful deletions', nsuccess(is,ibox)%deletion
+        write(logunit,'(A40,2X,I2,2X,A2,2X,I10)') 'Total number of deletions for species', is , 'is', ntrials(is,this_box)%deletion
+        write(logunit,'(A22,2X,I10)') 'Successful deletions', nsuccess(is,this_box)%deletion
     END DO
     write(logunit,*)
   END DO
