@@ -1546,18 +1546,18 @@ CONTAINS
     !        Ewald_Real
   !------------------------------------------------------------------------------------------
     ! Passed to
-    REAL(DP) :: rijsq
-    INTEGER :: is,im,ia,js,jm,ja,ibox
-    LOGICAL :: get_vdw,get_qq
+    REAL(DP), INTENT(IN) :: rijsq
+    INTEGER, INTENT(IN) :: is,im,ia,js,jm,ja
+    LOGICAL, INTENT(IN) :: get_vdw,get_qq
 
+    ! Returned
+    REAL(DP), INTENT(OUT) :: Eij_vdw,Eij_qq
+
+    ! Local
     INTEGER :: i_vdw_sum
     LOGICAL :: intra
 
-    ! Returned
-    REAL(DP) :: Eij_vdw,Eij_qq
-
-    ! Local
-    INTEGER :: itype,jtype, this_box
+    INTEGER :: itype,jtype, this_box, ibox
     REAL(DP) :: eps,sig
     REAL(DP) :: SigOverRsq,SigOverR6,SigOverR12
     REAL(DP) :: SigOverRsq_shift,SigOverR6_shift,SigOverR12_shift
@@ -1570,11 +1570,12 @@ CONTAINS
     REAL(DP) :: SigOverR_shift, SigOverRn_shift, SigOverRm_shift, rcut_vdw, rcutsq
     REAL(DP) :: mie_coeff, rij,  mie_n, mie_m
 !    REAL(DP) :: Eij_vdw_check
+    REAL(DP) :: erf_val, Eij_ewald
     Real(DP) :: qi,qj, qsc
     REAL(DP) :: this_lambda
 
 !FSL Local Coulomb Correction variables
-    REAL(DP) :: E_qqcor, Cqqcor, Rqqcor, Sqqcor, ED, tanhqqcor
+    REAL(DP) :: ED, tanhqqcor
 !FSL Local Hydration and WCA Parameters
     REAL(DP) :: E_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, kappa
 
@@ -1883,9 +1884,9 @@ CONTAINS
                 
           rij = SQRT(rijsq)
 
-          Preexph = Hhyd/(Shyd*(SQRT(twopi)))
-          Powerh = ((rij - Rhyd)**2)/(2.0_DP*(Shyd**2))
-          E_hyd = Preexph*EXP(-Powerh)
+          Preexph = Hhyd / (Shyd * sqrtTwoPI)
+          Powerh = ((rij - Rhyd)**2.0)/(2.0_DP*(Shyd**2.0))
+          E_hyd = Preexph*DEXP(-Powerh)
 
           Eij_vdw = Eij_vdw + E_hyd
        ENDIF hydration_calculation
@@ -1896,40 +1897,53 @@ CONTAINS
           
           qi = nonbond_list(ia,is)%charge
           qj = nonbond_list(ja,js)%charge
+          Eij_ewald = 0.0_DP
 
           
-          IF (int_charge_sum_style(ibox) == charge_cut .OR. igas_flag) THEN
+          IF (int_charge_sum_style(ibox) == charge_cut .OR. igas_flag .OR. &
+              (int_charge_sum_style(ibox) == charge_ewald .AND. .NOT. igas_flag)) THEN
+            ! save time by multiplying only once, and then use it to get the ewald energy component
              ! Apply charge scaling for intramolecular energies
              qsc = 1.0_DP
 
+             rij = SQRT(rijsq)
              IF (intra) THEN
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
 
-             Eij_qq = qsc*charge_factor(ibox)*(qi*qj)/SQRT(rijsq)
+             Eij_qq = qsc*charge_factor(ibox)*(qi*qj)/rij
 
-             QQ_cor_calculation: IF ( int_vdw_style_mix(itype,jtype,vdw_corr) ) THEN
-         
-                Cqqcor = species_list(is)%total_charge*species_list(js)%total_charge
-                Rqqcor = vdw_param6_table(itype,jtype)
-                Sqqcor = vdw_param7_table(itype,jtype)
-         
-                tanhqqcor = DTANH((rij - Rqqcor)/Sqqcor)
-                ED = (5.2_DP + static_perm(ibox))/2.0_DP + (static_perm(ibox) - 5.2_DP)/2.0_DP*tanhqqcor
-                E_qqcor = charge_factor(ibox)*(Cqqcor/rij)*((static_perm(ibox)/ED) - 1.0_DP)
-                Eij_qq = Eij_qq + E_qqcor
-             END IF QQ_cor_calculation
-
-          ELSEIF (int_charge_sum_style(ibox) == charge_ewald .AND. ( .NOT. igas_flag) ) THEN
-             ! Real space Ewald part
-             this_box = molecule_list(im,is)%which_box
-             CALL Ewald_Real(ia,im,is,qi,ja,jm,js,qj,rijsq,Eij_qq,this_box)
-             
+             IF (int_charge_sum_style(ibox) == charge_ewald .AND. ( .NOT. igas_flag) ) THEN
+                ! Real space Ewald part
+                erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
+                Eij_ewald = - (erf_val * Eij_qq ) 
              ! self and recipricoal parts need to be computed as total energy differences between original
              ! configuration and the perturbed configuration. These terms are thus added on after all atoms 
              ! have been moved. 
 
+             ENDIF
+             Eij_qq = qsc*Eij_qq
           ENDIF
+
+          QQ_cor_calculation: IF ( int_vdw_style_mix(itype,jtype,vdw_corr) ) THEN
+             !              1    q1*q2  e_s
+             ! U_corr = --------*-----*-----
+             !          4*pi*e_0 e_s*r eD(r)
+             !
+             !          e_s+5.2   e_s-5.2      /r-r_me\
+             ! eD(r)  = ------- + ------- tanh|--------|
+             !             2         2         \ s_h  /
+             ! param6 = r_me
+             ! param7 = sigma_h
+      
+             tanhqqcor = DTANH((SQRT(rijsq) - vdw_param6_table(itype,jtype))/vdw_param7_table(itype,jtype))
+             ED = (5.2_DP + static_perm(ibox))/2.0_DP + (static_perm(ibox) - 5.2_DP)/2.0_DP*tanhqqcor
+
+             ! make sure that this does not affect the long-range effect from the ewald sum
+             Eij_qq = Eij_qq * (static_perm(ibox) / ED)
+   
+          END IF QQ_cor_calculation
+
 
           Screen_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_screen)) .or. &
                                    ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_screen)) ) THEN
@@ -1947,12 +1961,16 @@ CONTAINS
                 ENDIF
              ENDIF
                 
+             ! make sure that this does not affect the long-range effect from the ewald sum
              Eij_qq = Eij_qq * exp( -kappa * (rij - sig) )
 
           ENDIF Screen_calculation
 
+          !print*, nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name
+          Eij_qq = Eij_qq + Eij_ewald
+
        ENDIF qq_calculation
-       
+
     ENDIF ExistCheck
 
   !writE(*,*) E_hyd, nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), Eij_vdw, Eij_qq
@@ -1980,17 +1998,10 @@ CONTAINS
     INTEGER :: ia,im,is,ja,jm,js,ibox
     REAL(DP) :: qi,qj,qsc,rijsq,rij,erf_val
     REAL(DP) :: Eij
-!FSL Local Coulomb Correction variables
-    REAL(DP) :: E_qqcor, Cqqcor, Rqqcor, Sqqcor, ED, tanhqqcor
     INTEGER :: itype, jtype
 
     qsc = 1.0_DP
     ibox = molecule_list(im,is)%which_box
-    E_qqcor = 0.0_DP
-    Cqqcor = 1.0_DP
-    tanhqqcor = 0.0_DP
-    Rqqcor = 1.0_DP
-    Sqqcor = 1.0_DP
 
     itype = nonbond_list(ia,is)%atom_type_number
     jtype = nonbond_list(ja,js)%atom_type_number
@@ -2011,23 +2022,9 @@ CONTAINS
     rij = SQRT(rijsq)
     ! May need to protect against very small rijsq
     erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
-    Eij = (qi*qj/rij)*(qsc - erf_val)*charge_factor(ibox)
+    Eij = (qi * qj / rij)* charge_factor(ibox)
+    Eij = Eij * (qsc - erf_val) 
 
-!FSL QQ Cor start
-    QQ_cor_calculation: IF ( int_vdw_style_mix(itype,jtype,vdw_corr) ) THEN
-       ED = 0.0_DP
-
-       Cqqcor = species_list(is)%total_charge*species_list(js)%total_charge
-       Rqqcor = vdw_param6_table(itype,jtype)
-       Sqqcor = vdw_param7_table(itype,jtype)
-
-       tanhqqcor = DTANH((rij - Rqqcor)/Sqqcor)
-       ED = (5.2_DP + static_perm(ibox))/2.0_DP + (static_perm(ibox) - 5.2_DP)/2.0_DP*tanhqqcor
-       E_qqcor = charge_factor(ibox)*(Cqqcor/rij)*((static_perm(ibox)/ED) - 1.0_DP)
-       Eij = Eij + E_qqcor
-    END IF QQ_cor_calculation
-
-!FSL QQ Cor end    
 
   END SUBROUTINE Ewald_Real
 
@@ -3356,9 +3353,10 @@ CONTAINS
 !******************************************************************************************
  SUBROUTINE Energy_Test(rijsq,get_vdw,get_qq,this_box)
    
-   INTEGER  :: this_box
-   REAL(DP) :: rijsq,rcut_cbmcsq
-   LOGICAL  :: get_vdw, get_qq
+   REAL(DP), INTENT(IN) :: rijsq
+   LOGICAL, INTENT(OUT)  :: get_vdw, get_qq
+   INTEGER, INTENT(IN)  :: this_box
+   REAL(DP) :: rcut_cbmcsq
    
    rcut_cbmcsq = rcut_cbmc(this_box)*rcut_cbmc(this_box)
    
@@ -3694,26 +3692,28 @@ CONTAINS
     !        Ewald_Real
   !------------------------------------------------------------------------------------------
     ! Passed to
-    REAL(DP) :: rijsq
-    REAL(DP) :: rcutsq
-    INTEGER :: is,im,ia,js,jm,ja,ibox
-    LOGICAL :: get_vdw,get_qq
+    REAL(DP), INTENT(IN) :: rijsq
+    INTEGER, INTENT(IN) :: is,im,ia,js,jm,ja
+    LOGICAL, INTENT(IN) :: get_vdw,get_qq
 
     ! Returned
-    REAL(DP) :: Wij_vdw,Wij_qq,Eij_vdw
+    REAL(DP), INTENT(OUT) :: Wij_vdw,Wij_qq
 
     ! Local
-    INTEGER :: itype,jtype, this_box
+    INTEGER :: itype,jtype, this_box, ibox
+    REAL(DP) :: rcutsq
+    REAL(DP) :: Eij_vdw
     REAL(DP) :: eps,sig,SigOverRsq,SigOverR6,SigOverR12, kappa
     REAL(DP) :: SigOverR4
     REAL(DP) :: SigOverR3,SigOverR9
     REAL(DP) :: SigOverR, SigOverRn, SigOverRm, mie_coeff, mie_n, mie_m
     REAL(DP) :: roffsq_rijsq, roffsq_rijsq_sq, factor2, fscale
     REAL(DP) :: qi,qj, qsc, erf_val, this_lambda
-    REAL(DP) :: rij, ewald_constant, exp_const, Wij_self
+    REAL(DP) :: rij, ewald_constant, exp_const, Wij_self, Wij_ewald
 
 !FSL Local Hydration and WCA Parameters
     REAL(DP) :: Wij_hyd, Hhyd, Rhyd, Shyd, Preexph, Powerh, rshift
+    REAL(DP) :: ED, dEDdr, r_qqcor
 
     INTEGER :: i_vdw_sum
     LOGICAL :: intra
@@ -3988,7 +3988,7 @@ CONTAINS
                 
           rij = SQRT(rijsq)
 
-          Preexph = Hhyd/(Shyd**3*(SQRT(twopi)))
+          Preexph = Hhyd/(Shyd**3.0*(sqrtTwoPI))
           rshift = (rij - Rhyd)
           Powerh = (rshift**2)/(2.0_DP*(Shyd**2))
           Wij_hyd = Preexph*EXP(-Powerh)*rij*rshift
@@ -4001,47 +4001,41 @@ CONTAINS
 
        qq_calculation: IF ( get_qq ) THEN
 
-          qi = nonbond_list(ia,is)%charge
+          qi =  nonbond_list(ia,is)%charge
           qj = nonbond_list(ja,js)%charge
 
+          Wij_ewald = 0.0_DP
 
-          IF (int_charge_sum_style(ibox) == charge_cut) THEN
+          IF (int_charge_sum_style(ibox) == charge_cut .or. &
+              int_charge_sum_style(ibox) == charge_ewald) THEN
              ! Apply charge scaling for intramolecular energies
              qsc = 1.0_DP
              IF ( intra ) THEN
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
-             Wij_qq = qsc*charge_factor(ibox)*(qi*qj)/SQRT(rijsq)
-          ELSEIF (int_charge_sum_style(ibox) == charge_ewald) THEN
+
+             rij = SQRT(rijsq)
+
+             Wij_qq = qsc*(qi*qj)/SQRT(rijsq)
+
+          IF (int_charge_sum_style(ibox) == charge_ewald) THEN
              ! Real space Ewald part
-             this_box = molecule_list(im,is)%which_box
-             qsc = 1.0_DP
              ibox = molecule_list(im,is)%which_box 
-
-             ! Apply intramolecular scaling if necessary
-             IF (intra) THEN
-       
-                ! Intramolecular charge scaling
-                qsc = charge_intra_scale(ia,ja,is)
-
-             ENDIF
-
              ! Real space part: This does the intrascaling correct. For cfc intra,
              ! we use full scaling. I think for CFC inter, we simply scale the actual 
              ! value of the charge, but do NOT scale it here for intra interactions.
              ! Come back to this later.
 
-             rij = SQRT(rijsq)
              ewald_constant = 2.0_DP * alpha_ewald(ibox) / rootPI
              exp_const = EXP(-alpha_ewald(ibox)*alpha_ewald(ibox)*rijsq) 
              ! May need to protect against very smamie_coeffsq
              erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
-             Wij_qq = qi*qj*( (qsc - erf_val)/rij + ewald_constant*exp_const )
+             Wij_ewald = qi*qj*( -(erf_val/rij) + ewald_constant*exp_const )
 
              IF (intra) THEN
 
                 Wij_self = (qsc - 1.0_DP) * qi*qj * (erf_val/rij - ewald_constant * exp_const)
-                Wij_qq = Wij_qq + Wij_self
+                Wij_ewald = Wij_ewald + Wij_self
 
              END IF
 
@@ -4050,6 +4044,20 @@ CONTAINS
              ! have been moved. 
 
           ENDIF
+          ENDIF
+
+          QQ_cor_calculation: IF ( int_vdw_style_mix(itype,jtype,vdw_corr) ) THEN
+
+             ! calculate r_qqcor here so that it saves time later
+             r_qqcor = (rij - vdw_param6_table(itype,jtype)) / vdw_param7_table(itype,jtype)
+
+             ED = (5.2_DP + static_perm(ibox))/2.0_DP + (static_perm(ibox) - 5.2_DP)/2.0_DP*DTANH(r_qqcor)
+             dEDdr = ((static_perm(ibox) - 5.2_DP) / (2.0_DP * vdw_param7_table(itype,jtype))) * &
+                      (1.0_DP / DCOSH(r_qqcor))**2.0
+
+             Wij_qq = (Wij_qq + ( qi*qj * qsc * dEDdr / ED)) * (static_perm(ibox) / ED)
+
+          END IF QQ_cor_calculation
 
           Screen_calculation: IF ( ( intra .AND. int_in_vdw_style_mix(ia,ja,is,vdw_screen)) .or. &
                                    ( .not. intra .AND. int_vdw_style_mix(itype,jtype,vdw_screen)) ) THEN
@@ -4068,6 +4076,8 @@ CONTAINS
              ENDIF
                 
           ENDIF Screen_calculation
+
+          Wij_qq = Wij_qq + Wij_ewald
 
        ENDIF qq_calculation
 
