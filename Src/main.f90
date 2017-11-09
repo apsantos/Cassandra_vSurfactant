@@ -279,7 +279,7 @@ PROGRAM Main
   ELSEIF (start_type == 'read_gro') THEN
      ! Read in xyz coordinates for post processing
 
-     CALL Read_GRO(-1)
+     CALL Read_NDX
      CALL Read_GRO(1)
 
   ELSEIF (start_type == 'read_xtc') THEN

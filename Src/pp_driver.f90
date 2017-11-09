@@ -76,8 +76,6 @@ SUBROUTINE PP_Driver
 
      i = i + 1
 
-     ! We will select a move from Golden Sampling scheme
-  
      IF (i == n_mcsteps) complete = .TRUE.
 
      IF ( start_type == 'read_xyz' ) THEN
@@ -116,6 +114,8 @@ SUBROUTINE PP_Driver
      next_write(this_box) = .true.
      next_rdf_write(this_box) = .true.
 
+     ! We will select a move from Golden Sampling scheme
+  
      IF (i < n_equilsteps) CYCLE
 
      CALL Accumulate(this_box)
