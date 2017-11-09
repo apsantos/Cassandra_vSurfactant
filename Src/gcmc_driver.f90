@@ -282,19 +282,6 @@ SUBROUTINE GCMC_Driver
 
      IF ( .NOT. block_average ) THEN
 
-        IF ( ncluster_freq /= 0 ) THEN
-           IF ( MOD(i,ncluster_freq) == 0 ) THEN
-           
-              DO ibox = 1, nbr_boxes
-              
-                 CALL Find_Clusters(ibox,1)
-                 CALL Write_Cluster(ibox)
-              
-              END DO
-           
-           END IF
-        END IF
-        
         ! instantaneous values are to be printed   
 
         IF ( MOD(i,ncoord_freq) == 0 ) THEN
