@@ -19,6 +19,7 @@
 !   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !********************************************************************************
 SUBROUTINE Write_Properties(this_mc_step,this_box)
+!********************************************************************************
   ! The subroutine will write desired properties to the property files. It is
   ! called by respective drivers such as.
   !
@@ -518,8 +519,7 @@ SUBROUTINE Write_Coords(this_box)
         IF(molecule_list(this_im,is)%live  .AND. &
            molecule_list(this_im,is)%which_box == this_box ) THEN
            DO ia = 1, natoms(is)
-!FSL Write is and im values           
-              WRITE(M_XYZ_unit,'(A3,F20.13,F20.13,F20.13,I5,I5)') &
+              WRITE(M_XYZ_unit,'(A3,x,F20.13,x,F20.13,x,F20.13,x,I5,x,I5)') &
               nonbond_list(ia,is)%atom_name, & 
                    atom_list(ia,this_im,is)%rxp, &
                    atom_list(ia,this_im,is)%ryp, &
@@ -777,7 +777,7 @@ SUBROUTINE Write_Histogram(this_box)
           iend   = INT( (energy_hist(is, -1,imol) - energy_hist(is, 0, imol)) / energy_hist_width )
 
           IF (istart /= iend) THEN 
-              WRITE (this_unit,'(2i7,f13.5)') imol, iend-istart+1, energy_hist(is, -2,imol)
+              WRITE (this_unit,'(i7,i7,x,f13.5)') imol, iend-istart+1, energy_hist(is, -2,imol)
               WRITE (this_unit,'(8f9.0)') (energy_hist(is, i, imol), i = istart, iend)
           ENDIF
 
