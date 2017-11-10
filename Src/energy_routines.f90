@@ -1975,7 +1975,7 @@ CONTAINS
 
   !writE(*,*) E_hyd, nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), Eij_vdw, Eij_qq
   !writE(*,'(2A,F8.3,X,F11.5,X,F11.5,X,F11.5)') nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), &
-  !                                          Eij_vdw, Eij_qq, E_hyd
+  !                                          Eij_vdw, Eij_qq, sqrt(rcutsq)
 
   END SUBROUTINE Pair_Energy
 
@@ -3771,10 +3771,15 @@ CONTAINS
                 Wij_vdw = (12.0_DP * eps ) * (SigOverR12 - SigOverR6)
 
              ELSEIF (i_vdw_sum == vdw_cut .OR. i_vdw_sum == vdw_cut_tail) THEN
-                Wij_vdw = (24.0_DP * eps) * (2.0_DP*SigOverR12 - SigOverR6)
+                IF (rijsq < rcutsq) THEN
+                    Wij_vdw = (24.0_DP * eps) * (2.0_DP*SigOverR12 - SigOverR6)
+                END IF
 
              ELSEIF (i_vdw_sum == vdw_cut_shift) THEN
-                Wij_vdw = (24.0_DP * eps) * (2.0_DP*SigOverR12 - SigOverR6) 
+
+                IF (rijsq < rcutsq) THEN
+                    Wij_vdw = (24.0_DP * eps) * (2.0_DP*SigOverR12 - SigOverR6) 
+                END IF
 
              ELSEIF (i_vdw_sum == vdw_cut_switch) THEN
                 
@@ -3832,7 +3837,9 @@ CONTAINS
              SigOverR4  = SigOverRsq * SigOverRsq
              SigOverR12 = SigOverR4 * SigOverR4 * SigOverR4
 
-             Wij_vdw = (4.0_DP * lj124pre * eps) * (3.0_DP*SigOverR12 - SigOverR4)
+             IF (rijsq < rcutsq) THEN
+                Wij_vdw = (4.0_DP * lj124pre * eps) * (3.0_DP*SigOverR12 - SigOverR4)
+             END IF
 
              IF (i_vdw_sum == vdw_cut_switch) THEN
                 
@@ -3884,7 +3891,9 @@ CONTAINS
              SigOverR6  = SigOverR3 * SigOverR3
              SigOverR9  = SigOverR6 * SigOverR3
 
-             Wij_vdw = (3.0_DP * lj96pre * eps) * (3.0_DP*SigOverR9 - 2.0_DP*SigOverR6)
+             IF (rijsq < rcutsq) THEN
+                Wij_vdw = (3.0_DP * lj96pre * eps) * (3.0_DP*SigOverR9 - 2.0_DP*SigOverR6)
+             END IF
 
              IF (i_vdw_sum == vdw_cut_switch) THEN
                 
@@ -3931,15 +3940,17 @@ CONTAINS
                    ENDIF
                 ENDIF
 
-                rij = SQRT(rijsq)
+                IF (rijsq < rcutsq) THEN
+                    rij = SQRT(rijsq)
 
-                mie_n = mie_nlist(mie_Matrix(is,js))
-                mie_m = mie_mlist(mie_Matrix(is,js))
-                mie_coeff = mie_n/(mie_n-mie_m) * (mie_n/mie_m)**(mie_m/(mie_n-mie_m))
-                SigOverR = sig/rij
-                SigOverRn = SigOverR ** mie_n
-                SigOverRm = SigOverR ** mie_m
-                Wij_vdw = (mie_coeff * eps) *(mie_n * SigOverRn - mie_m * SigOverRm)
+                    mie_n = mie_nlist(mie_Matrix(is,js))
+                    mie_m = mie_mlist(mie_Matrix(is,js))
+                    mie_coeff = mie_n/(mie_n-mie_m) * (mie_n/mie_m)**(mie_m/(mie_n-mie_m))
+                    SigOverR = sig/rij
+                    SigOverRn = SigOverR ** mie_n
+                    SigOverRm = SigOverR ** mie_m
+                    Wij_vdw = (mie_coeff * eps) *(mie_n * SigOverRn - mie_m * SigOverRm)
+                END IF
 
           ENDIF mie_calculation
 
@@ -3963,8 +3974,11 @@ CONTAINS
              IF (i_vdw_sum == vdw_cut .OR. i_vdw_sum == vdw_cut_tail .OR. &
                  i_vdw_sum == vdw_cut_shift) THEN 
       
+                IF (rijsq < rcutsq) THEN
                    rij = SQRT(rijsq)
                    Wij_vdw = Wij_vdw + ( eps * exp(-kappa * rij) * (kappa + 1.0 / rij))
+
+                ENDIF
 
             ENDIF
 
@@ -4084,6 +4098,8 @@ CONTAINS
     ENDIF ExistCheck
 !------------------------------------------------------------------------------
 
+  !writE(*,'(2A,F8.3,X,F11.5,X,F11.5,X,F11.5)') nonbond_list(ia, is)%atom_name, nonbond_list(ja, js)%atom_name, sqrt(rijsq), &
+  !                                          Wij_vdw, Wij_qq, Wij_hyd
   END SUBROUTINE Pair_Force
 
   !----------------------------------------------------------------------------------------------
