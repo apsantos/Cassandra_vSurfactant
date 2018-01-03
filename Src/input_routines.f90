@@ -3524,8 +3524,52 @@ SUBROUTINE Get_Box_Info
            CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
            line_nbr = line_nbr + 1
            box_list(ibox)%box_shape = TRIM( line_array(1) )
+           
+           read_volume = .FALSE.
+           ivolfreq = 1
+           line_nbr_vol = 1
 
-           IF (box_list(ibox)%box_shape == 'CUBIC') THEN
+           IF (box_list(ibox)%box_shape == 'VARCUBIC') THEN
+
+              box_list(ibox)%box_shape = 'CUBIC'
+
+              IF (nbr_boxes > 1) THEN
+                 write(*,*)'cannot have variable vol. with multiple boxes'
+                 write(*,*)'stopping'
+                 STOP
+              ENDIF
+
+              read_volume = .TRUE.
+
+              l_cubic(ibox) = .TRUE.
+              
+              ! Read in filename with volume information
+              CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+              line_nbr = line_nbr + 1
+              volume_info_file = TRIM( line_array(1) )
+
+              ! Open file with volume information
+              OPEN(unit=volume_info_unit, file=volume_info_file)
+
+              ! Read in frequency of volume information (with respect to configurations saved in the dcd file
+              ! so that a frequency of 10 means that volume information was collected for every 10th configuration
+              ! in the dcd file)
+              CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
+              line_nbr = line_nbr + 1
+              ivolfreq = String_To_Int(line_array(1))
+
+              WRITE (logunit, '(A,T25,T50,A)') 'Vol info file name: ', volume_info_file
+              WRITE (logunit, '(A,T25,I4,A)') 'Freq of vol info: ', ivolfreq
+
+              ! Set off-diagonal components to zero
+              box_list(ibox)%length(1,2) = 0.0
+              box_list(ibox)%length(1,3) = 0.0
+              box_list(ibox)%length(2,1) = 0.0
+              box_list(ibox)%length(2,3) = 0.0
+              box_list(ibox)%length(3,1) = 0.0
+              box_list(ibox)%length(3,2) = 0.0
+
+           ELSEIF (box_list(ibox)%box_shape == 'CUBIC') THEN
               box_list(ibox)%int_box_shape = int_cubic
               l_cubic(ibox) = .TRUE.
               ! Read in the x,y,z box edge lengths in A

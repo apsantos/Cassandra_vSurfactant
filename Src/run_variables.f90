@@ -667,6 +667,14 @@ INTEGER, DIMENSION(:), ALLOCATABLE :: is_atoms
 INTEGER :: dcd_natoms, xtc_natoms, gro_natoms, xyz_natoms
 LOGICAL :: read_dcd_box
 TYPE(virial_Class), TARGET :: mcvirial
- 
+
+!*********************************************************************************************************
+! Information on variable box volume
+
+LOGICAL :: read_volume 
+INTEGER :: line_nbr_vol
+INTEGER :: ivolfreq
+INTEGER :: ndcdconfigsread
+
 END MODULE Run_Variables
 

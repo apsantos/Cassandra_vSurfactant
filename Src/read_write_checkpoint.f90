@@ -562,6 +562,33 @@ SUBROUTINE Read_GRO(this_mc_step)
 
   END SUBROUTINE Read_GRO
 
+SUBROUTINE Read_VOL
+
+    INTEGER :: nbr_entries, ierr
+    CHARACTER(240) :: line_array(80)
+    REAL(DP) :: box_volume, box_length
+
+    CALL Parse_String(volume_info_unit,line_nbr_vol,2,nbr_entries,line_array,ierr)
+    line_nbr_vol = line_nbr_vol + 1
+
+    box_volume = String_To_Double(line_array(2))
+    box_length = box_volume ** (1./3.)
+
+    WRITE(*,*) 'Box vol info line number ', line_nbr_vol
+    WRITE(*,*) 'Reading a box volume of ', box_volume
+    WRITE(*,*) 'Writing a box length of ', box_length
+
+    ! specific for cubic boxes
+    box_list(1)%length(1,1) = box_length
+    box_list(1)%length(2,2) = box_length
+    box_list(1)%length(3,3) = box_length
+
+    box_list(1)%hlength(1,1) = 0.5_DP * box_list(1)%length(1,1)
+    box_list(1)%hlength(2,2) = 0.5_DP * box_list(1)%length(2,2)
+    box_list(1)%hlength(3,3) = 0.5_DP * box_list(1)%length(3,3)
+
+    END SUBROUTINE Read_VOL
+
 SUBROUTINE Read_XYZ(this_mc_step)
 
    INTEGER, INTENT(IN) :: this_mc_step
@@ -797,7 +824,18 @@ SUBROUTINE Read_DCD(this_mc_step)
     this_box = 1
     box = 0.0
 
+    WRITE(*, *) '=========='
+    WRITE(*, *) 'at the beginning of Read_DCD: '
+    WRITE(*, *) 'this_mc_step is ', this_mc_step
+    WRITE(*, *) 'the box length is ', box_list(1)%length(1,1)
+    WRITE(*, *) 'the number of dcd configurations read at this point is ', ndcdconfigsread
+
     IF ( this_mc_step == -1 ) THEN 
+       
+       CALL Read_VOL
+
+       ndcdconfigsread = 0
+
        temp_n_equilsteps = n_equilsteps
        n_equilsteps = 1
        CALL Read_XYZ(1)
@@ -847,6 +885,12 @@ SUBROUTINE Read_DCD(this_mc_step)
     READ(8,IOSTAT=ierr) (pos(1, im),im=1,dcd_natoms)
     READ(8,IOSTAT=ierr) (pos(2, im),im=1,dcd_natoms)
     READ(8,IOSTAT=ierr) (pos(3, im),im=1,dcd_natoms)
+    ndcdconfigsread = ndcdconfigsread + 1
+
+    WRITE(*, *) 'after the coordinates are read from the DCD: '
+    WRITE(*, *) 'this_mc_step is ', this_mc_step
+    WRITE(*, *) 'the box length is ', box_list(1)%length(1,1)
+    WRITE(*, *) 'the number of dcd configurations read at this point is ', ndcdconfigsread
 
     IF ( 1 == this_mc_step) THEN
         ! C is row-major, whereas Fortran is column major. Hence the following.
@@ -861,12 +905,19 @@ SUBROUTINE Read_DCD(this_mc_step)
     ELSEIF (this_mc_step < n_equilsteps) THEN
         RETURN
 
+    ELSEIF (read_volume .AND. MOD(this_mc_step-1,ivolfreq) /= 0) THEN
+       RETURN
+
     ELSEIF (ierr /= 0) THEN
         WRITE(logunit,*) 'There are only ', this_mc_step, 'steps in dcd file'
         err_msg = ""
         err_msg(1) = "Not as many steps in the dcd file."
         CALL Clean_Abort(err_msg,'Read_DCD')
     END IF
+
+    IF ( read_volume ) THEN
+       CALL Read_VOL
+    ENDIF
 
     DO i = 1, dcd_natoms
         ia = ia_atoms(i)
@@ -877,6 +928,11 @@ SUBROUTINE Read_DCD(this_mc_step)
         atom_list(ia,im,is)%ryp = DBLE( pos(2,i) )
         atom_list(ia,im,is)%rzp = DBLE( pos(3,i) )
     END DO
+
+    WRITE(*, *) 'after the coordinates are written to atom_list: '
+    WRITE(*, *) 'this_mc_step is ', this_mc_step
+    WRITE(*, *) 'the box length is ', box_list(1)%length(1,1)
+    WRITE(*, *) 'the number of dcd configurations read at this point is ', ndcdconfigsread
 
     deallocate(pos)
 
