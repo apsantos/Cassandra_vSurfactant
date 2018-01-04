@@ -266,6 +266,7 @@ USE Type_Definitions
   ! concentration conversion
   REAL(DP), PARAMETER :: navogadro = 6.022140857E23_DP !mol-1
   REAL(DP), PARAMETER :: m3_to_A3 = 1.0E30_DP !mol-1
+  REAL(DP), PARAMETER :: nperA3_to_mM = 1660539.02857
 
   ! Parameter identifying number of trials
 

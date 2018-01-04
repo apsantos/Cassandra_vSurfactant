@@ -574,6 +574,8 @@ SUBROUTINE Read_VOL
     box_volume = String_To_Double(line_array(2))
     box_length = box_volume ** (1./3.)
 
+    box_list(1)%volume = box_volume
+
     ! specific for cubic boxes
     box_list(1)%length(1,1) = box_length
     box_list(1)%length(2,2) = box_length
