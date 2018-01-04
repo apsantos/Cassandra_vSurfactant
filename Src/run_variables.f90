@@ -674,7 +674,6 @@ TYPE(virial_Class), TARGET :: mcvirial
 LOGICAL :: read_volume 
 INTEGER :: line_nbr_vol
 INTEGER :: ivolfreq
-INTEGER :: ndcdconfigsread
 
 END MODULE Run_Variables
 

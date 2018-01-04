@@ -98,7 +98,6 @@ SUBROUTINE PP_Driver
      ELSEIF (start_type == 'read_dcd' ) THEN
         IF (i > 1) THEN
            CALL Read_DCD(i)
-           WRITE(*,*) 'Read_DCD called, i = ', i
         ENDIF
         lopen = .true.
      ENDIF
@@ -211,9 +210,6 @@ SUBROUTINE PP_Driver
                  END IF
               
                  CALL Calculate_Excluded_Volume(ibox)
-
-                 WRITE(*, *) 'Excluded volume calculated, i = ', i
-                 WRITE(*, *) 'ndcdconfigsread = ', ndcdconfigsread
 
               !CALL cpu_time(now_time)
               !print '("exvol Time = ",f6.3," seconds.")',now_time-time_start

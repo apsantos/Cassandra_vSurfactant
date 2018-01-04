@@ -574,10 +574,6 @@ SUBROUTINE Read_VOL
     box_volume = String_To_Double(line_array(2))
     box_length = box_volume ** (1./3.)
 
-    WRITE(*,*) 'Box vol info line number ', line_nbr_vol
-    WRITE(*,*) 'Reading a box volume of ', box_volume
-    WRITE(*,*) 'Writing a box length of ', box_length
-
     ! specific for cubic boxes
     box_list(1)%length(1,1) = box_length
     box_list(1)%length(2,2) = box_length
@@ -824,17 +820,9 @@ SUBROUTINE Read_DCD(this_mc_step)
     this_box = 1
     box = 0.0
 
-    WRITE(*, *) '=========='
-    WRITE(*, *) 'at the beginning of Read_DCD: '
-    WRITE(*, *) 'this_mc_step is ', this_mc_step
-    WRITE(*, *) 'the box length is ', box_list(1)%length(1,1)
-    WRITE(*, *) 'the number of dcd configurations read at this point is ', ndcdconfigsread
-
     IF ( this_mc_step == -1 ) THEN 
        
        CALL Read_VOL
-
-       ndcdconfigsread = 0
 
        temp_n_equilsteps = n_equilsteps
        n_equilsteps = 1
@@ -885,12 +873,6 @@ SUBROUTINE Read_DCD(this_mc_step)
     READ(8,IOSTAT=ierr) (pos(1, im),im=1,dcd_natoms)
     READ(8,IOSTAT=ierr) (pos(2, im),im=1,dcd_natoms)
     READ(8,IOSTAT=ierr) (pos(3, im),im=1,dcd_natoms)
-    ndcdconfigsread = ndcdconfigsread + 1
-
-    WRITE(*, *) 'after the coordinates are read from the DCD: '
-    WRITE(*, *) 'this_mc_step is ', this_mc_step
-    WRITE(*, *) 'the box length is ', box_list(1)%length(1,1)
-    WRITE(*, *) 'the number of dcd configurations read at this point is ', ndcdconfigsread
 
     IF ( 1 == this_mc_step) THEN
         ! C is row-major, whereas Fortran is column major. Hence the following.
@@ -928,11 +910,6 @@ SUBROUTINE Read_DCD(this_mc_step)
         atom_list(ia,im,is)%ryp = DBLE( pos(2,i) )
         atom_list(ia,im,is)%rzp = DBLE( pos(3,i) )
     END DO
-
-    WRITE(*, *) 'after the coordinates are written to atom_list: '
-    WRITE(*, *) 'this_mc_step is ', this_mc_step
-    WRITE(*, *) 'the box length is ', box_list(1)%length(1,1)
-    WRITE(*, *) 'the number of dcd configurations read at this point is ', ndcdconfigsread
 
     deallocate(pos)
 
