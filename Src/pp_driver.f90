@@ -473,4 +473,12 @@ SUBROUTINE PP_Driver
 
   END IF
 
+  IF ( start_type == 'read_xyz' ) THEN
+    CLOSE(unit=xyz_config_unit(1))
+  ELSEIF (start_type == 'read_gro' ) THEN
+    CLOSE(unit=gro_config_unit)
+  ELSEIF (start_type == 'read_dcd' ) THEN
+    CLOSE(unit=dcd_config_unit)
+  ENDIF
+
   END SUBROUTINE PP_Driver

@@ -5220,6 +5220,7 @@ SUBROUTINE Get_Start_Type
               WRITE(logunit,*) ADJUSTL(line_array(2))
 
               xyz_config_file = TRIM(ADJUSTL(line_array(1)))
+              dcd_config_unit = 8
               dcd_config_file = TRIM(ADJUSTL(line_array(2)))//C_NULL_CHAR
                  
               tot_natoms = 0
