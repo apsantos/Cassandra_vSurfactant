@@ -1557,7 +1557,7 @@ CONTAINS
     INTEGER :: i_vdw_sum
     LOGICAL :: intra
 
-    INTEGER :: itype,jtype, this_box, ibox
+    INTEGER :: itype,jtype, ibox
     REAL(DP) :: eps,sig
     REAL(DP) :: SigOverRsq,SigOverR6,SigOverR12
     REAL(DP) :: SigOverRsq_shift,SigOverR6_shift,SigOverR12_shift
@@ -3700,7 +3700,7 @@ CONTAINS
     REAL(DP), INTENT(OUT) :: Wij_vdw,Wij_qq
 
     ! Local
-    INTEGER :: itype,jtype, this_box, ibox
+    INTEGER :: itype,jtype, ibox
     REAL(DP) :: rcutsq
     REAL(DP) :: Eij_vdw
     REAL(DP) :: eps,sig,SigOverRsq,SigOverR6,SigOverR12, kappa
