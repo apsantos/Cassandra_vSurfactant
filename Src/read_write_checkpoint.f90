@@ -390,7 +390,8 @@ SUBROUTINE Read_GRO(this_mc_step)
     ps = ndx_type(1)
     DO i_line = 1, n_lines 
 
-       IF (1 < this_mc_step .and. this_mc_step < n_equilsteps) THEN
+       IF (this_mc_step < n_equilsteps) THEN
+       !IF (1 < this_mc_step .and. this_mc_step < n_equilsteps) THEN
           READ(gro_config_unit, *) 
           CYCLE
        END IF
@@ -845,12 +846,12 @@ SUBROUTINE Read_DCD(this_mc_step)
           err_msg(1) = "Could not find the dcd file."
           CALL Clean_Abort(err_msg,'Read_DCD')
        END IF
-       OPEN(UNIT=8, FILE=dcd_config_file, FORM = 'unformatted',STATUS= 'old')
+       OPEN(UNIT=dcd_config_unit, FILE=dcd_config_file, FORM = 'unformatted',STATUS= 'old')
    
        ! Read the header information
-       READ(8) HDR, (ICNTRL(i),i=1,9),delta,(ICNTRL(i),i=11,20)          
-       READ(8) 
-       READ(8) dcd_natoms
+       READ(dcd_config_unit) HDR, (ICNTRL(i),i=1,9),delta,(ICNTRL(i),i=11,20)          
+       READ(dcd_config_unit) 
+       READ(dcd_config_unit) dcd_natoms
 
        IF ( dcd_natoms /= xyz_natoms ) THEN
           err_msg = ""
@@ -867,19 +868,20 @@ SUBROUTINE Read_DCD(this_mc_step)
     
     ! Read the periodic bounday informatin if present (not used!)
     IF(read_dcd_box) THEN
-      READ(8,IOSTAT=ierr) (box(i),i=1,6)
+      READ(dcd_config_unit,IOSTAT=ierr) (box(i),i=1,6)
     ENDIF
 
     ! Read the atomic coordinates from the DCD trajectory file
     allocate(pos(3,dcd_natoms))
-    READ(8,IOSTAT=ierr) (pos(1, im),im=1,dcd_natoms)
-    READ(8,IOSTAT=ierr) (pos(2, im),im=1,dcd_natoms)
-    READ(8,IOSTAT=ierr) (pos(3, im),im=1,dcd_natoms)
+    READ(dcd_config_unit,IOSTAT=ierr) (pos(1, im),im=1,dcd_natoms)
+    READ(dcd_config_unit,IOSTAT=ierr) (pos(2, im),im=1,dcd_natoms)
+    READ(dcd_config_unit,IOSTAT=ierr) (pos(3, im),im=1,dcd_natoms)
 
     IF ( 1 == this_mc_step) THEN
         ! C is row-major, whereas Fortran is column major. Hence the following.
         DO i = 1, 3
            IF ( (1.0 / 1000) < ( box(i) - box_list(1)%length(i,i) ) ) THEN
+             deallocate(pos)
              err_msg = ""
              err_msg(1) = "box dimension in inputfile and dcd do not agree, check units maybe."
              CALL Clean_Abort(err_msg,'Read_DCD')
@@ -887,12 +889,14 @@ SUBROUTINE Read_DCD(this_mc_step)
         END DO
 
     ELSEIF (this_mc_step < n_equilsteps) THEN
+        deallocate(pos)
         RETURN
 
     ELSEIF (read_volume .AND. MOD(this_mc_step-1,ivolfreq) /= 0) THEN
        RETURN
 
     ELSEIF (ierr /= 0) THEN
+        deallocate(pos)
         WRITE(logunit,*) 'There are only ', this_mc_step, 'steps in dcd file'
         err_msg = ""
         err_msg(1) = "Not as many steps in the dcd file."

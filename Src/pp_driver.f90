@@ -76,8 +76,6 @@ SUBROUTINE PP_Driver
 
      i = i + 1
 
-     ! We will select a move from Golden Sampling scheme
-  
      IF (i == n_mcsteps) complete = .TRUE.
 
      IF ( start_type == 'read_xyz' ) THEN
@@ -116,6 +114,8 @@ SUBROUTINE PP_Driver
      next_write(this_box) = .true.
      next_rdf_write(this_box) = .true.
 
+     ! We will select a move from Golden Sampling scheme
+  
      IF (i < n_equilsteps) CYCLE
 
      IF (read_volume .AND. MOD(i-1,ivolfreq) /= 0) CYCLE
@@ -474,5 +474,13 @@ SUBROUTINE PP_Driver
     CLOSE(75)
 
   END IF
+
+  IF ( start_type == 'read_xyz' ) THEN
+    CLOSE(unit=xyz_config_unit(1))
+  ELSEIF (start_type == 'read_gro' ) THEN
+    CLOSE(unit=gro_config_unit)
+  ELSEIF (start_type == 'read_dcd' ) THEN
+    CLOSE(unit=dcd_config_unit)
+  ENDIF
 
   END SUBROUTINE PP_Driver

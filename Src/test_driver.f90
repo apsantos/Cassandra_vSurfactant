@@ -55,21 +55,33 @@ SUBROUTINE TEST_Driver
   IF(.NOT. ALLOCATED(tot_trials)) ALLOCATE(tot_trials(nbr_boxes))
 
   get_energy = .false.
-  ntests = 14
+  ntests = 17
   nfailure = 0
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Test 1                                              !
-  !  - cluster joining move rejection                   !
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Force Routine Tests
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  CALL Test_Pair_Force_QQ(nfailure)
+
+  CALL Test_Pair_Force_QQcorr(nfailure)
+
+  CALL Test_Pair_Force_Hydr(nfailure)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Cluster routine Tests
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! cluster joining move rejection 
   CALL Test_Translate_Cluster(nfailure)
 
+  ! cluster finding              
   CALL Test_Find_Cluster(nfailure)
 
+  ! Test neighbor finding routine
   CALL Test_Neighbor_Cluster(nfailure)
 
+  ! Test update labels
   CALL Test_Update_Labels(nfailure)
 
+  ! Test cluster energy calc
   CALL Test_Compute_Cluster_Nonbond_Inter_Energy(nfailure)
 
   ! let us check if at the end of the simulation, the energies are properly updated
@@ -93,6 +105,125 @@ SUBROUTINE TEST_Driver
 
 END SUBROUTINE TEST_Driver
 
+SUBROUTINE Test_Pair_Force_Hydr(nfailure)
+  USE Run_Variables
+  USE Energy_Routines
+  USE Cluster_Routines
+
+  IMPLICIT NONE
+
+  REAL(DP) :: negrForce_vdw, negrForce_qq
+  INTEGER, INTENT(INOUT) :: nfailure
+
+  int_vdw_style_mix(:,:,:) = .false.
+  int_vdw_style_mix(1,1,vdw_hydra) = .true.
+  nonbond_list(1,1)%charge = 0.0_DP
+  vdw_param3_table(1,1) = 10.0
+  vdw_param4_table(1,1) = 4.0
+  vdw_param5_table(1,1) = 0.5
+
+  molecule_list(:,:)%live = .false.
+  molecule_list(1:2,1)%live = .true.
+  atom_list(:,:,:)%exist = .false.
+  atom_list(1,1:2,1)%exist = .true.
+  static_perm(1) = 78.0_DP
+  charge_factor(1) = charge_factor_vacuum / static_perm(1)
+  rcut_coul(1) = 22.9
+  !                ewald_tol
+  !                  ^^^^^
+  ewald_p(1) = -DLOG( 0.001_DP )
+  ewald_p_sqrt(1) = DSQRT(ewald_p(1))
+  alpha_ewald(1) = ewald_p_sqrt(1) / rcut_coul(1)
+  h_ewald_cut(1) = 2.0_DP * ewald_p(1) / rcut_coul(1)
+
+  CALL Pair_Force(9.0_DP,1,1,1,1,2,1,.false.,.true.,negrForce_vdw,negrForce_qq)
+
+  IF( abs(negrForce_vdw + 12.958) > 0.001) THEN
+    nfailure = nfailure + 1
+    write(*,*) 'Hydr force acceptance FAILED'
+  ELSE
+    write(*,*) 'Hydr force acceptance PASSED'
+  ENDIF
+END SUBROUTINE Test_Pair_Force_Hydr
+
+SUBROUTINE Test_Pair_Force_QQ(nfailure)
+  USE Run_Variables
+  USE Energy_Routines
+  USE Cluster_Routines
+
+  IMPLICIT NONE
+
+  REAL(DP) :: negrForce_vdw, negrForce_qq
+  INTEGER, INTENT(INOUT) :: nfailure
+
+  int_vdw_style_mix(:,:,:) = .false.
+  nonbond_list(1,1)%charge = -1.0_DP
+
+  molecule_list(:,:)%live = .false.
+  molecule_list(1:2,1)%live = .true.
+  atom_list(:,:,:)%exist = .false.
+  atom_list(1,1:2,1)%exist = .true.
+  static_perm(1) = 78.0_DP
+  charge_factor(1) = charge_factor_vacuum / static_perm(1)
+  rcut_coul(1) = 22.9
+  !                ewald_tol
+  !                  ^^^^^
+  ewald_p(1) = -DLOG( 0.001_DP )
+  ewald_p_sqrt(1) = DSQRT(ewald_p(1))
+  alpha_ewald(1) = ewald_p_sqrt(1) / rcut_coul(1)
+  h_ewald_cut(1) = 2.0_DP * ewald_p(1) / rcut_coul(1)
+
+  CALL Pair_Force(9.0_DP,1,1,1,1,2,1,.false.,.true.,negrForce_vdw,negrForce_qq)
+
+  IF( abs(negrForce_qq - 0.323796) > 0.001) THEN
+    nfailure = nfailure + 1
+    write(*,*) 'QQ coulomb force acceptance FAILED'
+  ELSE
+    write(*,*) 'QQ coulomb force acceptance PASSED'
+  ENDIF
+END SUBROUTINE Test_Pair_Force_QQ
+
+SUBROUTINE Test_Pair_Force_QQcorr(nfailure)
+  USE Run_Variables
+  USE Energy_Routines
+  USE Cluster_Routines
+
+  IMPLICIT NONE
+
+  REAL(DP) :: negrForce_vdw, negrForce_qq
+  INTEGER, INTENT(INOUT) :: nfailure
+
+  int_vdw_style_mix(:,:,:) = .false.
+  int_vdw_style_mix(1,1,vdw_corr) = .true.
+  nonbond_list(1,1)%charge = -1.0_DP
+  int_charge_sum_style(1) = charge_ewald
+  vdw_param6_table(1,1) = 2.0
+  vdw_param7_table(1,1) = 0.5
+
+  molecule_list(:,:)%live = .false.
+  molecule_list(1:2,1)%live = .true.
+  atom_list(:,:,:)%exist = .false.
+  atom_list(1,1:2,1)%exist = .true.
+  static_perm(1) = 78.0_DP
+  charge_factor(1) = charge_factor_vacuum / static_perm(1)
+  rcut_coul(1) = 22.9
+  !                ewald_tol
+  !                  ^^^^^
+  ewald_p(1) = -DLOG( 0.001_DP )
+  ewald_p_sqrt(1) = DSQRT(ewald_p(1))
+  alpha_ewald(1) = ewald_p_sqrt(1) / rcut_coul(1)
+  h_ewald_cut(1) = 2.0_DP * ewald_p(1) / rcut_coul(1)
+
+  CALL Pair_Force(9.0_DP,1,1,1,1,2,1,.false.,.true.,negrForce_vdw,negrForce_qq)
+
+  IF( abs(negrForce_qq - 0.37205) > 0.001) THEN
+    nfailure = nfailure + 1
+    write(*,*) 'QQ correction force acceptance FAILED'
+  ELSE
+    write(*,*) 'QQ correction force acceptance PASSED'
+  ENDIF
+END SUBROUTINE Test_Pair_Force_QQcorr
+
 SUBROUTINE Test_Translate_Cluster(nfailure)
   USE Run_Variables
   USE Energy_Routines
@@ -109,10 +240,14 @@ SUBROUTINE Test_Translate_Cluster(nfailure)
 
   this_box = 1
 
+  int_vdw_style_mix(:,:,:) = .false.
+  int_vdw_style_mix(:,:,vdw_yukawa) = .true.
+  int_vdw_style_mix(:,:,vdw_lj) = .true.
+  int_vdw_sum_style_mix(:,:) = vdw_cut_shift
   vdw_param1_table(1,1) = 1.0
   vdw_param2_table(1,1) = 1.0
+  vdw_param8_table(1,1) = 0.5
   vdw_param9_table(1,1) = 0.5
-  vdw_param10_table(1,1) = 0.5
 
   cluster%min_distance_sq(:,:,:, 0, 0 ) = 0
   cluster%min_distance_sq(:,1,1, 0, 0 ) = 1.8096**2.0
@@ -172,7 +307,7 @@ SUBROUTINE Test_Translate_Cluster(nfailure)
     molecule_list(i,1)%zcom = atom_list(1,i,1)%rzp
   ENDDO
 
-  vdw_param9_table(1,1) = 10
+  vdw_param8_table(1,1) = 10
   CALL Translate_Cluster(this_box)
   IF (reject_type /= -3) THEN
     nfailure = nfailure + 1
@@ -181,7 +316,7 @@ SUBROUTINE Test_Translate_Cluster(nfailure)
     write(*,*) 'Cluster move energy rejection test PASSED'
   ENDIF
     
-  vdw_param9_table(1,1) = 0.5
+  vdw_param8_table(1,1) = 0.5
 END SUBROUTINE Test_Translate_Cluster
 
 SUBROUTINE Test_Find_Cluster(nfailure)
@@ -205,8 +340,8 @@ SUBROUTINE Test_Find_Cluster(nfailure)
 
   vdw_param1_table(1,1) = 1.0
   vdw_param2_table(1,1) = 1.0
+  vdw_param8_table(1,1) = 0.5
   vdw_param9_table(1,1) = 0.5
-  vdw_param10_table(1,1) = 0.5
 
   box_list(this_box)%length(1,1) = 17.0
   box_list(this_box)%length(2,2) = 17.0
@@ -499,8 +634,8 @@ SUBROUTINE Test_Compute_Cluster_Nonbond_Inter_Energy(nfailure)
 
   vdw_param1_table(1,1) = 1.0
   vdw_param2_table(1,1) = 1.0
+  vdw_param8_table(1,1) = 0.5
   vdw_param9_table(1,1) = 0.5
-  vdw_param10_table(1,1) = 0.5
 
   cluster%min_distance_sq(:,:,:, 0, 0 ) = 0
   cluster%min_distance_sq(:,1,1, 0, 0 ) = 1.8096**2.0

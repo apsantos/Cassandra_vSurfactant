@@ -428,6 +428,15 @@ SUBROUTINE Read_Intra_Exclusion_Table(is)
                                 vdw_in_param5_table(ja,ia,is) = vdw_in_param5_table(ia,ja,is)
                 
                             ELSEIF (pot_type == 'CORR') THEN
+                                !              1    q1*q2  e_s
+                                ! U_corr = --------*-----*-----
+                                !          4*pi*e_0 e_s*r eD(r)
+                                !
+                                !          e_s+5.2   e_s-5.2      /r-r_me\
+                                ! eD(r)  = ------- + ------- tanh|--------|
+                                !             2         2         \ s_h  /
+                                ! param6 = r_me
+                                ! param7 = sigma_h
                                 int_in_vdw_style_mix(ia,ja,is,vdw_corr) = .true.
                                 int_in_vdw_style_mix(ja,ia,is,vdw_corr) = .true.
                                 vdw_in_param6_table(ia,ja,is) = String_To_Double(line_array(i+1))
