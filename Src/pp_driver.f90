@@ -481,6 +481,9 @@ SUBROUTINE PP_Driver
     CLOSE(unit=gro_config_unit)
   ELSEIF (start_type == 'read_dcd' ) THEN
     CLOSE(unit=dcd_config_unit)
+    IF (read_volume) THEN
+       CLOSE(unit=volume_info_unit)
+    ENDIF
   ENDIF
 
   END SUBROUTINE PP_Driver

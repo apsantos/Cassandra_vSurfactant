@@ -893,7 +893,8 @@ SUBROUTINE Read_DCD(this_mc_step)
         RETURN
 
     ELSEIF (read_volume .AND. MOD(this_mc_step-1,ivolfreq) /= 0) THEN
-       RETURN
+        deallocate(pos)
+        RETURN
 
     ELSEIF (ierr /= 0) THEN
         deallocate(pos)
