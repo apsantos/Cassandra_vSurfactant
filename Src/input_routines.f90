@@ -3465,6 +3465,7 @@ SUBROUTINE Get_Box_Info
 !********************************************************************************
   INTEGER :: ierr,line_nbr,nbr_entries,ibox
   CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
+  LOGICAL :: ex
 
 !********************************************************************************
   REWIND(inputunit)
@@ -3549,6 +3550,12 @@ SUBROUTINE Get_Box_Info
               volume_info_file = TRIM( line_array(1) )
 
               ! Open file with volume information
+              INQUIRE(file=trim(volume_info_file),exist=ex)
+              IF (.not. ex) THEN
+                 write(*,*)'could not find the volume info file'
+                 write(*,*)'stopping'
+                 STOP
+              END IF
               OPEN(unit=volume_info_unit, file=volume_info_file)
 
               ! Read in frequency of volume information (with respect to configurations saved in the dcd file
