@@ -388,9 +388,11 @@ for i in xrange(0,len(mcf_files)):
 
 #is there is any atom labeled as "ring"?
 atom_type_list = [0]*nbr_species
+bond_type_list = [0]*nbr_species
 which_atoms_are_ring = []
 temp_list = []
 nbr_atoms = []
+nbr_bonds = []
 for i in xrange(0, nbr_species):
     nbr_atoms.append(int(linecache.getline(mcf_files[i],
                          line_where_atom_info[i]+1).split()[0]))
@@ -405,8 +407,17 @@ for i in xrange(0, nbr_species):
                        line_where_atom_info[i]+2+j).split()[-1] == 'ring'
         if atom_in_ring:
             temp_list.append(str(j+1))
+
     which_atoms_are_ring.append(temp_list)
     temp_list=[]
+
+    nbr_bonds.append(int(linecache.getline(mcf_files[i],
+                         line_where_bond_info[i]+1).split()[0]))
+    bond_type_list[i] = [0]*nbr_bonds[i]
+    for j in xrange(0,nbr_bonds[i]):
+        bond_type = linecache.getline(mcf_files[i],
+                                      line_where_bond_info[i]+2+j).split()[3]
+        bond_type_list[i][j] = bond_type
 
 #Find how many fragments there are and get a list of them.
 nbr_fragments = []
@@ -514,7 +525,8 @@ for i in xrange(0, nbr_species):
         print "Fragment configuration will be taken from PDB file."
         continue
 
-    if nbr_atoms[i] >= 3:
+    if ( (nbr_atoms[i] >= 3 and 'harmonic' not in bond_type_list[i][:]) or
+         (nbr_atoms[i] >= 2 and 'harmonic' in bond_type_list[i][:]) ):
         for element in files_ring_to_copy:
             if str(i) in element[0]:
                 os.system("cp "+element[1]+" species"+str(i+1)+"/fragments/molecule.pdb")
@@ -547,7 +559,8 @@ fragment_is_rigid = [] # Boolean entry for each i,j
 ring_is_rigid = [] # frag_id's for each frag that has a rigid ring
 for i in xrange(0, nbr_species):
 
-    if nbr_atoms[i] < 3:
+    if ( (nbr_atoms[i] < 3 and 'harmonic' not in bond_type_list[i]) or
+         (nbr_atoms[i] == 1 and 'harmonic' in bond_type_list[i]) ):
 
         temp_rigid = [True]
         temp_ring_rigid = []
@@ -587,7 +600,10 @@ for i in xrange(0, nbr_species):
                             nbr_angles_fixed += 1
                 line = frag_mcf.readline()
             #If all angles are rigid, fragment is rigid
-            temp_rigid.append(nbr_angles == nbr_angles_fixed)
+            if (nbr_atoms[i] > 2):
+                temp_rigid.append(nbr_angles == nbr_angles_fixed)
+            elif (nbr_atoms[i] == 2):
+                temp_rigid.append(False)
 
             #Also check for a rigid ring (exoatoms may be flexible)
             if fragment_has_ring[i][j]:

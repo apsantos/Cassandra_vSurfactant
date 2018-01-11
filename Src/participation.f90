@@ -458,7 +458,11 @@ SUBROUTINE Participation
            ! fragments have only 1 anchor we will use this to
            ! identify the id of the anchor.
          
-           ia = frag_list(ifrag,is)%anchor(1)
+           IF (frag_list(ifrag,is)%natoms > 2) THEN
+              ia = frag_list(ifrag,is)%anchor(1)
+           ELSEIF (frag_list(ifrag,is)%natoms == 2) THEN
+              ia = frag_list(ifrag,is)%atoms(1)
+           ENDIF
            
            anchor_atom = 1
               

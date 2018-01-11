@@ -100,7 +100,11 @@ SUBROUTINE NVT_MC_Fragment_Driver
         ! aligned along the x axis. So, we sample only the natoms(is) - 2 atoms
 
         
-        rand_atom = INT ( (natoms(is) - 2) * rranf()) + 3
+        IF (natoms(is) > 2) THEN
+            rand_atom = INT ( (natoms(is) - 2) * rranf()) + 3
+        ELSEIF (natoms(is) == 2) THEN
+            rand_atom = 2
+        END IF
         ! save the coordinates
 
         CALL Save_Old_Cartesian_Coordinates(im,is)
@@ -246,12 +250,4 @@ SUBROUTINE Change_Phi_Theta(this_atom,im,is,theta_bound)
   atom_list(this_atom,im,is)%rzp = bond_length * DCOS(theta)
 
 END SUBROUTINE Change_Phi_Theta
- 
-     
-
-
-  
-
-
-
  
