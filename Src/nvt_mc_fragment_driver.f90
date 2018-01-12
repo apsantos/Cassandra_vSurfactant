@@ -55,7 +55,7 @@ SUBROUTINE NVT_MC_Fragment_Driver
   !***************************************************************************************
 
   USE Run_Variables
-  USE Random_Generators
+  USE Random_Generators, ONLY : rranf
   USE Energy_Routines
   USE File_Names
   USE Cluster_Routines
@@ -64,8 +64,10 @@ SUBROUTINE NVT_MC_Fragment_Driver
 
   INTEGER :: is, im, this_box, i, rand_atom, naccept, ia
 
-  REAL(DP) :: e_angle_old, e_angle_new, delta_e_angle, p_acc
-  REAL(DP) :: e_improper_n, e_improper_o, delta_e_improper, delta_e, e_total_o
+  REAL(DP) :: p_acc, delta_e, e_total_o
+  REAL(DP) :: e_angle_old, e_angle_new, delta_e_angle
+  REAL(DP) :: e_bond_old, e_bond_new, delta_e_bond
+  REAL(DP) :: e_improper_n, e_improper_o, delta_e_improper
   REAL(DP) :: ac_frag_energy, zig_over_omega
 
   LOGICAL :: theta_bound
@@ -78,13 +80,26 @@ SUBROUTINE NVT_MC_Fragment_Driver
 
      im = locate(1,is)
 
-     CALL Compute_Molecule_Angle_Energy(im,is,e_angle_old)
-     e_total_o = e_angle_old
+     IF(nbonds(is) .GT. 0) THEN
+        CALL Compute_Molecule_Bond_Energy(im,is,e_bond_old)
+     ELSE
+        e_bond_old = 0.0_DP
+     END IF
+     e_total_o = e_bond_old
+
+     IF(nangles(is) .GT. 0) THEN
+        CALL Compute_Molecule_Angle_Energy(im,is,e_angle_old)
+     ELSE
+        e_angle_old = 0.0_DP
+     ENDIF
+     e_total_o = e_total_o + e_angle_old
 
      IF(nimpropers(is) .GT. 0) THEN
         CALL Compute_Molecule_Improper_Energy(im,is,e_improper_o)
-        e_total_o = e_total_o + e_improper_o
+     ELSE
+        e_improper_o = 0.0_DP
      END IF
+     e_total_o = e_total_o + e_improper_o
 
      this_box = molecule_list(im,is)%which_box
 
@@ -95,33 +110,36 @@ SUBROUTINE NVT_MC_Fragment_Driver
      zig_over_omega = 0.0_DP
 
      DO i = 1, n_mcsteps
-        
-        ! Note that the 1st atom is at the origin while the second atom is
-        ! aligned along the x axis. So, we sample only the natoms(is) - 2 atoms
-
-        
-        IF (natoms(is) > 2) THEN
-            rand_atom = INT ( (natoms(is) - 2) * rranf()) + 3
-        ELSEIF (natoms(is) == 2) THEN
-            rand_atom = 2
-        END IF
         ! save the coordinates
-
         CALL Save_Old_Cartesian_Coordinates(im,is)
         CALL Save_Old_Internal_Coordinates(im,is)
+        
+        ! Note that the 1st atom is at the origin while the second atom is:
+        ! aligned along the x axis. So, we sample only the:
+        ! (rigid) natoms(is) - 2 atoms
+        ! (flexible) natoms(is) - 1
+        rand_atom = INT ( (natoms(is) - 1) * rranf()) + 2
 
         CALL Change_Phi_Theta(rand_atom,im,is,theta_bound)
         
-        CALL Compute_Molecule_Angle_Energy(im,is,e_angle_new)
-        IF(nimpropers(is) .GT. 0) CALL Compute_Molecule_Improper_Energy(im,is,e_improper_n)
+        IF(nbonds(is) .GT. 0) THEN
+            CALL Compute_Molecule_Bond_Energy(im,is,e_bond_new)
+            delta_e_bond = e_bond_new - e_bond_old 
+        ELSE
+            delta_e_bond = 0.0_DP
+        END IF
 
+        CALL Compute_Molecule_Angle_Energy(im,is,e_angle_new)
         delta_e_angle = e_angle_new - e_angle_old 
+
         IF(nimpropers(is) .GT. 0) THEN
+           CALL Compute_Molecule_Improper_Energy(im,is,e_improper_n)
            delta_e_improper = e_improper_n - e_improper_o
         ELSE
            delta_e_improper = 0.0_DP
         END IF
-        delta_e = delta_e_angle + delta_e_improper
+
+        delta_e = delta_e_bond + delta_e_angle + delta_e_improper
 
         p_acc = min(1.0_DP, DEXP(-beta(this_box)*delta_e))
         
@@ -129,13 +147,26 @@ SUBROUTINE NVT_MC_Fragment_Driver
 
            ! update energies 
 
-           e_angle_old = e_angle_old + delta_e_angle
-           e_total_o = e_angle_old
+           IF(nbonds(is) .GT. 0) THEN
+              e_bond_old = e_bond_old + delta_e_bond
+           ELSE
+              e_bond_old = 0.0_DP
+           END IF
+           e_total_o = e_bond_old
+
+           IF(nangles(is) .GT. 0) THEN
+              e_angle_old = e_angle_old + delta_e_angle
+           ELSE
+              e_angle_old = 0.0_DP
+           END IF
+           e_total_o = e_total_o + e_angle_old
 
            IF(nimpropers(is) .GT. 0) THEN
               e_improper_o = e_improper_o + delta_e_improper
-              e_total_o = e_total_o + e_improper_o
+           ELSE
+              e_improper_o = 0.0_DP
            END IF
+           e_total_o = e_total_o + e_improper_o
 
            naccept = naccept + 1
 
@@ -157,7 +188,7 @@ SUBROUTINE NVT_MC_Fragment_Driver
            IF (MOD(i,nthermo_freq) == 0) THEN
               !           WRITE(frag_file_unit,*) natoms(is)
               
-              WRITE(frag_file_unit,*) temperature(this_box), e_angle_old
+              WRITE(frag_file_unit,*) temperature(this_box), e_total_o
               DO ia = 1, natoms(is)
                  WRITE(frag_file_unit,*) nonbond_list(ia,is)%element, atom_list(ia,im,is)%rxp, atom_list(ia,im,is)%ryp, &
                       atom_list(ia,im,is)%rzp
@@ -186,7 +217,7 @@ END SUBROUTINE NVT_MC_Fragment_Driver
 SUBROUTINE Change_Phi_Theta(this_atom,im,is,theta_bound)
 !**********************************************************************************
   USE Run_Variables
-  USE Random_Generators, ONLY : rranf
+  USE Random_Generators, ONLY : r8_normal_ab, rranf
 
   IMPLICIT NONE
 
@@ -197,28 +228,49 @@ SUBROUTINE Change_Phi_Theta(this_atom,im,is,theta_bound)
   REAL(DP) :: this_x, this_y, this_z, rho, bond_length, theta, phi, dcostheta
   REAL(DP) :: dphi
 
-  theta_bound = .false.
+  INTEGER :: j, atom_j, this_bond
 
+  theta_bound = .false.
+  IF (this_atom == 1) THEN
+     ! the first of the fragment is always at the origin
+     RETURN
+  END IF
 
 !  delta_cos = 0.2_DP
 !  delta_phi = 10.0_DP * PI/180.0_DP
 
   ! Get spherical coordinates
-
   this_x = atom_list(this_atom,im,is)%rxp
   this_y = atom_list(this_atom,im,is)%ryp
   this_z = atom_list(this_atom,im,is)%rzp
 
   rho = this_x * this_x + this_y * this_y 
-  bond_length = this_z * this_z + rho
+
+  ! this one will be aligned on the x-axis
+  ! new coordinates
+  DO j = 1, bondpart_list(this_atom,is)%nbonds
+     atom_j = bondpart_list(this_atom,is)%atom(j)
+     ! is this the bond with the first/center atom
+     IF (atom_j == 1) THEN
+         this_bond = bondpart_list(this_atom,is)%bond_num(j)
+         IF (bond_list(this_bond,is)%int_bond_type == int_harmonic) THEN
+             bond_length = ABS( r8_normal_ab( bond_list(this_bond,is)%bond_param(2), &
+                                               (2.0_DP * bond_list(this_bond,is)%bond_param(1))**(-0.5) ) )
+         ELSE
+             bond_length = this_z * this_z + rho
+             bond_length = DSQRT(bond_length)
+         END IF
+
+         EXIT
+
+     END IF
+  END DO
 
   rho = DSQRT(rho)
-  bond_length = DSQRT(bond_length)
 
   theta = DACOS(this_z/bond_length)
   
   phi = DASIN(this_y/rho)
-
 
   IF ( this_x < 0.0_DP ) THEN
      
@@ -232,8 +284,8 @@ SUBROUTINE Change_Phi_Theta(this_atom,im,is,theta_bound)
   dphi = (2.0_DP * rranf() - 1.0_DP ) * delta_phi_max 
 
 
-!  theta = DACOS(2.0_DP * rranf() - 1.0_DP)
-!  phi = (2.0_DP * rranf()) * PI
+  !theta = DACOS(2.0_DP * rranf() - 1.0_DP)
+  !phi = (2.0_DP * rranf()) * PI
 
   ! new polar and azimuthal anlges
   IF ( (ABS(DCOS(theta) + dcostheta) > 1.0_DP) ) THEN
