@@ -226,7 +226,7 @@ SUBROUTINE Change_Phi_Theta(this_atom,im,is,theta_bound)
   LOGICAL, INTENT(INOUT) :: theta_bound
 
   REAL(DP) :: this_x, this_y, this_z, rho, bond_length, theta, phi, dcostheta
-  REAL(DP) :: dphi
+  REAL(DP) :: dphi, o_length
 
   INTEGER :: j, atom_j, this_bond
 
@@ -245,6 +245,7 @@ SUBROUTINE Change_Phi_Theta(this_atom,im,is,theta_bound)
   this_z = atom_list(this_atom,im,is)%rzp
 
   rho = this_x * this_x + this_y * this_y 
+  o_length = DSQRT(this_z * this_z + rho)
 
   ! this one will be aligned on the x-axis
   ! new coordinates
@@ -257,8 +258,7 @@ SUBROUTINE Change_Phi_Theta(this_atom,im,is,theta_bound)
              bond_length = ABS( r8_normal_ab( bond_list(this_bond,is)%bond_param(2), &
                                                (2.0_DP * bond_list(this_bond,is)%bond_param(1))**(-0.5) ) )
          ELSE
-             bond_length = this_z * this_z + rho
-             bond_length = DSQRT(bond_length)
+             bond_length = o_length
          END IF
 
          EXIT
@@ -268,7 +268,7 @@ SUBROUTINE Change_Phi_Theta(this_atom,im,is,theta_bound)
 
   rho = DSQRT(rho)
 
-  theta = DACOS(this_z/bond_length)
+  theta = DACOS(this_z/o_length)
   
   phi = DASIN(this_y/rho)
 
