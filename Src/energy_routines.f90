@@ -239,7 +239,7 @@ CONTAINS
              l0 = bond_list(ibond,species)%bond_param(2)
                 
              CALL Get_Bond_Length(ibond,molecule,species,length)
-             energy = k*(length-l0)**2
+             energy = k*(length-l0)**2.0_DP
              ierr = 0
 
              ! Add more potential functions here.
@@ -433,7 +433,8 @@ CONTAINS
           k=angle_list(iangle,species)%angle_param(1)
           theta0 = angle_list(iangle,species)%angle_param(2)
           CALL Get_Bond_Angle(iangle,molecule,species,theta)
-          ea = k*(theta-theta0)**2
+          ea = k*(theta-theta0)**2.0
+          ! print*, k, theta, theta0, ea
           ! Add more potential functions here.
        ENDIF
        energy = energy + ea
@@ -711,7 +712,7 @@ CONTAINS
 
           CALL Get_Dihedral_Angle(idihed,molecule,species,phi)
 
-          cosine = COS(phi - PI)
+          cosine = DCOS(phi - PI)
           cosine2 = cosine * cosine
           cosine4 = cosine2 * cosine2
           edihed =  a0 + (a1 * cosine) + (a2 * cosine2) + (a3 * cosine2 * cosine) + &
@@ -1911,12 +1912,13 @@ CONTAINS
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
 
-             Eij_qq = qsc*charge_factor(ibox)*(qi*qj)/rij
+             Eij_qq = charge_factor(ibox)*(qi*qj)/rij
 
              IF (int_charge_sum_style(ibox) == charge_ewald .AND. ( .NOT. igas_flag) ) THEN
                 ! Real space Ewald part
                 erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
                 Eij_ewald = - (erf_val * Eij_qq ) 
+             
              ! self and recipricoal parts need to be computed as total energy differences between original
              ! configuration and the perturbed configuration. These terms are thus added on after all atoms 
              ! have been moved. 
@@ -2022,9 +2024,7 @@ CONTAINS
     rij = SQRT(rijsq)
     ! May need to protect against very small rijsq
     erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
-    Eij = (qi * qj / rij)* charge_factor(ibox)
-    Eij = Eij * (qsc - erf_val) 
-
+    Eij = (qi * qj / rij) * (qsc - erf_val) * charge_factor(ibox)
 
   END SUBROUTINE Ewald_Real
 
@@ -2774,6 +2774,7 @@ CONTAINS
           
     END DO
 
+    !print*, energy(this_box)%ewald_self, alpha_ewald(this_box), rootPI, charge_factor(this_box)
     energy(this_box)%ewald_self = energy(this_box)%ewald_self * alpha_ewald(this_box) / rootPI
     energy(this_box)%ewald_self = -energy(this_box)%ewald_self * charge_factor(this_box)
 
@@ -3285,6 +3286,7 @@ CONTAINS
           
           sigij12 = sigij6*sigij6
 
+          !print*, ia, ja, epsij, sigij, nint_beads(ja,this_box), nint_beads(ia,this_box)
           e_lrc_ia_ja = e_lrc_ia_ja + nint_beads(ja,this_box) * &
                4.0_DP * epsij * (sigij12 /(9.0_DP*rcut9(this_box)) - &
                (sigij6 / (3.0_DP*rcut3(this_box))))
