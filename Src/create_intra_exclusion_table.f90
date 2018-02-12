@@ -194,6 +194,10 @@ SUBROUTINE Create_Intra_Exclusion_Table
         DO jj = 1,natoms(is)
            jtype = nonbond_list(jj,is)%atom_type_number
 
+           rcut_in_vdw_mix(ii,jj,is) = rcut_vdw_mix(itype,jtype)
+
+           int_in_vdw_sum_style_mix(ii,jj,is) = int_vdw_sum_style_mix(itype,jtype)
+
            vdw_in_param1_table(ii,jj,is) = vdw_param1_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
            vdw_in_param2_table(ii,jj,is) = vdw_param2_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
            vdw_in_param3_table(ii,jj,is) = vdw_param3_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
