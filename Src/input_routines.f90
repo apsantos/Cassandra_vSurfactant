@@ -1820,6 +1820,9 @@ SUBROUTINE Get_Angle_Info(is)
 
   ierr = 0
   line_nbr = 0
+  nbr_entries = 0
+  line_string = ""
+  species_list(is)%linear = .FALSE. 
 
   DO
      line_nbr = line_nbr + 1
@@ -3424,10 +3427,10 @@ SUBROUTINE Get_Intra_Scaling
   IF (.not. intrascaling_set) THEN
      WRITE(logunit,*) 'Using default intramolecular scaling factors, if required'
   ELSE
-     WRITE(logunit,*) 'intramolecular scaling factors explicitly set'
+     WRITE(logunit,*) 'intramolecular scaling factors explicitly set '
      DO is = 1, nspecies
         IF (intrascaling_read(is)) THEN
-           WRITE(logunit,*) 'intramolecular scaling factors explicitly set in', intrafile_name(is)
+           WRITE(logunit,*) 'intramolecular scaling factors explicitly set in ', intrafile_name(is)
    
         ELSE
            WRITE(logunit,'(A,T50,I7)') 'Intra molecule scaling factors for species', is 
