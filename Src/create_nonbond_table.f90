@@ -459,10 +459,9 @@ SUBROUTINE Read_Nonbond_Table
     INTEGER :: ierr,nbr_entries
     INTEGER :: i_line, n_params, cur_line
     CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
-    CHARACTER(charLength) :: temp_name, pot_type
+    CHARACTER(charLength) :: temp_name, pot_type, temp_name_list(30)
     INTEGER :: temp_type_list(30), temp_type, ncheck
   !********************************************************************************
-
 
 !********************************************************************************
     ! Open mixfile and find the line where the data begins
@@ -476,6 +475,7 @@ SUBROUTINE Read_Nonbond_Table
     i_line = 1
     tot_natoms = SUM(natoms(:))
     temp_type_list = -100
+    temp_name_list = ""
     nbr_atomtypes = 0
     DO 
         IF (line_string(1:12) == '# Atom_Types') THEN
@@ -489,6 +489,7 @@ SUBROUTINE Read_Nonbond_Table
                 IF ( ALL(temp_type_list /= temp_type) ) THEN
                     nbr_atomtypes = nbr_atomtypes + 1
                     temp_type_list(nbr_atomtypes) = temp_type
+                    temp_name_list(nbr_atomtypes) = temp_name
                 END IF
                 !Check which speicies and atom corresponds to this name
                 ncheck = 0
@@ -517,6 +518,10 @@ SUBROUTINE Read_Nonbond_Table
     ! to the atom type number
 
     ALLOCATE(atom_type_list(nbr_atomtypes), Stat=AllocateStatus)
+
+    DO itype = 1, nbr_atomtypes
+       atom_type_list(itype) = temp_name_list(itype)
+    END DO
 
     ! allocate arrays containing vdw parameters for all interaction pairs.
     ALLOCATE(vdw_param1_table(nbr_atomtypes,nbr_atomtypes), Stat=AllocateStatus)
@@ -564,8 +569,6 @@ SUBROUTINE Read_Nonbond_Table
        err_msg(1) = ' ERROR: Not enough memory for vdw interaction table '
        CALL Clean_Abort(err_msg,'ceate_nonbond_table')
     END IF
-
-    atom_type_list = ""
 
     ! Now determine the set of vdw parameters for each type of interaction and load them into vdw_param_table
     ! This is a brute force search - but it is fast.
