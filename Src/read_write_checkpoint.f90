@@ -825,7 +825,9 @@ SUBROUTINE Read_DCD(this_mc_step)
 
     IF ( this_mc_step == -1 ) THEN 
        
-       CALL Read_VOL
+       IF ( read_volume ) THEN
+          CALL Read_VOL
+       ENDIF
 
        temp_n_equilsteps = n_equilsteps
        n_equilsteps = 1

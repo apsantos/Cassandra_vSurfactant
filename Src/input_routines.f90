@@ -3569,8 +3569,8 @@ SUBROUTINE Get_Box_Info
               line_nbr = line_nbr + 1
               ivolfreq = String_To_Int(line_array(1))
 
-              WRITE (logunit, '(A,T25,T50,A)') 'Vol info file name: ', volume_info_file
-              WRITE (logunit, '(A,T25,I4,A)') 'Freq of vol info: ', ivolfreq
+              WRITE (logunit, '(A,T25,A)') 'Vol info file name: ', volume_info_file
+              WRITE (logunit, '(A,T25,I4)') 'Freq of vol info: ', ivolfreq
 
               ! Set off-diagonal components to zero
               box_list(ibox)%length(1,2) = 0.0
