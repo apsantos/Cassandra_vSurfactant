@@ -239,7 +239,7 @@ CONTAINS
              l0 = bond_list(ibond,species)%bond_param(2)
                 
              CALL Get_Bond_Length(ibond,molecule,species,length)
-             energy = k*(length-l0)**2
+             energy = k*(length-l0)**2.0_DP
              ierr = 0
 
              ! Add more potential functions here.
@@ -433,7 +433,8 @@ CONTAINS
           k=angle_list(iangle,species)%angle_param(1)
           theta0 = angle_list(iangle,species)%angle_param(2)
           CALL Get_Bond_Angle(iangle,molecule,species,theta)
-          ea = k*(theta-theta0)**2
+          ea = k*(theta-theta0)**2.0
+          ! print*, k, theta, theta0, ea
           ! Add more potential functions here.
        ENDIF
        energy = energy + ea
@@ -711,7 +712,7 @@ CONTAINS
 
           CALL Get_Dihedral_Angle(idihed,molecule,species,phi)
 
-          cosine = COS(phi - PI)
+          cosine = DCOS(phi - PI)
           cosine2 = cosine * cosine
           cosine4 = cosine2 * cosine2
           edihed =  a0 + (a1 * cosine) + (a2 * cosine2) + (a3 * cosine2 * cosine) + &
@@ -1636,7 +1637,7 @@ CONTAINS
 
              ELSEIF (i_vdw_sum == vdw_cut .OR. i_vdw_sum == vdw_cut_tail) THEN
                  
-                   Eij_vdw = 4.0_DP * eps * (SigOverR12 - SigOverR6)
+                   Eij_vdw = lj126pre * eps * (SigOverR12 - SigOverR6)
 
              ELSEIF (i_vdw_sum == vdw_cut_shift) THEN
                 
@@ -1645,13 +1646,13 @@ CONTAINS
                 SigOverR6_shift = SigOverRsq_shift * SigOverRsq_shift * SigOverRsq_shift
                 SigOverR12_shift = SigOverR6_shift * SigOverR6_shift
                 
-                Eij_vdw = 4.0_DP * eps * ( (SigOverR12 - SigOverR6) - (SigOverR12_shift - SigOverR6_shift) )
+                Eij_vdw = lj126pre * eps * ( (SigOverR12 - SigOverR6) - (SigOverR12_shift - SigOverR6_shift) )
                 ENDIF
 
                 
              ELSEIF (i_vdw_sum == vdw_cut_switch) THEN
                 
-                Eij_vdw = 4.0_DP * eps * (SigOverR12 - SigOverR6)
+                Eij_vdw = lj126pre * eps * (SigOverR12 - SigOverR6)
                                             
                 IF ( (rijsq < ron_switch_sq(ibox) )) THEN
                    
@@ -1911,12 +1912,13 @@ CONTAINS
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
 
-             Eij_qq = qsc*charge_factor(ibox)*(qi*qj)/rij
+             Eij_qq = charge_factor(ibox)*(qi*qj)/rij
 
              IF (int_charge_sum_style(ibox) == charge_ewald .AND. ( .NOT. igas_flag) ) THEN
                 ! Real space Ewald part
                 erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
                 Eij_ewald = - (erf_val * Eij_qq ) 
+             
              ! self and recipricoal parts need to be computed as total energy differences between original
              ! configuration and the perturbed configuration. These terms are thus added on after all atoms 
              ! have been moved. 
@@ -2022,9 +2024,7 @@ CONTAINS
     rij = SQRT(rijsq)
     ! May need to protect against very small rijsq
     erf_val = 1.0_DP - erfc(alpha_ewald(ibox) * rij)
-    Eij = (qi * qj / rij)* charge_factor(ibox)
-    Eij = Eij * (qsc - erf_val) 
-
+    Eij = (qi * qj / rij) * (qsc - erf_val) * charge_factor(ibox)
 
   END SUBROUTINE Ewald_Real
 
@@ -2740,8 +2740,7 @@ CONTAINS
     INTEGER :: is,im, this_locate, ia,  this_box
     REAL(DP) :: charge
 
-    IF (int_sim_type == sim_nvt .OR. int_sim_type == sim_nvt_min .OR. &
-       int_sim_type == sim_npt .OR. &
+    IF (int_sim_type == sim_nvt_min .OR. &
        int_sim_type == sim_frag .OR. int_sim_type == sim_ring .OR. &
        int_sim_type == sim_mcf .OR. &
        int_sim_type == sim_virial) THEN
@@ -2774,6 +2773,7 @@ CONTAINS
           
     END DO
 
+    !print*, energy(this_box)%ewald_self, alpha_ewald(this_box), rootPI, charge_factor(this_box)
     energy(this_box)%ewald_self = energy(this_box)%ewald_self * alpha_ewald(this_box) / rootPI
     energy(this_box)%ewald_self = -energy(this_box)%ewald_self * charge_factor(this_box)
 
@@ -3263,10 +3263,10 @@ CONTAINS
     INTEGER, INTENT(IN) :: this_box
     REAL(DP), INTENT(OUT) :: e_lrc
     
-    INTEGER ::  ia, ja
-    REAL(DP) :: epsij, sigij, sigij2, sigij6, sigij12
+    INTEGER ::  ia, ja, nj
+    REAL(DP) :: sigij2, sigij3, sigij4, sigij6, sigij9, sigij12
 
-    REAL(DP) :: e_lrc_ia_ja
+    REAL(DP) :: e_lrc_ia_ja, Ulr_ij
 
     e_lrc = 0.0_DP
     
@@ -3276,18 +3276,41 @@ CONTAINS
        
        DO ja = 1, nbr_atomtypes
           
-          epsij = vdw_param1_table(ia,ja)
-          sigij = vdw_param2_table(ia,ja)
+          nj = nint_beads(ja,this_box)
+          IF (ia == ja) nj = nj - 1
+          nj = nj - nexclude_beads(ia, ja)
 
-          sigij2 = sigij*sigij
-          
-          sigij6 = sigij2*sigij2*sigij2 
-          
-          sigij12 = sigij6*sigij6
+          LJ_12_6_calculation: IF ( int_vdw_style_mix(ia,ja,vdw_lj) ) THEN
 
-          e_lrc_ia_ja = e_lrc_ia_ja + nint_beads(ja,this_box) * &
-               4.0_DP * epsij * (sigij12 /(9.0_DP*rcut9(this_box)) - &
-               (sigij6 / (3.0_DP*rcut3(this_box))))
+             sigij2 = vdw_param2_table(ia,ja) * vdw_param2_table(ia,ja)
+             sigij6 = sigij2 * sigij2 * sigij2 
+             sigij12 = sigij6 * sigij6
+
+             Ulr_ij = lj126pre * vdw_param1_table(ia,ja) * (sigij12 / (9.0_DP*rcut9(this_box)) - &
+                                                           (sigij6 / (3.0_DP*rcut3(this_box))))
+          ENDIF LJ_12_6_calculation
+
+          LJ_12_4_calculation: IF ( int_vdw_style_mix(ia,ja,vdw_lj124) ) THEN
+
+             sigij2 = vdw_param2_table(ia,ja) * vdw_param2_table(ia,ja)
+             sigij4 = sigij2 * sigij2 
+             sigij12 = sigij4 * sigij4 * sigij4
+
+             Ulr_ij = lj124pre * vdw_param1_table(ia,ja) * (sigij12 / (9.0_DP*rcut9(this_box)) - &
+                                                           (sigij4 / (rcut_vdw(this_box))))
+          ENDIF LJ_12_4_calculation
+
+          LJ_9_6_calculation: IF ( int_vdw_style_mix(ia,ja,vdw_lj96) ) THEN
+
+             sigij3 = vdw_param2_table(ia,ja) * vdw_param2_table(ia,ja) * vdw_param2_table(ia,ja)
+             sigij6 = sigij3 * sigij3 
+             sigij9 = sigij3 * sigij6
+
+             Ulr_ij = lj96pre * vdw_param1_table(ia,ja) * (sigij9 / (6.0_DP*rcut6(this_box)) - &
+                                                          (sigij6 / (3.0_DP*rcut3(this_box))))
+          ENDIF LJ_9_6_calculation
+
+          e_lrc_ia_ja = e_lrc_ia_ja + (nj * Ulr_ij)
           
        END DO
 
@@ -3892,7 +3915,7 @@ CONTAINS
              SigOverR9  = SigOverR6 * SigOverR3
 
              IF (rijsq < rcutsq) THEN
-                Wij_vdw = (3.0_DP * lj96pre * eps) * (3.0_DP*SigOverR9 - 2.0_DP*SigOverR6)
+                Wij_vdw = (lj96pre * eps) * (9.0_DP*SigOverR9 - 6.0_DP*SigOverR6)
              END IF
 
              IF (i_vdw_sum == vdw_cut_switch) THEN
@@ -4117,10 +4140,10 @@ CONTAINS
     INTEGER, INTENT(IN) :: this_box
     REAL(DP), INTENT(OUT) :: w_lrc
     
-    INTEGER ::   ia, ja
+    INTEGER ::   ia, ja, nj
 
-    REAL(DP) :: epsij, sigij
-    REAL(DP) :: w_lrc_ia_ja
+    REAL(DP) :: sigij2, sigij3, sigij4, sigij6, sigij9, sigij12
+    REAL(DP) :: w_lrc_ia_ja, Wlr_ij
 
     w_lrc = 0.0_DP 
 
@@ -4130,11 +4153,41 @@ CONTAINS
           
        DO ja = 1, nbr_atomtypes
 
-          epsij = vdw_param1_table(ia,ja)
-          sigij = vdw_param2_table(ia,ja)
+          nj = nint_beads(ja,this_box)
+          IF (ia == ja) nj = nj - 1
+          nj = nj - nexclude_beads(ia, ja)
 
-          w_lrc_ia_ja = w_lrc_ia_ja + nint_beads(ja,this_box) * epsij * ((2.0_DP / 3.0_DP * &
-                        sigij**12 / rcut9(this_box)) - (sigij**6 / rcut3(this_box)))
+          LJ_12_6_calculation: IF ( int_vdw_style_mix(ia,ja,vdw_lj) ) THEN
+
+             sigij2 = vdw_param2_table(ia,ja) * vdw_param2_table(ia,ja)
+             sigij6 = sigij2 * sigij2 * sigij2 
+             sigij12 = sigij6 * sigij6
+
+             Wlr_ij = 2.0_DP * lj126pre * vdw_param1_table(ia,ja) * ((2.0_DP * sigij12 / (3.0_DP*rcut9(this_box))) - &
+                                                           (sigij6 / rcut3(this_box)))
+          ENDIF LJ_12_6_calculation
+
+          LJ_12_4_calculation: IF ( int_vdw_style_mix(ia,ja,vdw_lj124) ) THEN
+
+             sigij2 = vdw_param2_table(ia,ja) * vdw_param2_table(ia,ja)
+             sigij4 = sigij2 * sigij2 
+             sigij12 = sigij4 * sigij4 * sigij4
+
+             Wlr_ij = 4.0_DP * lj124pre * vdw_param1_table(ia,ja) * ( sigij12 / (3.0_DP*rcut9(this_box)) - &
+                                                                     (sigij4 / rcut_vdw(this_box)))
+          ENDIF LJ_12_4_calculation
+
+          LJ_9_6_calculation: IF ( int_vdw_style_mix(ia,ja,vdw_lj96) ) THEN
+
+             sigij3 = vdw_param2_table(ia,ja) * vdw_param2_table(ia,ja) * vdw_param2_table(ia,ja)
+             sigij6 = sigij3 * sigij3 
+             sigij9 = sigij3 * sigij6
+
+             Wlr_ij = lj96pre * vdw_param1_table(ia,ja) * ((3.0_DP * sigij9 / rcut6(this_box)) - &
+                                                           (2.0_DP * sigij6 / rcut3(this_box)))
+          ENDIF LJ_9_6_calculation
+
+          w_lrc_ia_ja = w_lrc_ia_ja + (nj * Wlr_ij)
              
        END DO
 
@@ -4142,7 +4195,7 @@ CONTAINS
 
     END DO
 
-    w_lrc = 16.0_DP / 3.0_DP * PI * w_lrc / box_list(this_box)%volume
+    w_lrc = 2.0_DP / 3.0_DP * PI * w_lrc / box_list(this_box)%volume
 
   END SUBROUTINE Compute_LR_Force
 

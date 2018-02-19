@@ -51,7 +51,7 @@ SUBROUTINE Create_Intra_Exclusion_Table
 
   IMPLICIT NONE
 
-  INTEGER :: is,ii,jj,kk, max_natoms, itype, jtype
+  INTEGER :: is, ii, jj, kk, ia, ja, max_natoms, itype, jtype
 !-----------------------------------------------------------------------------
 
   max_natoms = MAXVAL(natoms)
@@ -97,6 +97,8 @@ SUBROUTINE Create_Intra_Exclusion_Table
   int_in_vdw_style_mix(:,:,:,int_vdw_style(1)) = .true.
   ALLOCATE(int_in_vdw_sum_style_mix(max_natoms,max_natoms,nspecies), Stat=AllocateStatus)
   int_in_vdw_sum_style_mix(:,:,:) = int_vdw_sum_style(1)
+
+  ALLOCATE(nexclude_beads(nbr_atomtypes,nbr_atomtypes))
 
   IF (AllocateStatus .NE. 0) THEN
      err_msg = ''
@@ -194,6 +196,10 @@ SUBROUTINE Create_Intra_Exclusion_Table
         DO jj = 1,natoms(is)
            jtype = nonbond_list(jj,is)%atom_type_number
 
+           rcut_in_vdw_mix(ii,jj,is) = rcut_vdw_mix(itype,jtype)
+
+           int_in_vdw_sum_style_mix(ii,jj,is) = int_vdw_sum_style_mix(itype,jtype)
+
            vdw_in_param1_table(ii,jj,is) = vdw_param1_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
            vdw_in_param2_table(ii,jj,is) = vdw_param2_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
            vdw_in_param3_table(ii,jj,is) = vdw_param3_table(itype,jtype) * vdw_intra_scale(ii,jj,is)
@@ -217,6 +223,35 @@ SUBROUTINE Create_Intra_Exclusion_Table
      ENDIF
   ENDDO
      
+  nexclude_beads(:,:) = 0
+  DO is = 1, nspecies
+    ! find the number of intra exclusions by type
+     DO ii = 1, natoms(is)
+        DO ia = 1, nbr_atomtypes
+           IF ( atom_type_list(ia) == nonbond_list(ii,is)%atom_name ) THEN
+              DO jj = ii+1, natoms(is)
+                 IF (vdw_in_param1_table(ii,jj,is) == 0.0_DP) THEN
+                    DO ja = 1, nbr_atomtypes
+                       IF ( atom_type_list(ja) == nonbond_list(jj,is)%atom_name ) THEN
+                          nexclude_beads(ia, ja) = nexclude_beads(ia, ja) + 1
+                          EXIT
+                       END IF
+                    END DO
+                 END IF
+              END DO
+           END IF
+        END DO
+     END DO
+     
+  END DO
+
+  DO ia = 1, nbr_atomtypes
+     DO ja = ia+1, nbr_atomtypes
+        nexclude_beads(ia, ja) = nexclude_beads(ia, ja) + nexclude_beads(ja, ia) 
+        nexclude_beads(ja, ia) = nexclude_beads(ia, ja)
+     END DO
+  END DO
+ 
 
   ! report info to log
   WRITE(logunit,*)

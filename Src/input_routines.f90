@@ -515,7 +515,8 @@ SUBROUTINE Get_Pair_Style
                  WRITE(logunit,'(A,2x,F7.3, A)') '    rcut = ',rcut_vdw(ibox), '   Angstrom'
 
                  rcut3(ibox) = rcut_vdw(ibox) * rcut_vdw(ibox) * rcut_vdw(ibox)
-                 rcut9(ibox) = rcut3(ibox) * rcut3(ibox) * rcut3(ibox)
+                 rcut6(ibox) = rcut3(ibox) * rcut3(ibox)
+                 rcut9(ibox) = rcut3(ibox) * rcut6(ibox)
 
               ELSEIF (vdw_sum_style(ibox) == 'cut_shift') THEN
                  int_vdw_sum_style(ibox) = vdw_cut_shift
@@ -1820,6 +1821,9 @@ SUBROUTINE Get_Angle_Info(is)
 
   ierr = 0
   line_nbr = 0
+  nbr_entries = 0
+  line_string = ""
+  species_list(is)%linear = .FALSE. 
 
   DO
      line_nbr = line_nbr + 1
@@ -3424,10 +3428,10 @@ SUBROUTINE Get_Intra_Scaling
   IF (.not. intrascaling_set) THEN
      WRITE(logunit,*) 'Using default intramolecular scaling factors, if required'
   ELSE
-     WRITE(logunit,*) 'intramolecular scaling factors explicitly set'
+     WRITE(logunit,*) 'intramolecular scaling factors explicitly set '
      DO is = 1, nspecies
         IF (intrascaling_read(is)) THEN
-           WRITE(logunit,*) 'intramolecular scaling factors explicitly set in', intrafile_name(is)
+           WRITE(logunit,*) 'intramolecular scaling factors explicitly set in ', intrafile_name(is)
    
         ELSE
            WRITE(logunit,'(A,T50,I7)') 'Intra molecule scaling factors for species', is 
@@ -3719,7 +3723,7 @@ SUBROUTINE Get_Box_Info
   ALLOCATE(ron_charmmsq(nbr_boxes) , roff_charmmsq(nbr_boxes))
   ALLOCATE(switch_factor1(nbr_boxes) , switch_factor2(nbr_boxes))
   ALLOCATE(rcut_coulsq(nbr_boxes))
-  ALLOCATE(rcut9(nbr_boxes) , rcut3(nbr_boxes))
+  ALLOCATE(rcut9(nbr_boxes), rcut6(nbr_boxes), rcut3(nbr_boxes))
 
   ALLOCATE(W_tensor_charge(3,3,nbr_boxes) , W_tensor_recip(3,3,nbr_boxes))
   ALLOCATE(W_tensor_vdw(3,3,nbr_boxes) , W_tensor_total(3,3,nbr_boxes))

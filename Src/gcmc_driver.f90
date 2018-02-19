@@ -261,8 +261,14 @@ SUBROUTINE GCMC_Driver
 
        WRITE(*,*)
        WRITE(*,"(A,T15,I10)") ' MC Step =', i
-       WRITE(*,"(A,T15,I8)") 'Nmol(1) = ', nmols(1,1)
-       WRITE(*,"(A,T15,F24.12)") 'Energy(1) =', energy(1)%total
+       DO ibox = 1, nbr_boxes
+          WRITE(*,"(A,I2,A)", ADVANCE='NO') 'Nmol(species, box=', ibox, ') = '
+          DO is = 1, nspecies-1
+             WRITE(*,"(T2,I8)", ADVANCE='NO') nmols(is,ibox)
+          END DO
+          WRITE(*,"(T15,I8)") nmols(nspecies,ibox)
+          WRITE(*,"(A,I2,A,T15,F24.12)") 'Energy(box=', ibox, ') =', energy(1)%total
+       END DO
 
      END IF
 

@@ -137,7 +137,7 @@ USE Type_Definitions
   REAL(DP), DIMENSION(:), ALLOCATABLE :: ron_switch, roff_switch, roff_switch_sq, switch_factor1
   REAL(DP), DIMENSION(:), ALLOCATABLE :: switch_factor2, ron_switch_sq
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut_vdwsq, rcut_coulsq, ron_charmmsq, roff_charmmsq
-  REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut9, rcut3
+  REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut9, rcut6, rcut3
   REAL(DP), DIMENSION(:), ALLOCATABLE :: rcut_vdw3, rcut_vdw6
   REAL(DP) :: edens_cut, rcut_clus, rcut_low, rcut_lowsq
   LOGICAL, DIMENSION(:), ALLOCATABLE :: l_half_len_cutoff
@@ -164,6 +164,7 @@ USE Type_Definitions
   
  
   INTEGER, DIMENSION(:,:), ALLOCATABLE :: nint_beads
+  INTEGER, DIMENSION(:,:), ALLOCATABLE :: nexclude_beads
 
   ! Intramolecular exclusion variables (1-2, 1-3, 1-4 exclusions/scaling)
   ! and the scaling to use for all other intramolecular terms.
@@ -214,6 +215,7 @@ USE Type_Definitions
   REAL(DP), PARAMETER :: rootPI = 1.7724538509_DP
 
   !lj parameters
+  REAL(DP), PARAMETER :: lj126pre = 4.0_DP
   REAL(DP), PARAMETER :: lj124pre = 2.5980762114_DP
   REAL(DP), PARAMETER :: lj96pre = 6.75_DP
 
@@ -350,7 +352,7 @@ USE Type_Definitions
 
   ! array containing name of each atom type with idex = atomtype number.
   ! It is set and allocated to size nbr_atomtypes in Create_Nonbond_Table
-  CHARACTER(6), DIMENSION(:), ALLOCATABLE :: atom_type_list
+  CHARACTER(charLength), DIMENSION(:), ALLOCATABLE :: atom_type_list
 
   ! Number of parameters required for various potential functions.
   INTEGER, DIMENSION(:), ALLOCATABLE :: nbr_bond_params, nbr_angle_params 
