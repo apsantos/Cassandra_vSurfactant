@@ -269,6 +269,7 @@ USE Type_Definitions
   ! concentration conversion
   REAL(DP), PARAMETER :: navogadro = 6.022140857E23_DP !mol-1
   REAL(DP), PARAMETER :: m3_to_A3 = 1.0E30_DP !mol-1
+  REAL(DP), PARAMETER :: nperA3_to_mM = 1660539.02857
 
   ! Parameter identifying number of trials
 
@@ -670,6 +671,13 @@ INTEGER, DIMENSION(:), ALLOCATABLE :: is_atoms
 INTEGER :: dcd_natoms, xtc_natoms, gro_natoms, xyz_natoms
 LOGICAL :: read_dcd_box
 TYPE(virial_Class), TARGET :: mcvirial
- 
+
+!*********************************************************************************************************
+! Information on variable box volume
+
+LOGICAL :: read_volume 
+INTEGER :: line_nbr_vol
+INTEGER :: ivolfreq
+
 END MODULE Run_Variables
 

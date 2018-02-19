@@ -118,6 +118,8 @@ SUBROUTINE PP_Driver
   
      IF (i < n_equilsteps) CYCLE
 
+     IF (read_volume .AND. MOD(i-1,ivolfreq) /= 0) CYCLE
+
      CALL Accumulate(this_box)
      
      IF ( .NOT. block_average ) THEN
@@ -208,7 +210,7 @@ SUBROUTINE PP_Driver
                  END IF
               
                  CALL Calculate_Excluded_Volume(ibox)
-              
+
               !CALL cpu_time(now_time)
               !print '("exvol Time = ",f6.3," seconds.")',now_time-time_start
               END DO
@@ -479,6 +481,9 @@ SUBROUTINE PP_Driver
     CLOSE(unit=gro_config_unit)
   ELSEIF (start_type == 'read_dcd' ) THEN
     CLOSE(unit=dcd_config_unit)
+    IF (read_volume) THEN
+       CLOSE(unit=volume_info_unit)
+    ENDIF
   ENDIF
 
   END SUBROUTINE PP_Driver

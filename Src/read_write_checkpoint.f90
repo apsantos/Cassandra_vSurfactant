@@ -563,6 +563,31 @@ SUBROUTINE Read_GRO(this_mc_step)
 
   END SUBROUTINE Read_GRO
 
+SUBROUTINE Read_VOL
+
+    INTEGER :: nbr_entries, ierr
+    CHARACTER(240) :: line_array(80)
+    REAL(DP) :: box_volume, box_length
+
+    CALL Parse_String(volume_info_unit,line_nbr_vol,2,nbr_entries,line_array,ierr)
+    line_nbr_vol = line_nbr_vol + 1
+
+    box_volume = String_To_Double(line_array(2))
+    box_length = box_volume ** (1./3.)
+
+    box_list(1)%volume = box_volume
+
+    ! specific for cubic boxes
+    box_list(1)%length(1,1) = box_length
+    box_list(1)%length(2,2) = box_length
+    box_list(1)%length(3,3) = box_length
+
+    box_list(1)%hlength(1,1) = 0.5_DP * box_list(1)%length(1,1)
+    box_list(1)%hlength(2,2) = 0.5_DP * box_list(1)%length(2,2)
+    box_list(1)%hlength(3,3) = 0.5_DP * box_list(1)%length(3,3)
+
+    END SUBROUTINE Read_VOL
+
 SUBROUTINE Read_XYZ(this_mc_step)
 
    INTEGER, INTENT(IN) :: this_mc_step
@@ -799,6 +824,9 @@ SUBROUTINE Read_DCD(this_mc_step)
     box = 0.0
 
     IF ( this_mc_step == -1 ) THEN 
+       
+       CALL Read_VOL
+
        temp_n_equilsteps = n_equilsteps
        n_equilsteps = 1
        CALL Read_XYZ(1)
@@ -864,6 +892,10 @@ SUBROUTINE Read_DCD(this_mc_step)
         deallocate(pos)
         RETURN
 
+    ELSEIF (read_volume .AND. MOD(this_mc_step-1,ivolfreq) /= 0) THEN
+        deallocate(pos)
+        RETURN
+
     ELSEIF (ierr /= 0) THEN
         deallocate(pos)
         WRITE(logunit,*) 'There are only ', this_mc_step, 'steps in dcd file'
@@ -871,6 +903,10 @@ SUBROUTINE Read_DCD(this_mc_step)
         err_msg(1) = "Not as many steps in the dcd file."
         CALL Clean_Abort(err_msg,'Read_DCD')
     END IF
+
+    IF ( read_volume ) THEN
+       CALL Read_VOL
+    ENDIF
 
     DO i = 1, dcd_natoms
         ia = ia_atoms(i)

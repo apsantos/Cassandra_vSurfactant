@@ -186,6 +186,10 @@ INTEGER :: movie_clus_xyz_unit = 165
 INTEGER :: lattice_file_unit = 170
 CHARACTER(FILENAME_LEN) :: lattice_file
 
+! Variables associated with volume file
+INTEGER :: volume_info_unit = 180
+CHARACTER(FILENAME_LEN) :: volume_info_file
+
 ! Cluster distribution file
 INTEGER :: cluster_file_unit = 919
 CHARACTER(FILENAME_LEN) :: cluster_file

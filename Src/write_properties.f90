@@ -134,6 +134,14 @@ CONTAINS
 
           prop_unit(ii) = '(% associated)'
 
+       ELSE IF (prop_to_write(1:11) == 'OligConcTot') THEN
+
+          prop_unit(ii) = '(mM)'
+
+       ELSE IF (prop_to_write(1:11) == 'OligConcAcc') THEN
+
+          prop_unit(ii) = '(mM)'
+          
        END IF
 
        WRITE(this_unit,'(A16,2X)',ADVANCE='NO') (TRIM(prop_unit(ii)))
@@ -165,6 +173,14 @@ CONTAINS
     ELSE IF (prop_to_write(1:6) == 'Degree') THEN
 
        prop_unit(ii) = '(% associated)'
+
+    ELSE IF (prop_to_write(1:11) == 'OligConcTot') THEN
+
+       prop_unit(ii) = '(mM)'
+
+    ELSE IF (prop_to_write(1:11) == 'OligConcAcc') THEN
+
+       prop_unit(ii) = '(mM)'
 
     END IF
     
@@ -382,6 +398,16 @@ CONTAINS
             write_buff(ii+1) = cluster%n_oligomers
          END IF
 
+      ELSE IF (prop_written == 'OligConcTot') THEN
+
+         IF (block_average) THEN
+            write_buff(ii+1) = REAL(cluster%n_oligomers) / box_list(1)%volume &
+                 * nperA3_to_mM / REAL(ncluster_freq,DP)
+         ELSE
+            write_buff(ii+1) = REAL(cluster%n_oligomers) / box_list(1)%volume &
+                 * nperA3_to_mM
+         END IF
+
       ELSE IF (prop_written == 'NclustersOlig') THEN
 
          IF (block_average) THEN
@@ -423,6 +449,17 @@ CONTAINS
             IF (lattice_sim) write_buff(ii+1) = exvol%excluded / &
                                                 REAL(exvol%n_iter * box_list(1)%volume)
 
+         END IF
+
+      ELSE IF (prop_written == 'OligConcAcc') THEN
+         
+         IF (block_average) THEN
+            write_buff(ii+1) = REAL(cluster%n_oligomers) / box_list(1)%volume &
+                 * nperA3_to_mM / REAL(ncluster_freq,DP) / &
+                 (1 - exvol%excluded / REAL(nexvol_freq * exvol%n_iter))
+         ELSE
+            write_buff(ii+1) = REAL(cluster%n_oligomers) / box_list(1)%volume &
+                 * nperA3_to_mM / (1 - exvol%excluded / REAL(exvol%n_iter))
          END IF
 
       ELSE IF (prop_written == 'Degree_Association') THEN
