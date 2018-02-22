@@ -148,24 +148,27 @@ CONTAINS
 
 SUBROUTINE Read_NDX
 
-    CHARACTER(240) :: line_array(80)
+    CHARACTER(charLength) :: line_array(lineArrayLength)
     INTEGER :: is, line_nbr, nbr_entries, ierr, idx, i_ndx, totatoms
 
-    line_nbr = 1
+    ierr = 0
+    nbr_entries = 0
     totatoms = 0
     DO is = 1 , nspecies
         totatoms = totatoms + nmolecules(is) * natoms(is)
     ENDDO
 
     ALLOCATE( ndx_type( totatoms ) )
-    idx = 0
+    ndx_type(:) = 0
 
     OPEN(unit=ndx_unit, file=ndx_file)
+
+    idx = 0
+    line_nbr = 1
+    line_array(:) = ""
     DO 
         CALL Parse_String(ndx_unit,line_nbr,0,nbr_entries,line_array,ierr)
-        IF (ierr /= 0) THEN
-            EXIT
-        END IF
+        IF (ierr /= 0) EXIT
         ! skip empty lines
         IF (nbr_entries == 0) CYCLE
 
@@ -220,6 +223,10 @@ SUBROUTINE Read_XTC(this_mc_step)
     type(C_PTR) :: xd_c
 
     IF ( this_mc_step == -1 ) THEN 
+       IF ( read_volume ) THEN
+          CALL Read_VOL
+       ENDIF
+
        CALL Read_NDX
 
        temp_n_equilsteps = n_equilsteps
@@ -250,6 +257,10 @@ SUBROUTINE Read_XTC(this_mc_step)
        END IF
 
     END IF
+
+    IF ( read_volume ) THEN
+       CALL Read_VOL
+    ENDIF
     
     ! Read configuration
 
@@ -269,6 +280,10 @@ SUBROUTINE Read_XTC(this_mc_step)
         END DO
 
     ELSEIF (this_mc_step < n_equilsteps) THEN
+        RETURN
+
+    ELSEIF (read_volume .AND. MOD(this_mc_step-1,ivolfreq) /= 0) THEN
+        deallocate(pos)
         RETURN
 
     ELSEIF (ierr /= 0) THEN
@@ -475,9 +490,12 @@ SUBROUTINE Read_GRO(this_mc_step)
     line_nbr = line_nbr + 1
 
     ! Check the box size
-    IF (box_list(1)%length(1,1) /= String_To_Double(line_array(1))*10.0 .OR. &
-        box_list(1)%length(2,2) /= String_To_Double(line_array(2))*10.0 .OR. &
-        box_list(1)%length(3,3) /= String_To_Double(line_array(3))*10.0 ) THEN
+    IF ( ( ( (box_list(1)%length(1,1) - String_To_Double(line_array(1))*10.0) / &
+             box_list(1)%length(1,1)) > 0.001 ) .OR. &
+         ( ( (box_list(1)%length(2,2) - String_To_Double(line_array(2))*10.0) / &
+             box_list(1)%length(2,2)) > 0.001 ) .OR. &
+         ( ( (box_list(1)%length(2,2) - String_To_Double(line_array(2))*10.0) / &
+             box_list(1)%length(2,2)) > 0.001 ) ) THEN
           err_msg = ""
           err_msg(1) = "Box size in input and gromacs config do not agree."
           CALL Clean_Abort(err_msg,'Read_GRO')
@@ -585,6 +603,8 @@ SUBROUTINE Read_VOL
     box_list(1)%hlength(1,1) = 0.5_DP * box_list(1)%length(1,1)
     box_list(1)%hlength(2,2) = 0.5_DP * box_list(1)%length(2,2)
     box_list(1)%hlength(3,3) = 0.5_DP * box_list(1)%length(3,3)
+
+    !CALL Compute_Cell_Dimensions(1)
 
     END SUBROUTINE Read_VOL
 

@@ -269,7 +269,8 @@ SUBROUTINE Get_Bond_Length(this_bond,this_molecule,is,r21)
    REAL(DP)            :: rx12, ry12, rz12, rx32, ry32, rz32
    REAL(DP)            :: rx34, ry34, rz34, mx, my, mz, nx, ny, nz
    REAL(DP)            :: msq, nsq, mdn, abs_m, abs_n
-   REAL(DP)            :: cosphi, phi, r12dn
+   REAL(DP)            :: cosphi, r12dn
+   REAL(DP),INTENT(OUT):: phi
    
   
 ! Get the atoms involved in the dihedral of interest

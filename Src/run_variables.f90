@@ -286,8 +286,8 @@ USE Type_Definitions
 
   ! Parameter for species type 
 
-  INTEGER, PARAMETER :: int_sorbate = 0
-  INTEGER, PARAMETER :: int_solvent = 1
+  INTEGER, PARAMETER :: int_sorbate = 1
+  INTEGER, PARAMETER :: int_solvent = 2
 
   ! Parameters for insertion type
   INTEGER, PARAMETER :: int_noinsert = -1

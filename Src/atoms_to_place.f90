@@ -53,7 +53,7 @@ MODULE Atoms_To_Place
   IMPLICIT NONE
 
   INTEGER, ALLOCATABLE, DIMENSION(:) :: alive, deadend, central
-  INTEGER, ALLOCATABLE, DIMENSION(:) :: atoms_to_place_list(:)
+  INTEGER, ALLOCATABLE, DIMENSION(:) :: atoms_to_place_list!(:)
   
  
   
@@ -385,16 +385,25 @@ CONTAINS
     IMPLICIT NONE
 
     INTEGER :: ispecies, idihedrals, atom1, atom2, atom3, atom4, iatoms
-    INTEGER :: alive_atoms, i, j
+    INTEGER :: alive_atoms
     
 
     ALLOCATE(alive(MAXVAL(natoms)))
     ALLOCATE(deadend(MAXVAL(natoms)))
     ALLOCATE(central(MAXVAL(natoms)))
     ALLOCATE(atoms_to_place_list(MAXVAL(natoms)))
+    alive(:) = 0
+    deadend(:) = 0
+    central(:) = 0
+    atoms_to_place_list(:) = 0
+    atom1 = 0
+    atom2 = 0
+    atom3 = 0
+    atom4 = 0
 
     ALLOCATE(dihedral_atoms_to_place_list(MAXVAL(ndihedrals),nspecies),Stat=AllocateStatus)
           IF (AllocateStatus /= 0 ) STOP
+
 
     species_loop: DO ispecies = 1, nspecies
 
@@ -500,16 +509,20 @@ CONTAINS
 
     write(logunit,*)
     write(logunit,*) 'checking for dihedral_atoms_to_place'
-    DO i = 1, nspecies
-       DO j = 1,ndihedrals(i)
+    DO ispecies = 1, nspecies
+       DO idihedrals = 1,ndihedrals(ispecies)
           write(logunit,*) 'dihedral, atom1, atom2, atom3, atom4'
-          write(logunit,*) j,dihedral_list(j,i)%atom1,dihedral_list(j,i)%atom2, dihedral_list(j,i)%atom3, &
-               dihedral_list(j,i)%atom4
+          write(logunit,*) idihedrals, dihedral_list(idihedrals,ispecies)%atom1, &
+                                       dihedral_list(idihedrals,ispecies)%atom2, &
+                                       dihedral_list(idihedrals,ispecies)%atom3, &
+                                       dihedral_list(idihedrals,ispecies)%atom4
           write(logunit,*)
           write(logunit,*) 'natoms to place if atom 1 moves and the moving atom numbers'
-          write(logunit,*) dihedral_atoms_to_place_list(j,i)%atom1_natoms, dihedral_atoms_to_place_list(j,i)%atom1
+          write(logunit,*) dihedral_atoms_to_place_list(idihedrals,ispecies)%atom1_natoms, &
+                           dihedral_atoms_to_place_list(idihedrals,ispecies)%atom1
           write(logunit,*) 'natoms to place if atom 4 moves and the moving atom numbers'
-          write(logunit,*) dihedral_atoms_to_place_list(j,i)%atom4_natoms, dihedral_atoms_to_place_list(j,i)%atom4
+          write(logunit,*) dihedral_atoms_to_place_list(idihedrals,ispecies)%atom4_natoms, &
+                           dihedral_atoms_to_place_list(idihedrals,ispecies)%atom4
           write(logunit,*)
        ENDDO
     ENDDO       
@@ -575,11 +588,21 @@ CONTAINS
 
     IMPLICIT NONE
     
-    INTEGER :: atomplaced, i, bond_i, atom1i, atom2i, nextatom
-    INTEGER :: n_connect, j, bond_j, atom1j, atom2j, ispecies, alive_atoms
+    INTEGER :: i, bond_i, atom1i, atom2i, nextatom
+    INTEGER :: n_connect, j, bond_j, atom1j, atom2j
 
-    INTEGER, DIMENSION(:) :: alive, deadend, central, atoms_to_place_list
+    INTEGER, INTENT(IN) :: atomplaced, ispecies
+    INTEGER, INTENT(INOUT) :: alive_atoms
 
+    INTEGER, DIMENSION(:), INTENT(INOUT) :: alive, deadend, central, atoms_to_place_list
+
+    atom1i = 0
+    atom2i = 0
+    atom1j = 0
+    atom2j = 0
+    bond_j = 0
+    nextatom = 0
+    n_connect = 0
  
 
     IF (deadend(atomplaced) == 1) THEN

@@ -2046,7 +2046,8 @@ CONTAINS
     
     IMPLICIT NONE
     
-    INTEGER :: nx, ny, nz, this_box, kvecs, kx_max, ky_max, kz_max
+    INTEGER :: nx, ny, nz, kvecs, kx_max, ky_max, kz_max
+    INTEGER, INTENT(IN) :: this_box
 
     REAL(DP) :: const_val, hcutsq, x, y, z
     REAL(DP) :: hx_val, hy_val, hz_val, hsq_val

@@ -44,6 +44,7 @@ MODULE Input_Routines
   USE IO_Utilities
   USE File_Names
   USE Type_Definitions
+  USE Read_Write_Checkpoint, ONLY : Read_VOL
   USE Random_Generators, ONLY : s1
 
 
@@ -1214,6 +1215,7 @@ SUBROUTINE Get_Molecule_Info
 
   ! Loop over all species and load information from mfc files into list arrays
   species_list(:)%fragment = .FALSE.
+  species_list(:)%int_species_type = 0
   
   DO is=1,nspecies
 
@@ -1383,6 +1385,7 @@ SUBROUTINE Get_Species_Type(is)
      ELSEIF (line_string(1:3) == 'END' .or. line_nbr > 10000) THEN
 
 ! No species type specified. Default to normal
+        species_list(is)%int_species_type = int_normal
         species_list(is)%species_type = 'normal'
         WRITE(logunit,'(A,I4)') 'No species type given for species ',is
         WRITE(logunit,*) 'Defaulting to normal'
@@ -1992,14 +1995,24 @@ SUBROUTINE Get_Dihedral_Info(is)
 
   INTEGER, INTENT(IN) :: is
 
-  INTEGER :: ierr,line_nbr,nbr_entries, idihed
+  INTEGER :: ierr,line_nbr,nbr_entries, idihed, i
   CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
 
   REWIND(molfile_unit)
 
   ierr = 0
   line_nbr = 0
-
+  nbr_entries = 0
+  line_string = ""
+  dihedral_list(:,is)%atom1 = 0
+  dihedral_list(:,is)%atom2 = 0
+  dihedral_list(:,is)%atom3 = 0
+  dihedral_list(:,is)%atom4 = 0
+  dihedral_list(:,is)%int_dipot_type = 0
+  dihedral_list(:,is)%dihedral_potential_type = ""
+  DO i = 1, max_dihedral_params
+     dihedral_list(:,is)%dihedral_param(i) = 0.0_DP
+  END DO
 
   DO
      line_nbr = line_nbr + 1
@@ -2015,7 +2028,7 @@ SUBROUTINE Get_Dihedral_Info(is)
      IF (line_string(1:15) == '# Dihedral_Info') THEN
         line_nbr = line_nbr + 1
         
-        line_array = ""
+        line_array(:) = ""
         CALL Parse_String(molfile_unit,line_nbr,1,nbr_entries,line_array,ierr)
         ! Make sure the number of angles is still the same. It should not have changed!
         IF (String_To_Int(line_array(1)) /= ndihedrals(is)) THEN
@@ -2029,10 +2042,10 @@ SUBROUTINE Get_Dihedral_Info(is)
            EXIT
         ENDIF
 
-        DO idihed = 1,ndihedrals(is)
+        DO idihed = 1, ndihedrals(is)
            ! Now read the entries on the next lines. There must be at least 6 for 
            ! each dihedral.
-           line_array = ""
+           line_array(:) = ""
            CALL Parse_String(molfile_unit,line_nbr,6,nbr_entries,line_array,ierr)
 
            ! Test for problems readin file
@@ -2086,10 +2099,10 @@ SUBROUTINE Get_Dihedral_Info(is)
                    dihedral_list(idihed,is)%dihedral_param(4)
 
               ! Convert to molecular units amu A^2/ps^2
-              dihedral_list(idihed,is)%dihedral_param(1) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(1)
-              dihedral_list(idihed,is)%dihedral_param(2) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(2)
-              dihedral_list(idihed,is)%dihedral_param(3) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(3)
-              dihedral_list(idihed,is)%dihedral_param(4) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(4)
+              dihedral_list(idihed,is)%dihedral_param(1) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(1)
+              dihedral_list(idihed,is)%dihedral_param(2) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(2)
+              dihedral_list(idihed,is)%dihedral_param(3) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(3)
+              dihedral_list(idihed,is)%dihedral_param(4) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(4)
 
               ! Set number of dihedral parameters
               nbr_dihedral_params = 4
@@ -2121,12 +2134,12 @@ SUBROUTINE Get_Dihedral_Info(is)
                    dihedral_list(idihed,is)%dihedral_param(6)
 
               ! Convert to molecular units amu A^2/ps^2
-              dihedral_list(idihed,is)%dihedral_param(1) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(1)
-              dihedral_list(idihed,is)%dihedral_param(2) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(2)
-              dihedral_list(idihed,is)%dihedral_param(3) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(3)
-              dihedral_list(idihed,is)%dihedral_param(4) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(4)
-              dihedral_list(idihed,is)%dihedral_param(5) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(5)
-              dihedral_list(idihed,is)%dihedral_param(6) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(6)
+              dihedral_list(idihed,is)%dihedral_param(1) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(1)
+              dihedral_list(idihed,is)%dihedral_param(2) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(2)
+              dihedral_list(idihed,is)%dihedral_param(3) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(3)
+              dihedral_list(idihed,is)%dihedral_param(4) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(4)
+              dihedral_list(idihed,is)%dihedral_param(5) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(5)
+              dihedral_list(idihed,is)%dihedral_param(6) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(6)
 
               ! Set number of dihedral parameters
               nbr_dihedral_params = 6
@@ -2149,8 +2162,8 @@ SUBROUTINE Get_Dihedral_Info(is)
               
               ! Convert to molecular units amu A^2/ps^2 and the delta
               ! parameter to radians
-              dihedral_list(idihed,is)%dihedral_param(1) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(1)
-              dihedral_list(idihed,is)%dihedral_param(3) = (PI/180.0_DP)* dihedral_list(idihed,is)%dihedral_param(3)
+              dihedral_list(idihed,is)%dihedral_param(1) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(1)
+              dihedral_list(idihed,is)%dihedral_param(3) = (PI / 180.0_DP) * dihedral_list(idihed,is)%dihedral_param(3)
               
               nbr_dihedral_params = 3
 
@@ -2196,15 +2209,14 @@ SUBROUTINE Get_Dihedral_Info(is)
               
               ! Convert to molecular units amu A^2/ps^2 and the delta
               ! parameter to radians
-              dihedral_list(idihed,is)%dihedral_param(1) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(1)
-              dihedral_list(idihed,is)%dihedral_param(4) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(4)
-              dihedral_list(idihed,is)%dihedral_param(7) = kjmol_to_atomic* dihedral_list(idihed,is)%dihedral_param(7)
-              dihedral_list(idihed,is)%dihedral_param(3) = (PI/180.0_DP)* dihedral_list(idihed,is)%dihedral_param(3)
-              dihedral_list(idihed,is)%dihedral_param(6) = (PI/180.0_DP)* dihedral_list(idihed,is)%dihedral_param(6)
-              dihedral_list(idihed,is)%dihedral_param(9) = (PI/180.0_DP)* dihedral_list(idihed,is)%dihedral_param(9)
+              dihedral_list(idihed,is)%dihedral_param(1) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(1)
+              dihedral_list(idihed,is)%dihedral_param(4) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(4)
+              dihedral_list(idihed,is)%dihedral_param(7) = kjmol_to_atomic * dihedral_list(idihed,is)%dihedral_param(7)
+              dihedral_list(idihed,is)%dihedral_param(3) = (PI / 180.0_DP) * dihedral_list(idihed,is)%dihedral_param(3)
+              dihedral_list(idihed,is)%dihedral_param(6) = (PI / 180.0_DP) * dihedral_list(idihed,is)%dihedral_param(6)
+              dihedral_list(idihed,is)%dihedral_param(9) = (PI / 180.0_DP) * dihedral_list(idihed,is)%dihedral_param(9)
               
               nbr_dihedral_params = 9
-              
 
            ELSE IF (dihedral_list(idihed,is)%dihedral_potential_type == 'harmonic') THEN
               IF(species_list(is)%int_species_type == int_sorbate) zig_calc = .TRUE.
@@ -2224,7 +2236,7 @@ SUBROUTINE Get_Dihedral_Info(is)
               dihedral_list(idihed,is)%dihedral_param(1) = kboltz * dihedral_list(idihed,is)%dihedral_param(1)
 
               ! Convert the nominal bond angle to radians
-              dihedral_list(idihed,is)%dihedral_param(2) = (PI/180.0_DP)*dihedral_list(idihed,is)%dihedral_param(2)
+              dihedral_list(idihed,is)%dihedral_param(2) = (PI / 180.0_DP) * dihedral_list(idihed,is)%dihedral_param(2)
 
               ! Set number of angle parameters
               nbr_dihedral_params = 2
@@ -3476,6 +3488,10 @@ SUBROUTINE Get_Box_Info
 
   ierr = 0
   line_nbr = 0
+  nbr_entries = 0
+  line_string = ""
+  line_array = ""
+  ex = .false.
  
   DO
      line_nbr = line_nbr + 1
@@ -3524,19 +3540,20 @@ SUBROUTINE Get_Box_Info
 
         l_cubic(:) = .FALSE.
 
+        read_volume = .FALSE.
+        ivolfreq = 1
+        line_nbr_vol = 1
         DO ibox = 1,nbr_boxes
            ! Get box type
            CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
            line_nbr = line_nbr + 1
            box_list(ibox)%box_shape = TRIM( line_array(1) )
            
-           read_volume = .FALSE.
-           ivolfreq = 1
-           line_nbr_vol = 1
 
            IF (box_list(ibox)%box_shape == 'VARCUBIC') THEN
 
               box_list(ibox)%box_shape = 'CUBIC'
+              box_list(ibox)%int_box_shape = int_cubic
 
               IF (nbr_boxes > 1) THEN
                  write(*,*)'cannot have variable vol. with multiple boxes'
@@ -3551,7 +3568,7 @@ SUBROUTINE Get_Box_Info
               ! Read in filename with volume information
               CALL Parse_String(inputunit,line_nbr,1,nbr_entries,line_array,ierr)
               line_nbr = line_nbr + 1
-              volume_info_file = TRIM( line_array(1) )
+              volume_info_file = TRIM( ADJUSTL(line_array(1)) )
 
               ! Open file with volume information
               INQUIRE(file=trim(volume_info_file),exist=ex)
@@ -3560,6 +3577,9 @@ SUBROUTINE Get_Box_Info
                  write(*,*)'stopping'
                  STOP
               END IF
+              OPEN(unit=volume_info_unit, file=volume_info_file)
+              CALL Read_VOL
+              CLOSE(unit=volume_info_unit)
               OPEN(unit=volume_info_unit, file=volume_info_file)
 
               ! Read in frequency of volume information (with respect to configurations saved in the dcd file
@@ -3650,7 +3670,6 @@ SUBROUTINE Get_Box_Info
 
               WRITE (logunit,'(A,T15,I3,T25,A,T40,A)') 'Box number ',ibox,'Box Shape : ', ' CELL_MATRIX '
               WRITE (logunit,'(T5,f10.4,T20,f10.4,T30,f10.4)') box_list(ibox)%length(1,1:3)
-              WRITE (logunit,'(T5,f10.4,T20,f10.4,T30,f10.4)') box_list(ibox)%length(2,1:3)
               WRITE (logunit,'(T5,f10.4,T20,f10.4,T30,f10.4)') box_list(ibox)%length(3,1:3)
               WRITE(logunit,*)
 

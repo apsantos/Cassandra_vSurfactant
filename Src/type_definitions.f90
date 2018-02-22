@@ -353,8 +353,8 @@ MODULE Type_Definitions
      ! positions need to computed when dihedral is rotated on atom1 side
      ! atom2 holds the corresponding indices for the dihedral move on the other ised.
 
-     INTEGER, DIMENSION(:), ALLOCATABLE :: atom1(:)
-     INTEGER, DIMENSION(:), ALLOCATABLE :: atom4(:)
+     INTEGER, DIMENSION(:), ALLOCATABLE :: atom1!(:)
+     INTEGER, DIMENSION(:), ALLOCATABLE :: atom4!(:)
      INTEGER :: atom1_natoms
      INTEGER :: atom4_natoms
 

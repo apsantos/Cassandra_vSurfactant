@@ -92,7 +92,7 @@ CONTAINS
     INTEGER, INTENT(INOUT) :: ierr
     
     CHARACTER(charLength) :: string
-    INTEGER :: line_position,i
+    INTEGER :: line_position, i
     LOGICAL :: space_start
 !********************************************************************************
 
@@ -103,10 +103,11 @@ CONTAINS
     line_position = 1
 
 ! clear entry array
-    line_array = ""
+    line_array(:) = ""
       
 ! Read the string from the file
     CALL Read_String(file_number,string,ierr)
+    IF (ierr /= 0) RETURN
     
     IF (string(1:1) .NE. ' ') THEN
 
@@ -143,8 +144,6 @@ CONTAINS
     END IF
       
     END SUBROUTINE Parse_String
-
-
 
 !****************************************************************************
     SUBROUTINE Name_Files(prefix,suffix,new_name)
@@ -324,29 +323,30 @@ FUNCTION String_To_Int(string_in)
   LOGICAL :: is_negative
   INTEGER :: string_to_int, ndigits, strln
   INTEGER :: mult, digit, pos, ii
-  CHARACTER(*) :: string_in
+  CHARACTER(*), INTENT(in) :: string_in
+  CHARACTER(charLength) :: string_dummy
 !****************************************************************************
   !Initialize some things
   string_to_int = 0
-  string_in = ADJUSTL(string_in)
-  ndigits = LEN_TRIM(string_in)
-  strln = LEN(string_in)
+  string_dummy = ADJUSTL(string_in)
+  ndigits = LEN_TRIM(string_dummy)
+  strln = LEN(string_dummy)
 
   !Find out if the number is negative
   is_negative = .FALSE.
-  IF (string_in(1:1) == "-") THEN
+  IF (string_dummy(1:1) == "-") THEN
      is_negative = .TRUE.
      ndigits = ndigits - 1
   END IF
-  IF (string_in(1:1) == "+") ndigits = ndigits - 1
+  IF (string_dummy(1:1) == "+") ndigits = ndigits - 1
 
   !Pull of digits starting at the end, multiply by
   !the correct power of ten and add to value
-  string_in = ADJUSTR(string_in)
+  string_dummy = ADJUSTR(string_dummy)
   mult = 1
   DO ii = 1, ndigits
      pos = strln - ii + 1
-     digit = IACHAR(string_in(pos:pos)) - 48
+     digit = IACHAR(string_dummy(pos:pos)) - 48
      string_to_int = string_to_int + mult*digit
      mult = mult*10
   END DO
