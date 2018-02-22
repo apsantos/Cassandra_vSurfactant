@@ -38,13 +38,14 @@ SUBROUTINE precalculate
     
     REAL(DP) :: roffsq_ronsq
 
+    roffsq_ronsq = 0.0_DP
 
     DO ibox = 1,nbr_boxes
        IF (int_vdw_style(ibox) /= vdw_none) THEN
           IF (int_vdw_sum_style(ibox) == vdw_charmm) THEN
              ! Compute the square for use in pair routines
-             ron_charmmsq(ibox) = ron_charmm(ibox)*ron_charmm(ibox)
-             roff_charmmsq(ibox) = roff_charmm(ibox)*roff_charmm(ibox)
+             ron_charmmsq(ibox) = ron_charmm(ibox) * ron_charmm(ibox)
+             roff_charmmsq(ibox) = roff_charmm(ibox) * roff_charmm(ibox)
 
           ELSE IF (int_vdw_sum_style(ibox) == vdw_cut_switch) THEN
 
@@ -54,10 +55,10 @@ SUBROUTINE precalculate
 
              roffsq_ronsq = roff_switch_sq(ibox) - ron_switch_sq(ibox)
 
-             switch_factor1(ibox) = roffsq_ronsq ** 3.0_DP
-             switch_factor1(ibox) = 1.0_DP /switch_factor1(ibox)
+             switch_factor1(ibox) = roffsq_ronsq**3.0_DP
+             switch_factor1(ibox) = 1.0_DP / switch_factor1(ibox)
 
-             switch_factor2(ibox) = roff_switch_sq(ibox) - 3.0_DP * ron_switch_sq(ibox)
+             switch_factor2(ibox) = roff_switch_sq(ibox) - (3.0_DP * ron_switch_sq(ibox))
 
              rcut_vdw(ibox) = roff_switch(ibox)
 
@@ -66,18 +67,18 @@ SUBROUTINE precalculate
              ! Compute the square for use in pair routines
              DO itype = 1, nbr_atomtypes
                 DO jtype = 1, nbr_atomtypes
-                    rcut_vdwsq_mix(itype, jtype) = rcut_vdw_mix(itype, jtype)*rcut_vdw_mix(itype, jtype)
+                    rcut_vdwsq_mix(itype, jtype) = rcut_vdw_mix(itype, jtype) * rcut_vdw_mix(itype, jtype)
                 END DO
              END DO
              DO is = 1, nspecies
                 DO ia = 1, natoms(is)
                     DO ja = 1, natoms(is)
-                       rcut_in_vdwsq_mix(ia, ja, is) = rcut_in_vdw_mix(ia, ja, is)*rcut_in_vdw_mix(ia, ja, is)
+                       rcut_in_vdwsq_mix(ia, ja, is) = rcut_in_vdw_mix(ia, ja, is) * rcut_in_vdw_mix(ia, ja, is)
                     END DO
                 END DO
              END DO
 
-             rcut_vdwsq(ibox) = rcut_vdw(ibox)*rcut_vdw(ibox)
+             rcut_vdwsq(ibox) = rcut_vdw(ibox) * rcut_vdw(ibox)
              rcut_vdw3(ibox) = rcut_vdwsq(ibox) * rcut_vdw(ibox)
              rcut_vdw6(ibox) = rcut_vdw3(ibox) * rcut_vdw3(ibox)
           ENDIF
@@ -85,7 +86,7 @@ SUBROUTINE precalculate
        ENDIF
     
        IF (int_charge_style(ibox) /= charge_none) THEN
-          rcut_coulsq(ibox) = rcut_coul(ibox)*rcut_coul(ibox)
+          rcut_coulsq(ibox) = rcut_coul(ibox) * rcut_coul(ibox)
        ENDIF
     
        IF ( (int_vdw_style(ibox) /= vdw_none) .AND. (int_charge_style(ibox) /= charge_none)) THEN
@@ -111,5 +112,36 @@ SUBROUTINE precalculate
     ! ALLOCATE memory for the Ewald stuff
 
     ALLOCATE(energy(nbr_boxes),virial(nbr_boxes))
+    energy(:)%inter_vdw = 0.0_DP
+    energy(:)%lrc = 0.0_DP
+    energy(:)%inter_q = 0.0_DP
+    energy(:)%intra_vdw = 0.0_DP
+    energy(:)%intra_q = 0.0_DP
+    energy(:)%intra = 0.0_DP
+    energy(:)%ewald_reciprocal = 0.0_DP
+    energy(:)%ewald_self = 0.0_DP
+    energy(:)%total = 0.0_DP
+    energy(:)%bond = 0.0_DP
+    energy(:)%angle = 0.0_DP
+    energy(:)%dihedral = 0.0_DP
+    energy(:)%improper = 0.0_DP
+    energy(:)%erf_self = 0.0_DP
+    energy(:)%ewald_self_calc = .false.
+
+    virial(:)%inter_vdw = 0.0_DP
+    virial(:)%lrc = 0.0_DP
+    virial(:)%inter_q = 0.0_DP
+    virial(:)%intra_vdw = 0.0_DP
+    virial(:)%intra_q = 0.0_DP
+    virial(:)%intra = 0.0_DP
+    virial(:)%ewald_reciprocal = 0.0_DP
+    virial(:)%ewald_self = 0.0_DP
+    virial(:)%total = 0.0_DP
+    virial(:)%bond = 0.0_DP
+    virial(:)%angle = 0.0_DP
+    virial(:)%dihedral = 0.0_DP
+    virial(:)%improper = 0.0_DP
+    virial(:)%erf_self = 0.0_DP
+    virial(:)%ewald_self_calc = .false.
 
   END SUBROUTINE precalculate

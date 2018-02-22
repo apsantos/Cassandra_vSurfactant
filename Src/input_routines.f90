@@ -913,6 +913,10 @@ SUBROUTINE Get_Molecule_Info
 
   ierr = 0
   line_nbr = 0
+  nbr_entries = 0
+  openstatus = 0
+  line_string = ""
+  line_array = ""
   
   input_file_loop:DO
      line_nbr = line_nbr + 1
@@ -972,7 +976,7 @@ SUBROUTINE Get_Molecule_Info
 
               REWIND(molfile_unit)
 
-              mcf_index = 0
+              mcf_index(:) = 0
 
               mcf_read_loop:DO 
                  CALL Read_String(molfile_unit,line_string,ierr)
@@ -1086,6 +1090,19 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  atom_list(:,:,:)%rxp = 0.0_DP
+  atom_list(:,:,:)%ryp = 0.0_DP
+  atom_list(:,:,:)%rzp = 0.0_DP
+  atom_list(:,:,:)%vxp = 0.0_DP
+  atom_list(:,:,:)%vyp = 0.0_DP
+  atom_list(:,:,:)%vzp = 0.0_DP
+  atom_list(:,:,:)%rxp_nls = 0.0_DP
+  atom_list(:,:,:)%ryp_nls = 0.0_DP
+  atom_list(:,:,:)%rzp_nls = 0.0_DP
+  atom_list(:,:,:)%rxp_old = 0.0_DP
+  atom_list(:,:,:)%ryp_old = 0.0_DP
+  atom_list(:,:,:)%rzp_old = 0.0_DP
+  atom_list(:,:,:)%exist = .false.
 
   ALLOCATE( nonbond_list(MAXVAL(natoms), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
@@ -1093,6 +1110,16 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  nonbond_list(:,:)%vdw_potential_type = ""
+  DO i = 1, max_nonbond_params 
+     nonbond_list(:,:)%vdw_param(i) = 0.0_DP
+  END DO
+  nonbond_list(:,:)%element = ""
+  nonbond_list(:,:)%atom_name = ""
+  nonbond_list(:,:)%mass = 0.0_DP
+  nonbond_list(:,:)%charge = 0.0_DP
+  nonbond_list(:,:)%atom_type_number = 0
+  nonbond_list(:,:)%ring_atom = .false.
 
   ALLOCATE( ring_atom_ids(MAXVAL(natoms), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
@@ -1100,6 +1127,7 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  ring_atom_ids(:,:) = 0
   
   ALLOCATE( exo_atom_ids(MAXVAL(natoms), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
@@ -1107,6 +1135,7 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  exo_atom_ids(:,:) = 0
 
   ALLOCATE( bond_list(MAXVAL(nbonds), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
@@ -1114,6 +1143,13 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  bond_list(:,:)%atom1 = 0
+  bond_list(:,:)%atom2 = 0
+  bond_list(:,:)%int_bond_type = 0
+  DO i = 1, max_bond_params
+     bond_list(:,:)%bond_param(i) = 0.0_DP
+  END DO
+  bond_list(:,:)%bond_potential_type = ""
 
   ALLOCATE( angle_list(MAXVAL(nangles), nspecies),Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
@@ -1121,6 +1157,14 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  angle_list(:,:)%atom1 = 0
+  angle_list(:,:)%atom2 = 0
+  angle_list(:,:)%atom3 = 0
+  DO i = 1, max_angle_params
+     angle_list(:,:)%angle_param(i) = 0.0_DP
+  END DO
+  angle_list(:,:)%angle_potential_type = ""
+  angle_list(:,:)%int_angle_type = 0
 
   ALLOCATE( dihedral_list(MAXVAL(ndihedrals), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
@@ -1128,6 +1172,15 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  dihedral_list(:,:)%atom1 = 0
+  dihedral_list(:,:)%atom2 = 0
+  dihedral_list(:,:)%atom3 = 0
+  dihedral_list(:,:)%atom4 = 0
+  DO i = 1, max_dihedral_params
+     dihedral_list(:,:)%dihedral_param(i) = 0.0_DP
+  END DO
+  dihedral_list(:,:)%dihedral_potential_type = ""
+  dihedral_list(:,:)%int_dipot_type = 0
 
   ALLOCATE( improper_list(MAXVAL(nimpropers), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
@@ -1135,6 +1188,15 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  improper_list(:,:)%atom1 = 0
+  improper_list(:,:)%atom2 = 0
+  improper_list(:,:)%atom3 = 0
+  improper_list(:,:)%atom4 = 0
+  DO i = 1, max_improper_params
+     improper_list(:,:)%improper_param(i) = 0.0_DP
+  END DO
+  improper_list(:,:)%improper_potential_type = ""
+  improper_list(:,:)%int_improp_type = 0
 
   ALLOCATE( molecule_list(MAXVAL(nmolecules), nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
@@ -1142,6 +1204,29 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  molecule_list(:,:)%molecule_type = 0
+  molecule_list(:,:)%rx_num = 0
+  molecule_list(:,:)%which_box = 0
+  molecule_list(:,:)%live = .false.
+  molecule_list(:,:)%inside = .false.
+  molecule_list(:,:)%xcom = 0.0_DP
+  molecule_list(:,:)%ycom = 0.0_DP
+  molecule_list(:,:)%zcom = 0.0_DP
+  molecule_list(:,:)%euler1 = 0.0_DP
+  molecule_list(:,:)%euler2 = 0.0_DP
+  molecule_list(:,:)%euler3 = 0.0_DP
+  molecule_list(:,:)%xcom_old = 0.0_DP
+  molecule_list(:,:)%ycom_old = 0.0_DP
+  molecule_list(:,:)%zcom_old = 0.0_DP
+  molecule_list(:,:)%euler1_old = 0.0_DP
+  molecule_list(:,:)%euler2_old = 0.0_DP
+  molecule_list(:,:)%euler3_old = 0.0_DP
+  molecule_list(:,:)%cfc_lambda = 0.0_DP
+  molecule_list(:,:)%max_dcom = 0.0_DP
+  molecule_list(:,:)%max_dcom_old = 0.0_DP
+  molecule_list(:,:)%vxcom = 0.0_DP
+  molecule_list(:,:)%vycom = 0.0_DP
+  molecule_list(:,:)%vzcom = 0.0_DP
 
   ALLOCATE( locate(MAXVAL(nmolecules),nspecies), Stat = AllocateStatus )
   IF (AllocateStatus /= 0) THEN
@@ -1149,6 +1234,7 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  locate(:,:) = 0
 
   IF (l_pair_nrg) THEN
      ALLOCATE( pair_nrg_vdw(SUM(nmolecules),SUM(nmolecules)), Stat = AllocateStatus)
@@ -1157,6 +1243,7 @@ SUBROUTINE Get_Molecule_Info
         write(*,*) 'aborting'
         STOP
      END IF
+     pair_nrg_vdw(:,:) = 0.0_DP
      
      ALLOCATE( pair_nrg_qq(SUM(nmolecules),SUM(nmolecules)), Stat = AllocateStatus)
      IF (AllocateStatus /= 0 ) THEN
@@ -1164,13 +1251,7 @@ SUBROUTINE Get_Molecule_Info
         write(*,*) 'aborting'
         STOP
      END IF
-  END IF
-
-  ALLOCATE( species_list(nspecies), Stat = AllocateStatus )
-  IF (AllocateStatus /= 0) THEN
-     write(*,*)'memory could not be allocated for species_list array'
-     write(*,*)'stopping'
-     STOP
+     pair_nrg_qq(:,:) = 0.0_DP
   END IF
 
   max_index = MAX(MAXVAL(nbonds),MAXVAL(nangles),MAXVAL(ndihedrals),MAXVAL(nimpropers))
@@ -1181,6 +1262,13 @@ SUBROUTINE Get_Molecule_Info
      write(*,*)'stopping'
      STOP
   END IF
+  internal_coord_list(:,:,:)%bond_length_angstrom = 0.0_DP 
+  internal_coord_list(:,:,:)%bond_angle_degrees = 0.0_DP 
+  internal_coord_list(:,:,:)%bond_angle_radians = 0.0_DP 
+  internal_coord_list(:,:,:)%dihedral_angle_degrees = 0.0_DP 
+  internal_coord_list(:,:,:)%dihedral_angle_radians = 0.0_DP 
+  internal_coord_list(:,:,:)%improper_angle_degrees = 0.0_DP 
+  internal_coord_list(:,:,:)%improper_angle_radians = 0.0_DP 
 
   ALLOCATE(internal_coord_list_old(max_index), Stat = AllocateStatus)
   IF (AllocateStatus /= 0) THEN
@@ -1188,7 +1276,13 @@ SUBROUTINE Get_Molecule_Info
      err_msg(1) = 'memory could not be allocated for internal_coord_list_old array'
      CALL Clean_Abort(err_msg,'Get_Molecule_Info')
   END IF 
- 
+  internal_coord_list_old(:)%bond_length_angstrom = 0.0_DP 
+  internal_coord_list_old(:)%bond_angle_degrees = 0.0_DP 
+  internal_coord_list_old(:)%bond_angle_radians = 0.0_DP 
+  internal_coord_list_old(:)%dihedral_angle_degrees = 0.0_DP 
+  internal_coord_list_old(:)%dihedral_angle_radians = 0.0_DP 
+  internal_coord_list_old(:)%improper_angle_degrees = 0.0_DP 
+  internal_coord_list_old(:)%improper_angle_radians = 0.0_DP 
 
   ALLOCATE(frag_list(MAXVAL(nfragments),nspecies), Stat = AllocateStatus)
   IF (AllocateStatus /= 0) THEN
@@ -1196,6 +1290,15 @@ SUBROUTINE Get_Molecule_Info
      err_msg(1) = 'memory could not be allocated for frag_list array'
      CALL Clean_Abort(err_msg,'Get_Molecule_Info')
   END IF
+  frag_list(:,:)%natoms = 0
+  frag_list(:,:)%nconnect = 0
+  frag_list(:,:)%nanchors = 0
+  frag_list(:,:)%type = 0
+  frag_list(:,:)%nconfig = 0
+  frag_list(:,:)%ring = .false.
+  frag_list(:,:)%rcut_vdwsq = 0.0_DP
+  frag_list(:,:)%rcut_coulsq = 0.0_DP
+  frag_list(:,:)%alpha_ewald = 0.0_DP
 
   ALLOCATE(fragment_bond_list(MAXVAL(fragment_bonds),nspecies), Stat = AllocateStatus)
   IF (AllocateStatus /= 0 ) THEN
@@ -1203,19 +1306,49 @@ SUBROUTINE Get_Molecule_Info
      err_msg(1) = 'memory could not be allocated for fragment_bond_list'
      CALL Clean_Abort(err_msg,'Get_Molecule_Info')
   END IF
+  fragment_bond_list(:,:)%fragment1 = 0
+  fragment_bond_list(:,:)%fragment2 = 0
 
   ALLOCATE(res_file(MAXVAL(nfragments),nspecies), Stat = AllocateStatus)
   IF ( AllocateStatus /= 0 ) THEN
      err_msg = ''
      err_msg(1) = 'memorgy could not be alloaced for reservoir files'
   END IF
+  res_file(:,:) = ""
 
   ALLOCATE(zig_calc(nspecies))
   zig_calc(:) = .FALSE.
 
   ! Loop over all species and load information from mfc files into list arrays
-  species_list(:)%fragment = .FALSE.
+  ALLOCATE( species_list(nspecies), Stat = AllocateStatus )
+  IF (AllocateStatus /= 0) THEN
+     write(*,*)'memory could not be allocated for species_list array'
+     write(*,*)'stopping'
+     STOP
+  END IF
+  species_list(:)%molecular_weight = 0.0_DP
+  species_list(:)%total_charge = 0.0_DP
+  species_list(:)%fugacity = 0.0_DP
+  species_list(:)%chem_potential = 0.0_DP
+  species_list(:)%zig_by_omega = 0.0_DP
+  species_list(:)%activity = 0.0_DP
+  species_list(:)%max_lambda = 0.0_DP
+  species_list(:)%max_torsion = 0.0_DP
+  species_list(:)%xcom = 0.0_DP
+  species_list(:)%ycom = 0.0_DP
+  species_list(:)%zcom = 0.0_DP
+  species_list(:)%nmoltotal = 0
   species_list(:)%int_species_type = 0
+  species_list(:)%int_insert = 0
+  species_list(:)%species_type = ""
+  species_list(:)%insertion = ""
+  species_list(:)%insert_style = ""
+  species_list(:)%f_atom_disp = .FALSE.
+  species_list(:)%pair_insert = .FALSE.
+  species_list(:)%fragment = .FALSE.
+  species_list(:)%linear = .FALSE.
+  species_list(:)%L_Coul_CBMC = .FALSE.
+  species_list(:)%lcom = .FALSE.
   
   DO is=1,nspecies
 
@@ -2503,6 +2636,7 @@ SUBROUTINE Get_Fragment_Anchor_Info(is)
            frag_list(i,is)%nanchors = String_To_Int(line_array(2))
 
            ALLOCATE(frag_list(i,is)%anchor(frag_list(i,is)%nanchors))
+           frag_list(i,is)%anchor(:) = 0
 
            min_entries = 2 + frag_list(i,is)%nanchors
 
@@ -2631,6 +2765,7 @@ SUBROUTINE Get_Fragment_Info(is)
            END IF
 
            ALLOCATE(frag_list(ifrag,is)%atoms(frag_list(ifrag,is)%natoms))
+           frag_list(ifrag,is)%atoms(:) = 0
 
            DO iatom = 1, frag_list(ifrag,is)%natoms
               frag_list(ifrag,is)%atoms(iatom) = String_To_Int(line_array(iatom+2))
@@ -2812,6 +2947,7 @@ SUBROUTINE Get_Fragment_Connect_Info(is)
            frag_list(ifrag,is)%nconnect = String_To_Int(line_array(2))
 
            ALLOCATE(frag_list(ifrag,is)%frag_connect(frag_list(ifrag,is)%nconnect))
+           frag_list(ifrag,is)%frag_connect(:) = 0
 
            min_entries = 2 + frag_list(ifrag,is)%nconnect
            
@@ -3730,8 +3866,18 @@ SUBROUTINE Get_Box_Info
   ALLOCATE(vdw_style(nbr_boxes) , charge_style(nbr_boxes))
   ALLOCATE(vdw_sum_style(nbr_boxes) , charge_sum_style(nbr_boxes))
 
+  vdw_style(:) = ""
+  vdw_sum_style(:) = ""
+  charge_style(:) = ""
+  charge_sum_style(:) = ""
+
   ALLOCATE(int_vdw_style(nbr_boxes) , int_vdw_sum_style(nbr_boxes))
   ALLOCATE(int_charge_style(nbr_boxes) , int_charge_sum_style(nbr_boxes))
+  
+  int_vdw_style(:) = 0
+  int_vdw_sum_style(:) = 0
+  int_charge_style(:) = 0
+  int_charge_sum_style(:) = 0
 
   ALLOCATE(rcut_CBMC(nbr_boxes))
   ALLOCATE(rcut_vdw(nbr_boxes) , rcut_coul(nbr_boxes))
@@ -3744,11 +3890,29 @@ SUBROUTINE Get_Box_Info
   ALLOCATE(rcut_coulsq(nbr_boxes))
   ALLOCATE(rcut9(nbr_boxes), rcut6(nbr_boxes), rcut3(nbr_boxes))
 
+  rcut_CBMC(:) = 0.0_DP
+  rcut_vdw(:) = 0.0_DP
+  rcut_coul(:) = 0.0_DP
+  ron_charmm(:) = 0.0_DP
+  roff_charmm(:) = 0.0_DP
+  ron_switch(:) = 0.0_DP
+  roff_switch(:) = 0.0_DP
+  rcut_max(:) = 0.0_DP
+  rcut_vdwsq(:) = 0.0_DP
+  ron_switch_sq(:) = 0.0_DP
+  roff_switch_sq(:) = 0.0_DP
+  ron_charmmsq(:) = 0.0_DP
+  roff_charmmsq(:) = 0.0_DP
+  switch_factor1(:) = 0.0_DP
+  switch_factor2(:) = 0.0_DP
+  rcut_coulsq(:) = 0.0_DP
+  rcut9(:) = 0.0_DP
+  rcut6(:) = 0.0_DP
+  rcut3(:) = 0.0_DP
+
   ALLOCATE(W_tensor_charge(3,3,nbr_boxes) , W_tensor_recip(3,3,nbr_boxes))
   ALLOCATE(W_tensor_vdw(3,3,nbr_boxes) , W_tensor_total(3,3,nbr_boxes))
   ALLOCATE(W_tensor_elec(3,3,nbr_boxes), Pressure_tensor(3,3,nbr_boxes))
-
-  ALLOCATE(P_inst(nbr_boxes),P_ideal(nbr_boxes))
 
   W_tensor_charge(:,:,:) = 0.0_DP
   W_tensor_recip(:,:,:) = 0.0_DP
@@ -3757,10 +3921,15 @@ SUBROUTINE Get_Box_Info
   W_tensor_elec(:,:,:) = 0.0_DP
   Pressure_tensor(:,:,:) = 0.0_DP
 
+  ALLOCATE(P_inst(nbr_boxes),P_ideal(nbr_boxes))
+
   P_inst(:) = 0.0_DP
   P_ideal(:) = 0.0_DP
 
   ALLOCATE(rcut_vdw3(nbr_boxes), rcut_vdw6(nbr_boxes))
+
+  rcut_vdw3(:) = 0.0_DP
+  rcut_vdw6(:) = 0.0_DP
 
 END SUBROUTINE Get_Box_Info
 
@@ -3998,6 +4167,7 @@ SUBROUTINE Get_Fugacity_Info
         DO i = 1,nspecies
 
            ALLOCATE(species_list(i)%de_broglie(nbr_boxes))
+           species_list(i)%de_broglie(:) = 0.0_DP
 
            IF(species_list(i)%int_species_type == int_sorbate) THEN
               spec_counter = spec_counter + 1

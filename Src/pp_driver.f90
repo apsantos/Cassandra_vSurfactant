@@ -118,7 +118,7 @@ SUBROUTINE PP_Driver
   
      IF (i < n_equilsteps) CYCLE
 
-     IF (read_volume .AND. MOD(i-1,ivolfreq) /= 0) CYCLE
+     !IF (read_volume .AND. MOD(i-1,ivolfreq) /= 0) CYCLE
 
      CALL Accumulate(this_box)
      

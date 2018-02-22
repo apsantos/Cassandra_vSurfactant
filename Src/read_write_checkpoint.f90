@@ -259,7 +259,9 @@ SUBROUTINE Read_XTC(this_mc_step)
     END IF
 
     IF ( read_volume ) THEN
-       CALL Read_VOL
+       IF (MOD(this_mc_step - 1, ivolfreq) == 0) THEN
+          CALL Read_VOL
+       ENDIF
     ENDIF
     
     ! Read configuration
@@ -926,9 +928,13 @@ SUBROUTINE Read_DCD(this_mc_step)
         CALL Clean_Abort(err_msg,'Read_DCD')
     END IF
 
+    !IF ( read_volume ) THEN
     IF ( read_volume ) THEN
-       CALL Read_VOL
+       IF (MOD(this_mc_step - 1, ivolfreq) == 0) THEN
+          CALL Read_VOL
+       ENDIF
     ENDIF
+    
 
     DO i = 1, dcd_natoms
         ia = ia_atoms(i)
