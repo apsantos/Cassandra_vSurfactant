@@ -542,6 +542,8 @@ SUBROUTINE Read_Intra_Exclusion_Table(is)
 
                         IF (line_array(3) == 'cut') THEN
                            int_in_vdw_sum_style_mix(ia,ja,is) = vdw_cut
+                        ELSE IF (line_array(3) == 'cut_tail') THEN
+                           int_in_vdw_sum_style_mix(ia,ja,is) = vdw_cut_tail
                         ELSE IF (line_array(3) == 'cut_shift') THEN
                            int_in_vdw_sum_style_mix(ia,ja,is) = vdw_cut_shift
                         ELSE IF (line_array(3) == 'cut_switch') THEN
