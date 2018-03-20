@@ -130,7 +130,7 @@ CONTAINS
              this_box = molecule_list(this_im,is)%which_box
 
              DO ia = 1, natoms(is)
-                WRITE(chkptunit,'(A,T10,3(F15.10,1X),T70,I3)') nonbond_list(ia,is)%element, &
+                WRITE(chkptunit,'(A,T10,3(F15.9,1X),T70,I3)') nonbond_list(ia,is)%element, &
                 !WRITE(chkptunit,*) nonbond_list(ia,is)%element, &
                      atom_list(ia,this_im,is)%rxp, &
                      atom_list(ia,this_im,is)%ryp, &
