@@ -259,6 +259,8 @@ CONTAINS
 
        IF ( .NOT. ALLOCATED(nbeads_in)) ALLOCATE(nbeads_in(nbr_atomtypes))
        IF ( .NOT. ALLOCATED(nbeads_out)) ALLOCATE(nbeads_out(nbr_atomtypes))
+       IF ( .NOT. ALLOCATED(nexclude_beads_in)) ALLOCATE(nexclude_beads_in(nbr_atomtypes,nbr_atomtypes))
+       IF ( .NOT. ALLOCATED(nexclude_beads_out)) ALLOCATE(nexclude_beads_out(nbr_atomtypes,nbr_atomtypes))
        IF ( .NOT. ALLOCATED(nbeadsfrac_in)) &
            ALLOCATE(nbeadsfrac_in(nbr_atomtypes))
 

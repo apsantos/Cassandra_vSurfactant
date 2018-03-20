@@ -1912,7 +1912,7 @@ CONTAINS
                 qsc = charge_intra_scale(ia,ja,is)
              END IF
 
-             Eij_qq = charge_factor(ibox)*(qi*qj)/rij
+             Eij_qq = charge_factor(ibox) * (qi*qj) / rij
 
              IF (int_charge_sum_style(ibox) == charge_ewald .AND. ( .NOT. igas_flag) ) THEN
                 ! Real space Ewald part
@@ -1924,7 +1924,7 @@ CONTAINS
              ! have been moved. 
 
              ENDIF
-             Eij_qq = qsc*Eij_qq
+             Eij_qq = qsc * Eij_qq
           ENDIF
 
           QQ_cor_calculation: IF ( int_vdw_style_mix(itype,jtype,vdw_corr) ) THEN
@@ -2443,7 +2443,7 @@ CONTAINS
        END DO
        !$OMP END PARALLEL DO
 
-       v_recip_difference = v_recip_difference*charge_factor(this_box) - &
+       v_recip_difference = v_recip_difference * charge_factor(this_box) - &
           energy(this_box)%ewald_reciprocal
 
        RETURN
@@ -2470,7 +2470,7 @@ CONTAINS
 
        END DO
        !$OMP END PARALLEL DO
-       v_recip_difference = v_recip_difference*charge_factor(this_box)
+       v_recip_difference = v_recip_difference * charge_factor(this_box)
  
     ELSE IF ( move_flag == int_insertion ) THEN
 
@@ -2508,7 +2508,7 @@ CONTAINS
 
        !$OMP END PARALLEL DO
 
-       v_recip_difference = v_recip_difference*charge_factor(this_box)
+       v_recip_difference = v_recip_difference * charge_factor(this_box)
 
     END IF
 
@@ -3227,13 +3227,9 @@ CONTAINS
 
     END DO
 
-   
-
     IF (l_pair_nrg) THEN
 
        IF ( .NOT. cbmc_flag ) THEN
-
-       
 
           ! if here then, there was no overlap between im_1 and im_2
           ! update the interaction energy of the pair
@@ -3247,7 +3243,6 @@ CONTAINS
           
           pair_nrg_qq(locate_im_1,locate_im_2) = vqq_pair 
           pair_nrg_qq(locate_im_2,locate_im_1) = vqq_pair 
-          
 
        END IF
        
@@ -3277,8 +3272,14 @@ CONTAINS
        
        DO ja = 1, nbr_atomtypes
           
+          ! if this pair does not have a tail interaction, exclude
+          IF (int_vdw_sum_style_mix(ia,ja) /= vdw_cut_tail) THEN
+             CYCLE
+          END IF
+
           nj = nint_beads(ja,this_box)
           IF (ia == ja) nj = nj - 1
+          ! exclude intra-molecular
           nj = nj - nexclude_beads(ia, ja)
 
           LJ_12_6_calculation: IF ( int_vdw_style_mix(ia,ja,vdw_lj) ) THEN
@@ -4153,6 +4154,10 @@ CONTAINS
        w_lrc_ia_ja = 0.0_DP
           
        DO ja = 1, nbr_atomtypes
+
+          IF (int_vdw_sum_style_mix(ia,ja) /= vdw_cut_tail) THEN
+             CYCLE
+          END IF
 
           nj = nint_beads(ja,this_box)
           IF (ia == ja) nj = nj - 1

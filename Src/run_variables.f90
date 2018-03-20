@@ -345,6 +345,7 @@ USE Type_Definitions
   ! number of unique atom types
   INTEGER :: nbr_atomtypes
   INTEGER, DIMENSION(:), ALLOCATABLE :: nbeads_in, nbeads_out
+  INTEGER, DIMENSION(:,:), ALLOCATABLE :: nexclude_beads_in, nexclude_beads_out
   INTEGER, DIMENSION(:), ALLOCATABLE :: nbeadsfrac_in
 
   ! number of ideal gas particles in the intermediate box

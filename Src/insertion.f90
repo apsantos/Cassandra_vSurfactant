@@ -71,6 +71,7 @@ SUBROUTINE Insertion(this_box)
   INTEGER, ALLOCATABLE :: frag_order(:)
   INTEGER :: rand_igas, tot_mols
   INTEGER :: tn1, tn2, n1, n2, nplocal, npair, dn
+  INTEGER :: ii, jj, ia, ja
 
   REAL(DP) :: ppt, pp(n_insertable), randnpair, loc_chem_pot
   REAL(DP) :: dx, dy, dz, delta_e
@@ -529,6 +530,35 @@ SUBROUTINE Insertion(this_box)
      END DO
      enddo
 
+     nexclude_beads_in = nexclude_beads
+     DO is = 1, nspecies
+       ! find the number of intra exclusions by type
+        DO ii = 1, natoms(is)
+           DO ia = 1, nbr_atomtypes
+              IF ( atom_type_list(ia) == nonbond_list(ii,is)%atom_name ) THEN
+                 DO jj = ii+1, natoms(is)
+                    IF (vdw_in_param1_table(ii,jj,is) == 0.0_DP) THEN
+                       DO ja = 1, nbr_atomtypes
+                          IF ( atom_type_list(ja) == nonbond_list(jj,is)%atom_name ) THEN
+                             nexclude_beads(ia, ja) = nexclude_beads(ia, ja) + 1
+                             EXIT
+                          END IF
+                       END DO
+                    END IF
+                 END DO
+              END IF
+           END DO
+        END DO
+        
+     END DO
+   
+     DO ia = 1, nbr_atomtypes
+        DO ja = ia+1, nbr_atomtypes
+           nexclude_beads(ia, ja) = nexclude_beads(ia, ja) + nexclude_beads(ja, ia) 
+           nexclude_beads(ja, ia) = nexclude_beads(ia, ja)
+        END DO
+     END DO
+ 
      CALL Compute_LR_correction(this_box,e_lrc)
      delta_e = delta_e + e_lrc - energy(this_box)%lrc
 
@@ -661,6 +691,7 @@ SUBROUTINE Insertion(this_box)
      IF ( int_vdw_sum_style(this_box) == vdw_cut_tail ) THEN
         ! Restore the total number of bead types
         nint_beads(:,this_box) = nbeads_in(:)
+        nexclude_beads = nexclude_beads_in
      END IF
      
   END IF
