@@ -556,7 +556,7 @@ SUBROUTINE Write_Coords(this_box)
         IF(molecule_list(this_im,is)%live  .AND. &
            molecule_list(this_im,is)%which_box == this_box ) THEN
            DO ia = 1, natoms(is)
-              WRITE(M_XYZ_unit,'(A3,x,F20.13,x,F20.13,x,F20.13,x,I5,x,I5)') &
+              WRITE(M_XYZ_unit,'(A7,x,F20.13,x,F20.13,x,F20.13,x,I5,x,I5)') &
               nonbond_list(ia,is)%atom_name, & 
                    atom_list(ia,this_im,is)%rxp, &
                    atom_list(ia,this_im,is)%ryp, &
