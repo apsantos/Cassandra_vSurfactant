@@ -4689,6 +4689,7 @@ SUBROUTINE Get_Move_Probabilities
                     ! APS
                     IF(line_string2(11:14 ) == 'pair') THEN
                        CALL Parse_String(inputunit,line_nbr,2,nbr_entries,line_array,ierr)
+                       line_nbr = line_nbr + 1
 
                        IF (line_array(1) == 'insertion') THEN
                           err_msg =''
