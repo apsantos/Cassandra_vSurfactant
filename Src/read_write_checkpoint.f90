@@ -496,8 +496,8 @@ SUBROUTINE Read_GRO(this_mc_step)
              box_list(1)%length(1,1)) > 0.001 ) .OR. &
          ( ( (box_list(1)%length(2,2) - String_To_Double(line_array(2))*10.0) / &
              box_list(1)%length(2,2)) > 0.001 ) .OR. &
-         ( ( (box_list(1)%length(2,2) - String_To_Double(line_array(2))*10.0) / &
-             box_list(1)%length(2,2)) > 0.001 ) ) THEN
+         ( ( (box_list(1)%length(3,3) - String_To_Double(line_array(3))*10.0) / &
+             box_list(1)%length(3,3)) > 0.001 ) ) THEN
           err_msg = ""
           err_msg(1) = "Box size in input and gromacs config do not agree."
           CALL Clean_Abort(err_msg,'Read_GRO')
