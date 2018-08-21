@@ -440,7 +440,7 @@ SUBROUTINE Read_GRO(this_mc_step)
 
        IF ( im > nmolecules(is) ) THEN
           err_msg = ""
-          err_msg(1) = "Found more than "// TRIM(Int_To_String(nmolecules(is)))//" molecules in file:"
+          err_msg(1) = "Found more than "// TRIM(Int_To_String(nmolecules(is)))//" molecules for species"// TRIM(Int_To_String(is))//" in file:"
           err_msg(2) = TRIM( gro_config_file )
           err_msg(3) = " Check the *.ndx and gro files."
           CALL Clean_Abort(err_msg,'Read_GRO')
