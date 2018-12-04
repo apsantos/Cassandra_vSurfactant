@@ -6546,7 +6546,7 @@ SUBROUTINE Get_Clustering_Info
   ! 
   !***************************************************************************************************
 
-  INTEGER :: ierr, line_nbr, nbr_entries, i, is, js, ia, ja
+  INTEGER :: ierr, line_nbr, nbr_entries, i, is, js, ia, ja, idist
   INTEGER :: imax_nmol, c_or_m, icm, ientry, ie, n_entries, ntype_entries
   CHARACTER(charLength) :: line_string, line_array(lineArrayLength)
   REAL(8) :: distance, min_dist, min_dist_sq
@@ -6776,24 +6776,34 @@ EnLoop: DO ientry = 1, n_entries
                     err_msg = ""
                     err_msg(1) = "Error while reading inputfile"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+                ELSE IF(MOD(nbr_entries, 5) .NE. 0) THEN
+                    err_msg = ""
+                    err_msg(1) = "give multiple of 3 collumns:"
+                    err_msg(2) = "two names and one distance for the micelle clustering criteria"
+                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                 END IF
 
-                distance = String_To_Double(line_array(3))
-                ! Figure out the type of the atom from the name, remember could be multiple with the same name
-                IF (distance > min_dist) THEN
-                    DO ia = 1, natoms(is)
-                        IF (nonbond_list(ia,is)%atom_name == TRIM( line_array(2) ) ) THEN
-                            DO ja = 1, natoms(js)
-                                IF (nonbond_list(ja,js)%atom_name == TRIM( line_array(4) ) ) THEN
-                                    cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
-                                    WRITE(logunit,*) 'atom type "', TRIM(line_array(2)), '" of species, ', is, 'and'
-                                    WRITE(logunit,*) 'atom type "', TRIM(line_array(4)), '" of species, ', js
-                                    WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
-                                END IF
-                            END DO
-                        END IF
-                    END DO
-                END IF
+                DO idist = 1, nbr_entries, 5
+                    distance = String_To_Double(line_array(idist+4))
+                    ! Figure out the type of the atom from the name, remember could be multiple with the same name
+                    IF (distance > min_dist) THEN
+                        is = String_To_INT(line_array(idist))
+                        js = String_To_INT(line_array(idist+2))
+                        print*, is, js, distance
+                        DO ia = 1, natoms(is)
+                            IF (nonbond_list(ia,is)%atom_name == TRIM( line_array(idist+1) ) ) THEN
+                                DO ja = 1, natoms(js)
+                                    IF (nonbond_list(ja,js)%atom_name == TRIM( line_array(idist+3) ) ) THEN
+                                        cluster%min_distance_sq(c_or_m, is, js, ia, ja) = distance**2.0_DP
+                                        WRITE(logunit,*) 'atom type "', TRIM(line_array(idist+1)), '" of species, ', is, 'and'
+                                        WRITE(logunit,*) 'atom type "', TRIM(line_array(idist+3)), '" of species, ', js
+                                        WRITE(logunit,*) 'are included in the Clustering calculation as "associated"'
+                                    END IF
+                                END DO
+                            END IF
+                        END DO
+                    END IF
+                END DO
 
                 ! Make sure equivalent distances agree
                 isloop2: DO is = 1, nspecies
