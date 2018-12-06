@@ -293,32 +293,40 @@ CONTAINS
 
     DO is_clus = 1, nspecies
         n_removed = 0
-        IF (.not. ANY(cluster%species_type(1,:) == is_clus)) CYCLE
+        !IF (.not. ANY(cluster%species_type(3,:) == is_clus)) CYCLE
+        IF (.not. ANY(cluster%species_type(3,:) == is_clus)) THEN
+            molecule_list(:,is_clus)%live = .FALSE.
+            atom_list(:,:,is_clus)%exist = .FALSE.
 
-        MoleculeLoop: DO imol = 1, nmolecules(is_clus)
-            ! Make sure that the molecule exists in the simulation
-            t_im = locate(imol-n_removed, is_clus)
-            IF( .NOT. molecule_list(t_im,is_clus)%live ) CYCLE MoleculeLoop
-
-            ! IF the molecule is not in a cluster of the specified size
-            IF (cluster%N( cluster%clabel(t_im, is_clus) ) < cluster%M_olig(is_clus)) THEN
-
-                CALL Get_Position_Molecule(this_box,is_clus,t_im,position)
-                DO k = imol + 1 - n_removed, SUM(nmols(is_clus,:))
-                    locate(k-1,is_clus) = locate(k,is_clus)
-                END DO
-     
-                ! move the deleted molecule to the end of alive(is_clus) molecules
-                locate(nmols(is_clus,this_box),is_clus) = t_im
-                molecule_list(t_im,is_clus)%live = .FALSE.
-                atom_list(:,t_im,is_clus)%exist = .FALSE.
-     
-                ! update the number of molecules
-                nmols(is_clus,this_box) = nmols(is_clus,this_box) - 1
-                n_removed = n_removed + 1
-            END IF
-
-        END DO MoleculeLoop
+            ! update the number of molecules
+            n_removed = nmols(is_clus,this_box)
+            nmols(is_clus,this_box) = 0
+        ELSE
+            MoleculeLoop: DO imol = 1, nmolecules(is_clus)
+                ! Make sure that the molecule exists in the simulation
+                t_im = locate(imol-n_removed, is_clus)
+                IF( .NOT. molecule_list(t_im,is_clus)%live ) CYCLE MoleculeLoop
+    
+                ! IF the molecule is not in a cluster of the specified size
+                IF (cluster%N( cluster%clabel(imol, is_clus) ) < MAXVAL(cluster%M_olig(:))) THEN
+    
+                    CALL Get_Position_Molecule(this_box,is_clus,t_im,position)
+                    DO k = imol + 1 - n_removed, SUM(nmols(is_clus,:))
+                        locate(k-1,is_clus) = locate(k,is_clus)
+                    END DO
+         
+                    ! move the deleted molecule to the end of alive(is_clus) molecules
+                    locate(nmols(is_clus,this_box),is_clus) = t_im
+                    molecule_list(t_im,is_clus)%live = .FALSE.
+                    atom_list(:,t_im,is_clus)%exist = .FALSE.
+         
+                    ! update the number of molecules
+                    nmols(is_clus,this_box) = nmols(is_clus,this_box) - 1
+                    n_removed = n_removed + 1
+                END IF
+    
+            END DO MoleculeLoop
+        END IF
     END DO
 
   END SUBROUTINE Remove_Small_Clusters

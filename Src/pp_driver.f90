@@ -200,24 +200,6 @@ SUBROUTINE PP_Driver
            END IF
         END IF
 
-        IF ( nexvol_freq /= 0 ) THEN
-           IF ( MOD(i,nexvol_freq) == 0 ) THEN
-              !CALL cpu_time(time_start)
-           
-              DO ibox = 1, nbr_boxes
-                 IF ( MOD(i,ncluster_freq) /= 0 ) THEN
-                    CALL Find_Clusters(ibox,1)
-                 END IF
-              
-                 CALL Calculate_Excluded_Volume(ibox)
-
-              !CALL cpu_time(now_time)
-              !print '("exvol Time = ",f6.3," seconds.")',now_time-time_start
-              END DO
-           
-           END IF
-        END IF
-
         IF ( nalpha_freq /= 0 ) THEN
            IF ( MOD(i,nalpha_freq) == 0 ) THEN
               !CALL cpu_time(time_start)
@@ -237,6 +219,24 @@ SUBROUTINE PP_Driver
            END IF
         END IF
         
+        IF ( nexvol_freq /= 0 ) THEN
+           IF ( MOD(i,nexvol_freq) == 0 ) THEN
+              !CALL cpu_time(time_start)
+           
+              DO ibox = 1, nbr_boxes
+                 CALL Find_Clusters(ibox,3)
+              
+                 CALL Calculate_Excluded_Volume(ibox)
+
+                 CALL Find_Clusters(ibox,1)
+
+              !CALL cpu_time(now_time)
+              !print '("exvol Time = ",f6.3," seconds.")',now_time-time_start
+              END DO
+           
+           END IF
+        END IF
+
         IF ( nmsd_freq /= 0 ) THEN
            IF ( MOD(i,nmsd_freq) == 0 ) THEN
               !CALL cpu_time(time_start)

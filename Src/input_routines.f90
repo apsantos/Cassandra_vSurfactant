@@ -6656,7 +6656,7 @@ EnLoop: DO ientry = 1, n_entries
                         err_msg = ""
                         err_msg(1) = "Error while reading inputfile"
                         CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                    ELSE IF ( line_array(1) == 'com' .or. &
+                    ELSE IF ( line_array(1) == 'count' .or. &
                               line_array(1) == 'exvol' .or. &
                               line_array(1) == 'move') THEN
                         err_msg = ""
@@ -6751,24 +6751,25 @@ EnLoop: DO ientry = 1, n_entries
                 cluster%criteria(c_or_m, int_micelle) = .TRUE.
                 cluster%criteria(c_or_m, int_com) = .TRUE.
 
-                line_nbr = line_nbr + 1
-                CALL Parse_String(inputunit,line_nbr,nspecies,nbr_entries,line_array,ierr)
-                IF ( ierr /= 0 ) THEN
-                    err_msg = ""
-                    err_msg(1) = "Error while reading inputfile"
-                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
-                ELSE IF ( nspecies /= nbr_entries ) THEN
-                    WRITE(logunit,*) 'Only need 1 entry for every species in the micelle clustering'
-                END IF
-
-                DO is = 1, nspecies 
-                    distance = String_To_Double(line_array(is))
-                    cluster%min_distance_sq(c_or_m, is, is, 0, 0) = distance**2.0
-                    IF (distance > min_dist) THEN
-                        WRITE(logunit,*) 'COM clustering between species, ', is
-                        cluster%micelle_species = is
-                    END IF
-                END DO
+                cluster%micelle_species = String_To_Int(line_array(2))
+!                line_nbr = line_nbr + 1
+!                CALL Parse_String(inputunit,line_nbr,nspecies,nbr_entries,line_array,ierr)
+!                IF ( ierr /= 0 ) THEN
+!                    err_msg = ""
+!                    err_msg(1) = "Error while reading inputfile"
+!                    CALL Clean_Abort(err_msg,'Get_Clustering_Info')
+!                ELSE IF ( nspecies /= nbr_entries ) THEN
+!                    WRITE(logunit,*) 'Only need 1 entry for every species in the micelle clustering'
+!                END IF
+!
+!                DO is = 1, nspecies 
+!                    distance = String_To_Double(line_array(is))
+!                    cluster%min_distance_sq(c_or_m, is, is, 0, 0) = distance**2.0
+!                    IF (distance > min_dist) THEN
+!                        WRITE(logunit,*) 'COM clustering between species, ', is
+!                        cluster%micelle_species = is
+!                    END IF
+!                END DO
 
                 line_nbr = line_nbr + 1
                 CALL Parse_String(inputunit,line_nbr,5,nbr_entries,line_array,ierr)
@@ -6778,7 +6779,7 @@ EnLoop: DO ientry = 1, n_entries
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                 ELSE IF(MOD(nbr_entries, 5) .NE. 0) THEN
                     err_msg = ""
-                    err_msg(1) = "give multiple of 3 collumns:"
+                    err_msg(1) = "give multiple of 5 collumns:"
                     err_msg(2) = "two names and one distance for the micelle clustering criteria"
                     CALL Clean_Abort(err_msg,'Get_Clustering_Info')
                 END IF
@@ -6789,7 +6790,6 @@ EnLoop: DO ientry = 1, n_entries
                     IF (distance > min_dist) THEN
                         is = String_To_INT(line_array(idist))
                         js = String_To_INT(line_array(idist+2))
-                        print*, is, js, distance
                         DO ia = 1, natoms(is)
                             IF (nonbond_list(ia,is)%atom_name == TRIM( line_array(idist+1) ) ) THEN
                                 DO ja = 1, natoms(js)

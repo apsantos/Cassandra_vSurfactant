@@ -514,13 +514,10 @@ CONTAINS
         END DO
     END DO
 
-    IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE. ) CALL Micelle_Association(count_or_move)
 
     !write(*,*) 'c/m', count_or_move
     !write(*,*) 'N', cluster%N(1:200)
     !write(*,*) 'clabel', cluster%clabel
-    cluster%n_oligomers = 0
-    cluster%n_clusters = 0
     DO is = 1, cluster%n_species_type(count_or_move)
         is_clus = cluster%species_type(count_or_move, is)
         IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE.) THEN
@@ -541,6 +538,8 @@ CONTAINS
         END DO
     END DO
 
+    IF ( cluster%criteria(count_or_move, int_micelle) .eqv. .TRUE. ) CALL Micelle_Association(count_or_move)
+
     IF (count_or_move == 1) THEN
         CALL Update_Cluster_Counters(count_or_move)
     ENDIF
@@ -551,6 +550,8 @@ CONTAINS
     INTEGER, INTENT(IN) :: count_or_move
     INTEGER :: is, ic, is_clus
 
+    cluster%n_oligomers = 0
+    cluster%n_clusters = 0
     cluster%Mave = 0
     cluster%n_mic_clus = 0
     cluster%n_olig_clus = 0
@@ -807,9 +808,12 @@ CONTAINS
     !*********************************************************************************
 
     INTEGER, INTENT(IN) :: c_or_m
-    INTEGER :: i, j, as, am, cm, cs, as_clus, nclus
+    INTEGER :: i, j, as, am, cm, cs, as_clus
+    LOGICAL, DIMENSION(3, 4) :: ocriteria
 
-    cluster%criteria(c_or_m, int_com) = .FALSE.
+    ocriteria(c_or_m, :) = cluster%criteria(c_or_m, :)
+
+    cluster%criteria(c_or_m, :) = .FALSE.
     cluster%criteria(c_or_m, int_type) = .TRUE.
 
     cs = cluster%micelle_species
@@ -818,10 +822,14 @@ CONTAINS
         cm = locate(i, cs)
         IF( .NOT. molecule_list(cm, cs)%live ) CYCLE
 
+        ! skip if the cluster is small
+        !IF ( cluster%N( cluster%clabel(cm, cs) ) < cluster%M_olig(cs) ) CYCLE
+
+        ! loop over species that are in the cluster
         DO as = 1, cluster%n_species_type(c_or_m)
             as_clus = cluster%species_type(c_or_m, as)
 
-            IF ( as_clus == cluster%micelle_species) CYCLE
+            IF ( as_clus == cs) CYCLE
 
             DO j = 1, nmolecules(as_clus)
                 am = locate(j, as_clus)
@@ -829,14 +837,15 @@ CONTAINS
     
                 IF (Neighbor(c_or_m, am, cm, as_clus, cs) .eqv. .true.) THEN
                     ! Add it to the clabel and N
-                    cluster%clabel(am, as_clus) = cluster%clabel(cm, cs)
-                    nclus = cluster%clabel(cm, cs)
+                    ! Associate it with the larger cluster if it is already associated
+                    cluster%clabel(am, as_clus) = max( cluster%clabel(am, as_clus), cluster%clabel(cm, cs) )
+                    !nclus = cluster%clabel(am, as_clus)
 
-                    DO WHILE (cluster%N(nclus) < 0)
-                        nclus = -cluster%N(nclus)
-                    END DO
+                    !DO WHILE (cluster%N(nclus) < 0)
+                    !    nclus = -cluster%N(nclus)
+                    !END DO
 
-                    cluster%N(nclus) = cluster%N(nclus) + 1
+                    !cluster%N(nclus) = cluster%N(nclus) + 1
 
                 END IF
     
@@ -844,8 +853,7 @@ CONTAINS
         END DO
     END DO
 
-    cluster%criteria(c_or_m, int_com) = .TRUE.
-    cluster%criteria(c_or_m, int_type) = .FALSE.
+    cluster%criteria(c_or_m, :) = ocriteria(c_or_m, :)
                     
   END SUBROUTINE Micelle_Association
 
